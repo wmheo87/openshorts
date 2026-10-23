@@ -47,6 +47,10 @@ skills-lock.json
 .env.cloud.example
 .worktrees
 .studio-data/
+dashboard/.env.local
+dashboard/.env.*.local
+dashboard/test-results/
+dashboard/playwright-report/
 
 # Instrucciones locales con datos de infra (repo público)
 CLAUDE.local.md

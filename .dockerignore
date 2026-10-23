@@ -41,6 +41,8 @@ videos/
 # Runtime caches from the bind-mounted /app directory
 .cache/
 .studio-data/
+dashboard/test-results/
+dashboard/playwright-report/
 
 # Secrets — never bake real credentials into the image (repo is public,
 # image may be pushed to a registry). Runtime env comes via compose env_file.

@@ -43,3 +43,9 @@ jobs:
         run: npm ci
       - name: Build
         run: npm run build
+      - name: Discovery utility and proxy tests
+        run: npm run test:unit
+      - name: Install browser for discovery tests
+        run: npx playwright install --with-deps chromium
+      - name: Discovery desktop and mobile tests
+        run: npm run test:discovery

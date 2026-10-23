@@ -21,6 +21,9 @@ COPY . .
 # (Coolify: add it as a build variable on the frontend service). Empty = same-origin.
 ARG VITE_API_URL=""
 ENV VITE_API_URL=$VITE_API_URL
+# UI visibility only; the backend still enforces DISCOVERY_ENABLED and its API key.
+ARG VITE_DISCOVERY_ENABLED="0"
+ENV VITE_DISCOVERY_ENABLED=$VITE_DISCOVERY_ENABLED
 # Optional product analytics (OpenPanel). Left empty, index.html initialises
 # nothing and the build phones home to nobody — see the comment there.
 ARG VITE_OPENPANEL_API_URL=""

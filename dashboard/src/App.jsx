@@ -26,11 +26,14 @@ import TrialGate from './components/TrialGate';
 import AdvancedBanner from './components/AdvancedBanner';
 import HistoryTab from './components/HistoryTab';
 import AutopilotTab from './components/AutopilotTab';
+import DiscoveryPage from './features/discovery/DiscoveryPage';
 import ProfileMenu from './components/ProfileMenu';
 import Modal from './components/ui/Modal';
 import { useAuth } from './contexts/AuthContext';
 import { apiFetch, apiJson, QuotaError, QUOTA_WALL_EVENT } from './lib/api';
 import { track } from './lib/analytics';
+
+const DISCOVERY_UI_ENABLED = import.meta.env.VITE_DISCOVERY_ENABLED === '1';
 
 // Enhanced "Encryption" using XOR + Base64 with a Salt
 // This is better than plain Base64 but still client-side.
@@ -685,7 +688,7 @@ function App() {
         else if (!session.noSource) setProcessingMedia({ type: 'server', payload: `/api/source/${session.jobId}` });
         if (session.noSource) setNoSource(true);
         if (session.projectState) setProjectState(session.projectState);
-        if (session.activeTab) setActiveTab(session.activeTab);
+        if (session.activeTab && (session.activeTab !== 'discovery' || DISCOVERY_UI_ENABLED)) setActiveTab(session.activeTab);
         // If was processing, resume polling; if complete/error, just show results
         setStatus(session.status === 'processing' ? 'processing' : session.status);
         setSessionRecovered(true);
@@ -941,7 +944,7 @@ function App() {
   // dropped so a reload does not keep forcing the tab.
   const [autopilotConnected, setAutopilotConnected] = useState(false);
   useEffect(() => {
-    const DEEP_LINK_TABS = ['autopilot', 'history', 'settings', 'thumbnails', 'dashboard'];
+    const DEEP_LINK_TABS = ['autopilot', 'history', 'settings', 'thumbnails', 'dashboard', ...(DISCOVERY_UI_ENABLED ? ['discovery'] : [])];
     const apply = () => {
       const hash = window.location.hash || '';
       if (!hash.startsWith('#app?')) return;
@@ -1226,6 +1229,7 @@ function App() {
     { id: 'thumbnails', ord: '06', icon: Image, label: 'YouTube Studio', short: 'studio', primary: true },
     ...(billingEnabled && isSignedIn ? [{ id: 'history', ord: '07', icon: History, label: 'History', short: 'history' }] : []),
     { id: 'settings', ord: '08', icon: Settings, label: 'Settings', short: 'settings' },
+    ...(DISCOVERY_UI_ENABLED ? [{ id: 'discovery', ord: '09', icon: Globe, label: 'Video Discovery', short: 'discovery' }] : []),
   ];
   const activeNav = navItems.find((n) => n.id === activeTab);
 
@@ -1505,7 +1509,7 @@ function App() {
 
             {/* Hidden below sm: the standing banner underneath already says the
                 same thing, and two warnings in a 360px header is just noise. */}
-            {keysMissing && (
+            {keysMissing && activeTab !== 'discovery' && (
               <button
                 onClick={() => (billingEnabled && !isSignedIn ? setShowLogin(true) : goToTab('settings'))}
                 className="badge-warn hover:brightness-125 transition-all hidden sm:inline-flex"
@@ -1525,8 +1529,8 @@ function App() {
           </div>
         </header>
 
-        {/* Persistent Missing Keys Banner — visible on every screen */}
-        {keysMissing && activeTab !== 'settings' && (
+        {/* Discovery uses its own server key; editor-key warnings do not apply there. */}
+        {keysMissing && activeTab !== 'settings' && activeTab !== 'discovery' && (
           <div className="mx-3 sm:mx-6 mt-3 px-3.5 sm:px-4 py-3 bg-paper2 border border-rule rounded-card flex flex-wrap items-center justify-between gap-2.5 sm:gap-4 shrink-0 animate-fade">
             <div className="flex items-start sm:items-center gap-2.5 sm:gap-3 text-sm text-ink2 min-w-0 flex-1">
               <KeyRound size={16} className="shrink-0 text-warn mt-0.5 sm:mt-0" />
@@ -1965,6 +1969,8 @@ function App() {
               </div>
             </div>
           )}
+
+          {DISCOVERY_UI_ENABLED && activeTab === 'discovery' && <DiscoveryPage />}
 
           {/* View: History */}
           {activeTab === 'history' && (
