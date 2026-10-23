@@ -94,3 +94,7 @@ Linux Chromium 모바일 에뮬레이션은 실제 Android/iOS 기기나 Windows
 - 전체 백엔드 `pytest tests/ -q`: **1,291 passed / 29 skipped / 8 failed**. 기존 P1과 동일한 직접 DNS 의존 실패 8건이며 신규 백엔드 실패는 없다. 테스트/보안 검사는 변경하지 않았다.
 - 실제 HTTP 라우팅: 전체 FastAPI/독립 P1 앱에서 `/api/discovery/history` 200 및 P1 응답 구조 확인. 기존 `/api/config`는 전체 앱에서 정상이고 독립 앱에는 없음을 확인했다. 검증용 프로세스는 종료했고 외부 YouTube 호출·영상 작업은 실행하지 않았다.
 - 세 Compose 파일 병합 `config --quiet`, `git diff --check`: 성공.
+
+## P3 제작 연결
+
+P3에서 선택 후 권리·다운로드 확인과 기존 제작 엔진 연결을 추가했다. P2 당시의 미구현 범위와 구분하며, 현재 실행·검증 방법은 [제작 연결 문서](STUDIO_DISCOVERY_ENGINE.md)를 따른다.

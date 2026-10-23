@@ -3112,6 +3112,8 @@ async def process_endpoint(
     # below; self-host never runs that block, so it must default here.
     paid_allowed = True
     force_low = str(force_low_quality).lower() in ("1", "true", "yes")
+    discovery_payload = None
+    discovery_source = None
 
     # Handle JSON body manually for URL payload
     content_type = request.headers.get("content-type", "")
@@ -3133,6 +3135,9 @@ async def process_endpoint(
         captions = body.get("captions")
         upload_id = body.get("upload_id")
         max_minutes = body.get("max_minutes")
+        discovery_payload = body.get("discovery_source")
+        if discovery_payload is not None and body.get("acknowledged") is not True:
+            raise HTTPException(status_code=400, detail="Discovery requires explicit rights confirmation.")
 
     # Normalize output format (auto = keep pipeline default).
     if output_format not in ("vertical", "horizontal", "square"):
@@ -3187,6 +3192,15 @@ async def process_endpoint(
     if url:
         await _validate_source_url(url)
 
+    if discovery_payload is not None:
+        if not url or file or thumb_session or upload_slot:
+            raise HTTPException(status_code=422, detail="Discovery handover requires a single URL source.")
+        from studio.discovery.production import verify_source
+        from studio.discovery.router import get_service, invoke
+        # The existing URL guard above, and the quality/length gates below, still apply.
+        discovery_source = await asyncio.to_thread(
+            lambda: invoke(lambda: verify_source(discovery_payload, url, get_service())))
+
     # Capture attestation context for legal record (IP + timestamp + UA)
     client_ip = request.client.host if request.client else "unknown"
     fwd = request.headers.get("x-forwarded-for")
@@ -3205,6 +3219,10 @@ async def process_endpoint(
     job_id = str(uuid.uuid4())
     job_output_dir = os.path.join(OUTPUT_DIR, job_id)
     os.makedirs(job_output_dir, exist_ok=True)
+
+    if discovery_source is not None:
+        from studio.discovery.production import save_source
+        save_source(job_output_dir, discovery_source)
 
     # Prepare Command
     # sys.executable, not "python": bare "python" resolves against PATH, which
@@ -3431,6 +3449,7 @@ async def process_endpoint(
         # API callers poll or get the webhook; the clips-ready email is for
         # people who left the dashboard tab.
         'via_api_key': request_uses_api_key(request),
+        'discovery_source': discovery_source,
     }
 
     # Persist the owner so recovered jobs keep their multi-tenant guard after a
@@ -3455,7 +3474,8 @@ async def process_endpoint(
     _enqueue_job(job_id, priority)
 
     return {"job_id": job_id, "status": "queued", "partial": partial,
-            "first_video": bool(getattr(request.state, "first_video", False))}
+            "first_video": bool(getattr(request.state, "first_video", False)),
+            **({"discovery_source": discovery_source} if discovery_source is not None else {})}
 
 def _job_view_from_disk(job_id):
     """What the disk says about a job this instance does not hold in memory.
@@ -3503,18 +3523,26 @@ async def get_status(job_id: str, request: Request):
         raise HTTPException(status_code=404, detail="Job not found")
 
     await _assert_job_owner(request, job)
+    from studio.discovery.production import read_source, available_result
+    discovery_source = read_source(job)
+    result, missing = (available_result(job_id, job) if discovery_source and not BILLING_ENABLED
+                       else (job.get('result'), 0))
+    presented_status = _presented_status(job_id, job)
+    missing_completed = bool(missing and presented_status == 'completed')
     _logs_view = _visible_logs_timed(job['logs'])
     return {
-        "status": _presented_status(job_id, job),
+        "status": 'failed' if missing_completed else presented_status,
         "logs": _logs_view[0],
         # When each line arrived (epoch seconds, parallel to "logs"), or None.
         "log_times": _logs_view[1],
-        "result": job.get('result'),
+        "result": result,
         # Position in line and a rough wait while the job is still queued.
         "queue": queue_snapshot(job_id),
         # Set when only the first part of the source was clipped (quota wall
         # offer), so the dashboard can say so next to the clips.
         "partial": job.get('partial'),
+        **({"discovery_source": discovery_source} if discovery_source else {}),
+        **({"error": "Some result files expired or are missing; only available partial clips are shown."} if missing_completed else {}),
     }
 
 

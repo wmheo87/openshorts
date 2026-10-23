@@ -1,0 +1,21 @@
+# P3: one full backend owns search, revalidation budget, queue and result access.
+# docker compose -f docker-compose.yml -f docker-compose.discovery-engine.yml up --build
+services:
+  backend:
+    environment:
+      DISCOVERY_ENABLED: "1"
+      YOUTUBE_API_KEY: ${YOUTUBE_API_KEY:-}
+      DISCOVERY_DB_PATH: /app/.studio-data/discovery.sqlite3
+      GEMINI_API_KEY: ${GEMINI_API_KEY:-}
+      LLM_BASE_URL: ${LLM_BASE_URL:-}
+      LLM_MODEL: ${LLM_MODEL:-llama3.1:8b}
+    volumes:
+      - studio-discovery-data:/app/.studio-data
+  frontend:
+    environment:
+      VITE_DISCOVERY_ENABLED: "1"
+      VITE_PROXY_TARGET: http://backend:8000
+      VITE_DISCOVERY_PROXY_TARGET: http://backend:8000
+      VITE_API_URL: ""
+volumes:
+  studio-discovery-data:
