@@ -1,0 +1,24 @@
+# Standalone metadata-only backend: no GPU, editor, cloud/, Node or model downloads.
+# docker compose -f docker-compose.discovery.yml up --build -d
+services:
+  discovery:
+    build:
+      context: .
+      dockerfile: deploy/discovery/Dockerfile
+    ports:
+      - "127.0.0.1:8002:8000"
+    environment:
+      DISCOVERY_ENABLED: "1"
+      YOUTUBE_API_KEY: ${YOUTUBE_API_KEY:-}
+      DISCOVERY_DB_PATH: /data/discovery.sqlite3
+      DISCOVERY_CACHE_TTL_SECONDS: ${DISCOVERY_CACHE_TTL_SECONDS:-3600}
+      DISCOVERY_REQUESTS_PER_MINUTE: ${DISCOVERY_REQUESTS_PER_MINUTE:-30}
+      DISCOVERY_API_CALLS_PER_DAY: ${DISCOVERY_API_CALLS_PER_DAY:-100}
+      DISCOVERY_QUOTA_UNITS_PER_DAY: ${DISCOVERY_QUOTA_UNITS_PER_DAY:-9000}
+      DISCOVERY_MAX_PAGES: ${DISCOVERY_MAX_PAGES:-3}
+    volumes:
+      - discovery-data:/data
+    restart: unless-stopped
+
+volumes:
+  discovery-data:

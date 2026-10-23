@@ -1,5 +1,14 @@
 # OpenShorts.app
 
+### AI Shorts Studio: metadata discovery (P1)
+
+An opt-in, metadata-only YouTube search backend is available at
+`POST /api/discovery/search` and `GET /api/discovery/history`.
+It uses `YOUTUBE_API_KEY`, SQLite caching and bounded API budgets; it does not
+download videos or change the existing editor. See
+[setup, API examples and limitations](docs/STUDIO_DISCOVERY.md).
+
+
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Open Source](https://badges.frapsoft.com/os/v1/open-source.svg?v=103)](https://opensource.org/)
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](http://makeapullrequest.com)
