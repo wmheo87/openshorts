@@ -1,0 +1,4 @@
+# Metadata-only service; reuse the core repository's API/runtime version pins.
+fastapi==0.136.1
+uvicorn==0.46.0
+httpx==0.28.1

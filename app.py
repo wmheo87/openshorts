@@ -2448,6 +2448,10 @@ app.include_router(_mcp_server.router)
 import free_tools as _free_tools
 app.include_router(_free_tools.router)
 
+# Opt-in, metadata-only Studio discovery; no changes to the video engine.
+from studio.discovery.router import router as _discovery_router
+app.include_router(_discovery_router)
+
 # Enable CORS for frontend. Cloud mode locks this down to the configured origins;
 # self-host keeps the permissive wildcard it has always used.
 app.add_middleware(
