@@ -8,6 +8,9 @@ It uses `YOUTUBE_API_KEY`, SQLite caching and bounded API budgets; it does not
 download videos or change the existing editor. See
 [setup, API examples and limitations](docs/STUDIO_DISCOVERY.md).
 
+The opt-in **Video Discovery** dashboard adds search, filtering, comparison,
+selection and search history. See [P2 UI setup and verification](docs/STUDIO_DISCOVERY_UI.md).
+
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Open Source](https://badges.frapsoft.com/os/v1/open-source.svg?v=103)](https://opensource.org/)

@@ -38,7 +38,7 @@ export default defineConfig([
     rules: { 'react-refresh/only-export-components': 'off' },
   },
   {
-    files: ['vite.config.js', 'vite-plugin-seo.js', 'seo/**/*.js'],
+    files: ['vite.config.js', 'vite-plugin-seo.js', 'seo/**/*.js', 'playwright.config.js', 'tests/**/*.js'],
     languageOptions: { globals: { ...globals.node } },
   },
 ])

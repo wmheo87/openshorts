@@ -1,0 +1,9 @@
+# Combine with docker-compose.yml and docker-compose.discovery.yml.
+# Only discovery calls go to the standalone service; other APIs keep using backend.
+services:
+  frontend:
+    environment:
+      VITE_DISCOVERY_ENABLED: "1"
+      VITE_PROXY_TARGET: http://backend:8000
+      VITE_DISCOVERY_PROXY_TARGET: http://discovery:8000
+      VITE_API_URL: ""
