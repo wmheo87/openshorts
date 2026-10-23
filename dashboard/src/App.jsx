@@ -27,6 +27,7 @@ import AdvancedBanner from './components/AdvancedBanner';
 import HistoryTab from './components/HistoryTab';
 import AutopilotTab from './components/AutopilotTab';
 import DiscoveryPage from './features/discovery/DiscoveryPage';
+import { clearPendingProduction, readPendingProduction, rememberProduction, productionError, knownProductionRejection } from './features/discovery/production';
 import ProfileMenu from './components/ProfileMenu';
 import Modal from './components/ui/Modal';
 import { useAuth } from './contexts/AuthContext';
@@ -266,7 +267,7 @@ const SESSION_MAX_AGE = 86400000; // 24 hours
 // Mock polling function
 const pollJob = async (jobId) => {
   const res = await apiFetch(`/api/status/${jobId}`);
-  if (!res.ok) throw new Error('Status check failed');
+  if (!res.ok) { const error = new Error('Status check failed'); error.status = res.status; throw error; }
   return res.json();
 };
 
@@ -328,6 +329,11 @@ function App() {
   const [showKeyModal, setShowKeyModal] = useState(false);
   const [jobId, setJobId] = useState(null);
   const [status, setStatus] = useState('idle'); // idle, processing, complete, error
+  const [discoveryOrigin, setDiscoveryOrigin] = useState(() => readPendingProduction()?.source || null);
+  const [discoveryUncertain, setDiscoveryUncertain] = useState(() => !!readPendingProduction());
+  const [pollWarning, setPollWarning] = useState('');
+  const submissionLock = useRef(false);
+  const discoveryRetry = useRef(null);
   const [results, setResults] = useState(null);
   // Best clips first. The backend hands them back in transcript order, which
   // buries the strongest one wherever it happens to fall in the video — and
@@ -343,6 +349,7 @@ function App() {
     if (!Array.isArray(clips)) return [];
     return clips
       .map((clip, index) => ({ clip, index }))
+      .filter(({ clip }) => !clip.unavailable)
       .sort((a, b) => {
         const sa = Number.isFinite(a.clip?.predicted_score) ? a.clip.predicted_score : -1;
         const sb = Number.isFinite(b.clip?.predicted_score) ? b.clip.predicted_score : -1;
@@ -673,6 +680,8 @@ function App() {
     try {
       const saved = localStorage.getItem(SESSION_KEY);
       if (!saved) return;
+      // A lost submit response has no trustworthy job ID. Never replay it on reload.
+      if (readPendingProduction()) return;
       const session = JSON.parse(saved);
       if (Date.now() - session.timestamp > SESSION_MAX_AGE) {
         localStorage.removeItem(SESSION_KEY);
@@ -680,7 +689,7 @@ function App() {
       }
       if (session.jobId && session.status && session.status !== 'idle') {
         setJobId(session.jobId);
-        setResults(session.results || null);
+        setResults(session.discoveryOrigin ? null : session.results || null);
         // Restore the source preview. Older sessions (or uploads) saved no
         // media, so fall back to the backend-served source for this job —
         // except for reopened projects, whose source was never persisted.
@@ -688,9 +697,10 @@ function App() {
         else if (!session.noSource) setProcessingMedia({ type: 'server', payload: `/api/source/${session.jobId}` });
         if (session.noSource) setNoSource(true);
         if (session.projectState) setProjectState(session.projectState);
+        if (session.discoveryOrigin) setDiscoveryOrigin(session.discoveryOrigin);
         if (session.activeTab && (session.activeTab !== 'discovery' || DISCOVERY_UI_ENABLED)) setActiveTab(session.activeTab);
-        // If was processing, resume polling; if complete/error, just show results
-        setStatus(session.status === 'processing' ? 'processing' : session.status);
+        // Recheck Discovery files after reload; cached completion may have expired.
+        setStatus(session.discoveryOrigin ? 'processing' : session.status);
         setSessionRecovered(true);
         setTimeout(() => setSessionRecovered(false), 5000);
       }
@@ -720,6 +730,7 @@ function App() {
         activeTab,
         noSource,
         projectState,
+        discoveryOrigin,
         timestamp: Date.now()
       };
       localStorage.setItem(SESSION_KEY, JSON.stringify(sessionData));
@@ -727,7 +738,7 @@ function App() {
       // localStorage full or serialization error - ignore
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [jobId, status, results, activeTab, noSource, projectState]);
+  }, [jobId, status, results, activeTab, noSource, projectState, discoveryOrigin]);
 
   useEffect(() => {
     // Encrypt Gemini Key too for consistency if desired, but user asked specifically about Social integration not saving well.
@@ -807,10 +818,17 @@ function App() {
 
   useEffect(() => {
     let interval;
+    let cancelled = false;
+    let inFlight = false;
     if ((status === 'processing' || status === 'completed') && jobId) {
       interval = setInterval(async () => {
+        if (inFlight) return;
+        inFlight = true;
         try {
           const data = await pollJob(jobId);
+          if (cancelled) return;
+          setPollWarning('');
+          if (data.discovery_source) setDiscoveryOrigin(data.discovery_source);
           console.log("Job status:", data);
 
           // Update results if available (real-time)
@@ -829,7 +847,7 @@ function App() {
           } else if (data.status === 'failed') {
             setStatus('error');
             const errorMsg = data.error || (data.logs && data.logs.length > 0 ? data.logs[data.logs.length - 1] : "Process failed");
-            setJobError(readableError(errorMsg));
+            setJobError(discoveryOrigin ? productionError(errorMsg) : readableError(errorMsg));
             setLogs(prev => [...prev, "Error: " + errorMsg]);
             clearInterval(interval);
             refreshMe();
@@ -841,11 +859,23 @@ function App() {
             }
           }
         } catch (e) {
+          if (cancelled) return;
+          if (discoveryOrigin) {
+            if (e.status === 404 || e.status === 410) {
+              setStatus('error'); setResults(null);
+              setJobError('작업 또는 결과 파일을 찾을 수 없습니다. 서버 재시작·중단·보존 기간을 확인해 주세요. 자동으로 다시 제작하지 않습니다.');
+              clearInterval(interval);
+            } else setPollWarning('진행 상태 연결이 끊겼습니다. 실제 작업 상태를 확인 중이며 제작 요청을 다시 보내지는 않습니다.');
+          }
           console.error("Polling error", e);
+        } finally {
+          inFlight = false;
         }
       }, 2000);
     }
-    return () => clearInterval(interval);
+    return () => { cancelled = true; clearInterval(interval); };
+    // Source presence is stable for this job; metadata updates must not restart polling.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [status, jobId, refreshMe]);
 
 
@@ -1029,6 +1059,9 @@ function App() {
   };
 
   const handleProcess = async (data, forceLowQuality = false) => {
+    if (submissionLock.current) return { message: '이미 제작 요청을 전송 중입니다.' };
+    if (data.discoverySource && discoveryUncertain) return { message: '이전 요청의 작업 생성 여부가 불명확합니다. 서버 확인 전에는 다시 제출할 수 없습니다.' };
+    if (data.discoverySource && status === 'processing') return { message: '진행 중인 작업이 있습니다. Clip Generator에서 상태를 확인해 주세요.' };
     // Hosted: must be signed in AND on an active plan/trial. Self-host: BYOK keys.
     if (billingEnabled) {
       // The billing gate below is unchanged: signed in, then entitled, then the
@@ -1038,12 +1071,17 @@ function App() {
       // fall through the same gates.
       if (!isSignedIn) { stashPendingJob(data); setShowLogin(true); return; }
       if (!isManaged) { window.location.hash = '#/pricing'; return; }
-    } else if (keysMissing) {
+    } else if (keysMissing && !data.discoverySource) {
       setShowKeyModal(true);
       return;
     }
     // Past every gate, so this request is really running: nothing left to resume.
     clearPendingJob();
+    submissionLock.current = true;
+    if (data.discoverySource) {
+      setActiveTab('dashboard'); setDiscoveryOrigin(data.discoverySource); discoveryRetry.current = data;
+    } else setDiscoveryOrigin(null);
+    setJobId(null); setQueueInfo(null); setPollWarning('');
     setStatus('processing');
     setJobError('');
     setLogs(["Starting process..."]);
@@ -1058,6 +1096,8 @@ function App() {
     setPartialJob(null);
     setFirstVideoJob(false);
 
+    let sent = false;
+    let submitTimer;
     try {
       let body;
       // BYOK sends the Gemini header; managed users rely on the bearer token
@@ -1072,10 +1112,10 @@ function App() {
         clip_max_seconds: data.clipMaxSeconds || null,
         // Sent explicitly both ways: absent means off for raw API callers,
         // but the dashboard always states the user's choice.
-        auto_hook: data.autoHook ? '1' : '0',
+        auto_hook: data.discoverySource && data.autoHook == null ? null : data.autoHook ? '1' : '0',
         auto_hook_style: data.autoHook ? (data.autoHookStyle || 'pill') : null,
         // 'auto' is the server default, so only a deliberate choice travels.
-        layouts: data.layout && data.layout !== 'auto' ? data.layout : null,
+        layouts: data.discoverySource ? ['auto'] : data.layout && data.layout !== 'auto' ? data.layout : null,
         // Set when the user took the quota wall's "clip the first N minutes"
         // offer: the server reserves N minutes and cuts the source to them.
         max_minutes: data.maxMinutes || null,
@@ -1088,6 +1128,7 @@ function App() {
           acknowledged: !!data.acknowledged,
           output_format: data.outputFormat || 'auto',
           force_low_quality: forceLowQuality,
+          ...(data.discoverySource ? { discovery_source: data.discoverySource } : {}),
           ...Object.fromEntries(Object.entries(advanced).filter(([, v]) => v != null)),
         });
       } else if (data.type === 'thumbnail_session') {
@@ -1111,17 +1152,39 @@ function App() {
         body = formData;
       }
 
-      const res = await apiFetch('/api/process', { method: 'POST', headers, body });
+      let controller;
+      if (data.discoverySource) {
+        rememberProduction(data.discoverySource);
+        controller = new AbortController();
+        submitTimer = setTimeout(() => controller.abort(), 180000);
+      }
+      sent = true;
+      const res = await apiFetch('/api/process', { method: 'POST', headers, body, signal: controller?.signal });
 
-      if (!res.ok) throw new Error(await res.text());
+      if (!res.ok) {
+        const error = new Error(await res.text()); error.status = res.status;
+        try { error.code = JSON.parse(error.message)?.detail?.code; } catch { /* ordinary API text */ }
+        throw error;
+      }
       const resData = await res.json();
 
       // Quality gate: the source is below the min resolution — ask before burning
       // 20 min on it. On confirm we resend with force_low_quality.
       if (resData.needs_confirmation) {
+        if (data.discoverySource) clearPendingProduction();
         setStatus('idle');
         setQualityGate({ info: resData.quality_check, data });
         return;
+      }
+
+      if (!resData.job_id) throw new Error('제작 응답에 작업 ID가 없습니다.');
+      if (data.discoverySource) {
+        try {
+          localStorage.setItem(SESSION_KEY, JSON.stringify({ jobId: resData.job_id, status: 'processing', results: null,
+            processingMedia: data, discoveryOrigin: resData.discovery_source || data.discoverySource, activeTab: 'dashboard', timestamp: Date.now() }));
+        } catch { /* existing recovery is best effort when browser storage is unavailable */ }
+        clearPendingProduction();
+        setDiscoveryOrigin(resData.discovery_source || data.discoverySource);
       }
 
       setJobId(resData.job_id);
@@ -1141,6 +1204,7 @@ function App() {
 
     } catch (e) {
       if (e instanceof QuotaError) {
+        if (data.discoverySource) clearPendingProduction();
         setStatus('idle');
         refreshMe();
         // Trial users hit the trial minute cap → prompt them to activate the plan
@@ -1167,10 +1231,20 @@ function App() {
         }
         return;
       }
-      const reason = readableError(e.message);
+      const uncertain = data.discoverySource && sent && (!e.status || (e.status >= 500 && !knownProductionRejection(e.code)));
+      if (data.discoverySource) {
+        setDiscoveryUncertain(!!uncertain);
+        if (!uncertain) clearPendingProduction();
+      }
+      const reason = uncertain
+        ? '응답이 유실되어 작업 생성 여부를 확인할 수 없습니다. 자동 재전송하지 않습니다. 서버에서 기존 작업을 확인한 뒤에만 잠금을 해제하세요.'
+        : data.discoverySource ? productionError(e.message) : readableError(e.message);
       setJobError(reason);
       setStatus('error');
       setLogs(l => [...l, `Error starting job: ${reason}`]);
+    } finally {
+      clearTimeout(submitTimer);
+      submissionLock.current = false;
     }
   };
 
@@ -1211,6 +1285,8 @@ function App() {
     setFirstVideoJob(false);
     setQueueInfo(null);
     setJobError('');
+    setPollWarning('');
+    if (!discoveryUncertain) setDiscoveryOrigin(null);
     localStorage.removeItem(SESSION_KEY);
   };
 
@@ -1509,7 +1585,7 @@ function App() {
 
             {/* Hidden below sm: the standing banner underneath already says the
                 same thing, and two warnings in a 360px header is just noise. */}
-            {keysMissing && activeTab !== 'discovery' && (
+            {keysMissing && activeTab !== 'discovery' && !discoveryOrigin && (
               <button
                 onClick={() => (billingEnabled && !isSignedIn ? setShowLogin(true) : goToTab('settings'))}
                 className="badge-warn hover:brightness-125 transition-all hidden sm:inline-flex"
@@ -1530,7 +1606,7 @@ function App() {
         </header>
 
         {/* Discovery uses its own server key; editor-key warnings do not apply there. */}
-        {keysMissing && activeTab !== 'settings' && activeTab !== 'discovery' && (
+        {keysMissing && activeTab !== 'settings' && activeTab !== 'discovery' && !discoveryOrigin && (
           <div className="mx-3 sm:mx-6 mt-3 px-3.5 sm:px-4 py-3 bg-paper2 border border-rule rounded-card flex flex-wrap items-center justify-between gap-2.5 sm:gap-4 shrink-0 animate-fade">
             <div className="flex items-start sm:items-center gap-2.5 sm:gap-3 text-sm text-ink2 min-w-0 flex-1">
               <KeyRound size={16} className="shrink-0 text-warn mt-0.5 sm:mt-0" />
@@ -1577,6 +1653,22 @@ function App() {
 
         {/* Advanced tools (AI Shorts, AI Agent): BYOK fal.ai + ElevenLabs notice. */}
         {advancedThisTab && <AdvancedBanner needsPlan={needsPlan} onKeys={() => goToTab('settings')} />}
+
+        {discoveryOrigin && activeTab === 'dashboard' && (
+          <section aria-label="탐색 영상 제작 정보" className="mx-3 sm:mx-6 my-2 rounded-card border border-rule bg-paper2 p-3 text-xs space-y-2 shrink-0">
+            <p className="text-ink break-words">탐색 원본: {discoveryOrigin.title} · {discoveryOrigin.channel_title} · CC BY 표시</p>
+            <p className="text-muted break-all">{discoveryOrigin.url}</p>
+            <p className="text-muted">{!jobId && status === 'processing' ? '요청 접수 중 · 작업 ID 응답 대기' : jobId ? `작업 ${jobId} · 기존 Clip Generator에서 처리` : '작업이 아직 접수되지 않았습니다.'}</p>
+            {pollWarning && <p role="status" className="text-warn">{pollWarning}</p>}
+            {status === 'error' && <p role="alert" className="text-danger">{jobError}</p>}
+            {discoveryUncertain && <p role="alert" className="text-warn">응답 유실 · 중복 제작 방지를 위해 재전송이 잠겨 있습니다. 페이지를 새로고침해도 자동 제출하지 않습니다.</p>}
+            <div className="flex flex-wrap gap-2">
+              {status === 'error' && !discoveryUncertain && discoveryRetry.current && <button className="btn-ghost px-3 py-2" onClick={() => handleProcess(discoveryRetry.current)}>명시적으로 다시 시도</button>}
+              {discoveryUncertain && <button className="btn-ghost px-3 py-2" onClick={() => { if (window.confirm('관리자가 서버에서 해당 작업이 생성되지 않았음을 확인했습니까? 확인되지 않았다면 취소하세요.')) { clearPendingProduction(); setDiscoveryUncertain(false); } }}>미생성 확인 후 제출 잠금 해제</button>}
+              <button className="btn-ghost px-3 py-2" onClick={() => { handleReset(); setActiveTab('dashboard'); }}>보유 원본 파일 업로드로 이동</button>
+            </div>
+          </section>
+        )}
 
         {/* Main Workspace */}
         <div className="flex-1 overflow-hidden relative">
@@ -1970,7 +2062,7 @@ function App() {
             </div>
           )}
 
-          {DISCOVERY_UI_ENABLED && activeTab === 'discovery' && <DiscoveryPage />}
+          {DISCOVERY_UI_ENABLED && activeTab === 'discovery' && <DiscoveryPage onProduce={handleProcess} />}
 
           {/* View: History */}
           {activeTab === 'history' && (
@@ -2172,9 +2264,9 @@ function App() {
                 <div className="mb-4 sm:mb-6 shrink-0 space-y-3">
                   <h2 className="font-display lowercase text-lg sm:text-xl text-ink flex flex-wrap items-center gap-2">
                     <span className="mr-auto">Generated Shorts</span>
-                    {results?.clips?.length > 0 && (
+                    {rankedClips.length > 0 && (
                       <span className="readout bg-paper3 px-2.5 py-1 rounded-full">
-                        {results.clips.length} Clips
+                        {rankedClips.length} Clips
                       </span>
                     )}
                     {results?.cost_analysis && !isManaged && (
@@ -2183,7 +2275,7 @@ function App() {
                       </span>
                     )}
                   </h2>
-                  {results?.clips?.length > 0 && status === 'complete' && (
+                  {rankedClips.length > 0 && status === 'complete' && (
                     <div className="flex flex-col sm:flex-row sm:justify-end items-stretch sm:items-center gap-2">
                       <button
                         onClick={handleDownloadAll}
@@ -2195,7 +2287,7 @@ function App() {
                           ? <><Loader2 size={14} className="animate-spin" />zipping…</>
                           : <><Download size={14} />download all</>}
                       </button>
-                      {results.clips.length > 1 && (
+                      {rankedClips.length > 1 && (
                         <button
                           onClick={() => setShowScheduleWeek(true)}
                           className="btn-primary px-4 py-2 text-xs"
@@ -2208,7 +2300,7 @@ function App() {
                   )}
                 </div>
 
-                {status === 'complete' && results?.clips?.length > 0 && (
+                {status === 'complete' && rankedClips.length > 0 && (
                   <div className="mb-2 space-y-2">
                     {/* Partial job: the clips on screen come from the first N
                         minutes only. Say so, and sell the rest of the video. */}
@@ -2298,7 +2390,7 @@ function App() {
                 )}
 
                 <div className="flex-1 overflow-y-auto custom-scrollbar p-1">
-                  {results && results.clips && results.clips.length > 0 ? (
+                  {results && results.clips && rankedClips.length > 0 ? (
                     <div className={`grid gap-4 pb-10 ${status === 'complete' ? 'grid-cols-[repeat(auto-fill,minmax(min(100%,600px),1fr))]' : 'grid-cols-1'}`}>
                       {rankedClips.map(({ clip, index: i }) => (
                         <ResultCard
@@ -2322,7 +2414,7 @@ function App() {
                           onPlay={(time) => handleClipPlay(time)}
                           onPause={handleClipPause}
                           onBulkSubtitle={handleBulkSubtitles}
-                          clipCount={results.clips.length}
+                          clipCount={rankedClips.length}
                           bulkProgress={bulkSub}
                         />
                       ))}

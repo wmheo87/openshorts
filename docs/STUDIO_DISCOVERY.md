@@ -210,3 +210,7 @@ docker compose -f docker-compose.discovery.yml config --quiet
 테스트는 `httpx.MockTransport`, 임시 SQLite, 주입된 시각을 사용하고 실제 키·외부 네트워크·ML 모델을 필요로 하지 않는다. 기존 CI가 `tests/`를 수집하므로 신규 테스트도 자동 실행된다. `app.py`에는 router 등록만 추가했고 `main.py`/영상 편집·자막·프런트엔드는 수정하지 않았다. 기존 테스트의 직접 DNS 의존 실패 8건은 P0 기준선과 비교해 별도로 보고한다.
 
 P2 화면 개발 또는 P3 엔진 연결은 수행하지 않았다. PR 설명 초안은 [AI_SHORTS_STUDIO_P1_PR.md](AI_SHORTS_STUDIO_P1_PR.md)를 참고한다.
+
+## P3 제작 서버 재확인
+
+Discovery 선택을 실제 제작으로 연결하는 경우 처리 서버에도 Discovery 설정과 YouTube 키가 필요하다. 단일 백엔드 Compose 구성, fresh 재확인 예산 및 한계는 [P3 제작 연결](STUDIO_DISCOVERY_ENGINE.md)을 참고한다.

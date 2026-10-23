@@ -76,9 +76,9 @@ test('selection shows details, temporary rights confirmation, safe original link
   const detail = page.getByRole('region', { name: '선택한 영상 상세' });
   await expect(detail).toBeVisible();
   await expect(detail.getByText(/모든 이용 권리가 보장되지는/)).toBeVisible();
-  await expect(detail.getByText(/서버에 저장되지 않으며/)).toBeVisible();
-  await detail.getByRole('checkbox').check();
-  await expect(detail.getByRole('checkbox')).toBeChecked();
+  await expect(detail.getByText(/선택과 체크만으로 제작하지 않습니다/)).toBeVisible();
+  await detail.getByRole('checkbox', { name: /원본과 이용 조건/ }).check();
+  await expect(detail.getByRole('checkbox', { name: /원본과 이용 조건/ })).toBeChecked();
   const link = detail.getByRole('link');
   await expect(link).toHaveAttribute('href', videos[0].url);
   await expect(link).toHaveAttribute('target', '_blank');
@@ -91,7 +91,7 @@ test('selection shows details, temporary rights confirmation, safe original link
   expect(popup.url()).toBe(videos[0].url);
   await popup.close();
   await page.getByRole('button', { name: `${videos[1].title} 영상 선택` }).click();
-  await expect(detail.getByRole('checkbox')).not.toBeChecked();
+  await expect(detail.getByRole('checkbox', { name: /원본과 이용 조건/ })).not.toBeChecked();
   expect(calls.filter((call) => call.method !== 'GET').map((call) => call.path)).toEqual(['/api/discovery/search']);
 });
 
