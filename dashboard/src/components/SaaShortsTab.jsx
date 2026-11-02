@@ -1,10 +1,11 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Globe, Sparkles, Download, Copy, Check, ChevronRight, ChevronLeft, Loader2, AlertCircle, Volume2, User, Film, Terminal, ChevronDown, RefreshCw, Share2, Calendar, Upload } from 'lucide-react';
 import { getApiUrl } from '../config';
 import { apiFetch } from '../lib/api';
 import StepIndicator from './ui/StepIndicator';
 import SegmentedControl from './ui/SegmentedControl';
 import StarBanner from './StarBanner';
+import ProductVideoStudio from '../features/product-video/ProductVideoStudio';
 
 const STYLE_OPTIONS = [
   { id: 'ugc', label: 'UGC Natural', desc: 'Authentic, talking to camera' },
@@ -40,7 +41,7 @@ function saveCache(url, analysis, webResearch, scripts) {
   } catch { /* localStorage full */ }
 }
 
-export default function SaaShortsTab({ geminiApiKey, elevenLabsKey, falKey, uploadPostKey, uploadUserId, managed = false }) {
+function ActorShortsTab({ geminiApiKey, elevenLabsKey, falKey, uploadPostKey, uploadUserId, managed = false }) {
   // Managed (hosted plan): Gemini (script) + Upload-Post run server-side via the
   // bearer token — no BYOK Gemini key needed. fal.ai + ElevenLabs stay BYOK.
   const geminiHeader = geminiApiKey ? { 'X-Gemini-Key': geminiApiKey } : {};
@@ -211,13 +212,24 @@ export default function SaaShortsTab({ geminiApiKey, elevenLabsKey, falKey, uplo
     return () => clearInterval(interval);
   }, [jobId, genStatus]);
 
+  const [paidPending, setPaidPending] = useState(() => { try { return JSON.parse(sessionStorage.getItem('actor_paid_pending_v1') || 'null'); } catch { return null; } });
+  const paidLock = useRef(!!paidPending);
+  const beginPaid = () => {
+    const id = crypto.randomUUID(); paidLock.current = true; setPaidPending(id);
+    try { sessionStorage.setItem('actor_paid_pending_v1', JSON.stringify(id)); } catch { /* memory lock */ }
+    return id;
+  };
+  const clearPaid = () => { paidLock.current = false; setPaidPending(null); try { sessionStorage.removeItem('actor_paid_pending_v1'); } catch { /* best effort */ } };
+
   const handleAnalyze = async () => {
+    if (paidLock.current || !window.confirm('Gemini 대본 분석 요청은 과금될 수 있습니다. 요금과 상품 사실 확인 책임을 확인하고 실행하시겠습니까?')) return;
     if (!url.trim() && !description.trim()) return;
     if (needsGeminiKey) {
       setAnalyzeError('Gemini API key required. Set it in Settings.');
       return;
     }
 
+    const paidRequestId = beginPaid();
     setAnalyzing(true);
     setAnalyzeError('');
 
@@ -229,6 +241,7 @@ export default function SaaShortsTab({ geminiApiKey, elevenLabsKey, falKey, uplo
           ...geminiHeader,
         },
         body: JSON.stringify({
+          request_id: paidRequestId, paid_confirmed: true,
           url: url.trim() || undefined,
           description: description.trim() || undefined,
           num_scripts: numScripts,
@@ -241,7 +254,7 @@ export default function SaaShortsTab({ geminiApiKey, elevenLabsKey, falKey, uplo
       if (!res.ok) {
         let msg = 'Analysis failed';
         try { const err = await res.json(); msg = err.detail || msg; } catch { msg = await res.text() || msg; }
-        throw new Error(msg);
+        const error = new Error(msg); error.status = res.status; throw error;
       }
 
       const data = await res.json();
@@ -260,8 +273,9 @@ export default function SaaShortsTab({ geminiApiKey, elevenLabsKey, falKey, uplo
         setEditedNarration(data.scripts[0].full_narration || '');
       }
 
-      setStep(1);
+      setStep(1); clearPaid();
     } catch (e) {
+      if (e.status >= 400 && e.status < 500 && e.status !== 409) clearPaid();
       setAnalyzeError(e.message);
     } finally {
       setAnalyzing(false);
@@ -280,6 +294,7 @@ export default function SaaShortsTab({ geminiApiKey, elevenLabsKey, falKey, uplo
   const koreanVoiceReady = ttsProvider === 'gemini' ? !!ttsCheck?.catalog_confirmed : language !== 'ko' || voices.some(v => v.voice_id === selectedVoice && v.supports_korean);
 
   const handleGenerate = async () => {
+    if (paidLock.current || !window.confirm('AI 배우형은 fal.ai와 선택한 TTS 비용이 발생할 수 있습니다. 확인 후 실행하시겠습니까?')) return;
     if (!koreanVoiceReady) { alert('한국어 음성을 확인하고 선택해 주세요. 영어 기본 음성으로 대체하지 않습니다.'); return; }
     if (!falKey) {
       alert('fal.ai API key required. Set it in Settings.');
@@ -290,6 +305,7 @@ export default function SaaShortsTab({ geminiApiKey, elevenLabsKey, falKey, uplo
       return;
     }
 
+    const paidRequestId = beginPaid();
     setGenerating(true);
     setGenLogs(['Starting video generation...']);
     setGenStatus('processing');
@@ -313,6 +329,7 @@ export default function SaaShortsTab({ geminiApiKey, elevenLabsKey, falKey, uplo
           ...(ttsProvider === 'elevenlabs' ? { 'X-ElevenLabs-Key': elevenLabsKey } : geminiHeader),
         },
         body: JSON.stringify({
+          request_id: paidRequestId, paid_confirmed: true,
           script: scriptToSend,
           tts_provider: ttsProvider,
           gemini_voice: geminiVoice,
@@ -327,12 +344,14 @@ export default function SaaShortsTab({ geminiApiKey, elevenLabsKey, falKey, uplo
       if (!res.ok) {
         let msg = 'Generation failed';
         try { const err = await res.json(); msg = err.detail || msg; } catch { msg = await res.text() || msg; }
-        throw new Error(msg);
+        const error = new Error(msg); error.status = res.status; throw error;
       }
 
       const data = await res.json();
-      setJobId(data.job_id);
+      if (!data.job_id) throw new Error('작업 ID 응답이 없습니다. 접수 상태만 조회하세요.');
+      setJobId(data.job_id); clearPaid();
     } catch (e) {
+      if (e.status >= 400 && e.status < 500 && e.status !== 409) clearPaid();
       setGenStatus('failed');
       setGenLogs((prev) => [...prev, `Error: ${e.message}`]);
       setGenerating(false);
@@ -340,8 +359,11 @@ export default function SaaShortsTab({ geminiApiKey, elevenLabsKey, falKey, uplo
   };
 
   const handleRetry = async () => {
+    if (paidLock.current) return;
+    if (!window.confirm('명시적인 재시도는 추가 과금될 수 있습니다. 이전 작업이 중단됐는지 확인했습니까?')) return;
     if (!koreanVoiceReady) { alert('한국어 음성을 확인하고 선택해 주세요.'); return; }
     if (!jobId) return;
+    const paidRequestId = beginPaid();
     setGenerating(true);
     setGenLogs(['Retrying from cached assets...']);
     setGenStatus('processing');
@@ -363,6 +385,7 @@ export default function SaaShortsTab({ geminiApiKey, elevenLabsKey, falKey, uplo
           ...(ttsProvider === 'elevenlabs' ? { 'X-ElevenLabs-Key': elevenLabsKey } : geminiHeader),
         },
         body: JSON.stringify({
+          request_id: paidRequestId, paid_confirmed: true,
           script: scriptToSend,
           tts_provider: ttsProvider,
           gemini_voice: geminiVoice,
@@ -381,8 +404,10 @@ export default function SaaShortsTab({ geminiApiKey, elevenLabsKey, falKey, uplo
       }
 
       const data = await res.json();
-      setJobId(data.job_id);
+      if (!data.job_id) throw new Error('작업 ID 응답이 없습니다. 접수 상태만 조회하세요.');
+      setJobId(data.job_id); clearPaid();
     } catch (e) {
+      if (e.status >= 400 && e.status < 500 && e.status !== 409) clearPaid();
       setGenStatus('failed');
       setGenLogs((prev) => [...prev, `Retry error: ${e.message}`]);
       setGenerating(false);
@@ -439,6 +464,17 @@ export default function SaaShortsTab({ geminiApiKey, elevenLabsKey, falKey, uplo
         <div className="mb-8">
           <StepIndicator steps={STEPS} current={step} />
         </div>
+
+        {paidPending && <div role="alert" className="card p-3 text-warn">유료 요청 {paidPending} 접수 여부 확인 중입니다. 자동 재전송하지 않습니다.
+          <button className="btn-ghost p-2" onClick={async () => {
+            const res = await apiFetch(`/api/saasshorts/paid-request/${paidPending}`); if (!res.ok) return;
+            const saved = await res.json();
+            if (saved.job_id) { setJobId(saved.job_id); setGenStatus('processing'); setGenerating(true); setStep(3); clearPaid(); }
+            else if (saved.actor_result) { setActorOptions(saved.actor_result.images || []); clearPaid(); }
+            else if (saved.analysis_result) { setAnalysis(saved.analysis_result.analysis); setScripts(saved.analysis_result.scripts); setStep(1); clearPaid(); }
+          }}>접수 상태만 조회</button>
+          <button className="btn-ghost p-2" onClick={() => { if (window.confirm('관리자가 이 유료 요청이 실행 중이 아님을 확인했습니까? 추가 과금 위험을 확인한 뒤에만 해제하세요.')) clearPaid(); }}>서버 확인 후 잠금 해제</button>
+        </div>}
 
         {/* ── Step 0: URL Input ────────────────────────────────── */}
         {step === 0 && (
@@ -1065,7 +1101,9 @@ export default function SaaShortsTab({ geminiApiKey, elevenLabsKey, falKey, uplo
 
                 <button
                   onClick={async () => {
-                    if (!falKey || !actorDescription) return;
+                    if (!falKey || !actorDescription || paidLock.current) return;
+                    if (!window.confirm('배우 이미지 생성은 fal.ai 유료 요청입니다. 실행하시겠습니까?')) return;
+                    const paidRequestId = beginPaid();
                     setGeneratingActors(true);
                     setActorOptions([]);
                     setSelectedActor(null);
@@ -1073,18 +1111,18 @@ export default function SaaShortsTab({ geminiApiKey, elevenLabsKey, falKey, uplo
                       const res = await apiFetch('/api/saasshorts/actor-options', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json', 'X-Fal-Key': falKey },
-                        body: JSON.stringify({ actor_description: actorDescription, num_options: 3 }),
+                        body: JSON.stringify({ request_id: paidRequestId, paid_confirmed: true, actor_description: actorDescription, num_options: 3 }),
                       });
                       if (res.ok) {
                         const data = await res.json();
-                        setActorOptions(data.images || []);
+                        setActorOptions(data.images || []); clearPaid();
                         // Refresh gallery to include newly uploaded actors
                         const galRes = await fetch(getApiUrl('/api/saasshorts/actor-gallery'));
                         if (galRes.ok) {
                           const galData = await galRes.json();
                           setActorGallery(galData.images || []);
                         }
-                      }
+                      } else if (res.status >= 400 && res.status < 500 && res.status !== 409) clearPaid();
                     } catch (e) { console.error(e); }
                     finally { setGeneratingActors(false); }
                   }}
@@ -1546,4 +1584,16 @@ export default function SaaShortsTab({ geminiApiKey, elevenLabsKey, falKey, uplo
       </div>
     </div>
   );
+}
+
+
+export default function SaaShortsTab(props) {
+  const [mode, setMode] = useState('product');
+  return <div className="h-full flex flex-col min-h-0">
+    <div className="flex flex-wrap gap-2 p-3 border-b border-rule" role="group" aria-label="영상 제작 모드">
+      <button className="btn-ghost p-2" aria-pressed={mode === 'product'} onClick={() => setMode('product')}>제품 영상형 (기본·fal.ai 불필요)</button>
+      <button className="btn-ghost p-2" aria-pressed={mode === 'actor'} onClick={() => setMode('actor')}>AI 배우형 (fal.ai)</button>
+    </div>
+    <div className="flex-1 min-h-0">{mode === 'product' ? <ProductVideoStudio geminiApiKey={props.geminiApiKey} /> : <ActorShortsTab {...props} />}</div>
+  </div>;
 }
