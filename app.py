@@ -20,7 +20,7 @@ import signal
 import socket
 from datetime import datetime, timezone, timedelta
 from dotenv import load_dotenv
-from typing import Any, Dict, Optional, List
+from typing import Literal, Any, Dict, Optional, List
 from contextlib import asynccontextmanager
 from fastapi import FastAPI, UploadFile, File, Form, HTTPException, Request, Header, BackgroundTasks
 from fastapi.middleware.cors import CORSMiddleware
@@ -6619,6 +6619,7 @@ from saasshorts import (
     generate_actor_images,
     get_elevenlabs_voices,
     DEFAULT_VOICES,
+    normalize_saas_language,
 )
 
 # State for SaaSShorts jobs (separate from video processing jobs)
@@ -6630,7 +6631,7 @@ class SaaSAnalyzeRequest(BaseModel):
     description: Optional[str] = None  # Manual product/business description
     num_scripts: int = 3
     style: str = "ugc"
-    language: str = "en"
+    language: Literal["ko", "ko-KR", "en", "es"] = "en"
     actor_gender: str = "female"
 
 
@@ -6660,8 +6661,14 @@ async def saasshorts_analyze(
             if req.url and req.url.strip():
                 # URL provided: full scrape + research pipeline
                 scraped = scrape_website(req.url)
-                web_research = research_saas_online(req.url, gemini_key)
-                analysis = analyze_saas(scraped, gemini_key, web_research=web_research)
+                if normalize_saas_language(req.language) == "ko":
+                    # Preserve source text rather than synthesizing overseas SaaS claims.
+                    analysis = {"product_name": scraped.get("title", "상품"),
+                                "description": scraped.get("meta_description", ""),
+                                "source_content": scraped, "key_features": [], "pain_points": []}
+                else:
+                    web_research = research_saas_online(req.url, gemini_key)
+                    analysis = analyze_saas(scraped, gemini_key, web_research=web_research)
             else:
                 # Manual description: build analysis from description
                 analysis = {
@@ -7156,6 +7163,22 @@ async def saasshorts_generate(
         raise HTTPException(status_code=400, detail="Missing fal.ai API Key (X-Fal-Key header)")
     if not elevenlabs_key:
         raise HTTPException(status_code=400, detail="Missing ElevenLabs API Key (X-ElevenLabs-Key header)")
+
+    try:
+        language = normalize_saas_language(req.script.get("language", "en"))
+    except ValueError as exc:
+        raise HTTPException(status_code=422, detail=str(exc)) from None
+    req.script["language"] = language
+    if language == "ko":
+        # Fresh account availability check before paid generation; never use Rachel fallback.
+        if not req.voice_id:
+            raise HTTPException(status_code=400, detail="한국어 음성을 선택해 주세요. 영어 기본 음성으로 대체하지 않습니다.")
+        try:
+            available = await asyncio.to_thread(get_elevenlabs_voices, elevenlabs_key)
+        except Exception:
+            raise HTTPException(status_code=503, detail="한국어 음성 목록을 확인하지 못했습니다. 잠시 후 다시 확인해 주세요.") from None
+        if not any(v["voice_id"] == req.voice_id and v.get("supports_korean") for v in available):
+            raise HTTPException(status_code=400, detail="현재 계정에서 확인된 한국어 음성을 선택해 주세요.")
 
     # Support retry: reuse output_dir so cached assets (image, voice, head, broll) are kept
     reused = False

@@ -56,7 +56,7 @@ export default function SaaShortsTab({ geminiApiKey, elevenLabsKey, falKey, uplo
   const [videoMode, setVideoMode] = useState('lowcost'); // "lowcost" or "premium"
   const [description, setDescription] = useState('');
   const [style, setStyle] = useState('ugc');
-  const [language, setLanguage] = useState('en');
+  const [language, setLanguage] = useState(() => loadCache()?.scripts?.[0]?.language || (loadCache() ? 'en' : 'ko'));
   const [actorGender, setActorGender] = useState('female');
   const [numScripts, setNumScripts] = useState(3);
   const [analyzing, setAnalyzing] = useState(false);
@@ -72,7 +72,8 @@ export default function SaaShortsTab({ geminiApiKey, elevenLabsKey, falKey, uplo
   // Step 2: Configure
   const [shareToGallery, setShareToGallery] = useState(false);
   const [voices, setVoices] = useState([]);
-  const [selectedVoice, setSelectedVoice] = useState('21m00Tcm4TlvDq8ikWAM');
+  const [voicePreviewError, setVoicePreviewError] = useState('');
+  const [selectedVoice, setSelectedVoice] = useState('');
   const [actorDescription, setActorDescription] = useState('');
   const [editedNarration, setEditedNarration] = useState('');
   const [actorOptions, setActorOptions] = useState([]);
@@ -120,16 +121,27 @@ export default function SaaShortsTab({ geminiApiKey, elevenLabsKey, falKey, uplo
       .finally(() => setLoadingGallery(false));
   }, []);
 
-  // Fetch voices on mount
+  // Account-specific provider voices; discard stale key responses and defaults for ko.
   useEffect(() => {
+    let cancelled = false;
+    setVoices([]);
     if (elevenLabsKey) {
-      fetchVoices();
+      fetch(getApiUrl('/api/saasshorts/voices'), { headers: { 'X-ElevenLabs-Key': elevenLabsKey } })
+        .then(res => res.ok ? res.json() : { voices: [] })
+        .then(data => { if (!cancelled) setVoices(data.source === 'elevenlabs' ? data.voices || [] : []); })
+        .catch(() => { if (!cancelled) setVoices([]); });
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    return () => { cancelled = true; };
   }, [elevenLabsKey]);
 
   // Reset selected voice when actor gender changes
   useEffect(() => {
+    setVoicePreviewError('');
+    if (language === 'ko') {
+      setSelectedVoice(current => voices.some(v => v.voice_id === current && v.supports_korean &&
+        (!v.labels?.gender || v.labels.gender.toLowerCase() === actorGender)) ? current : '');
+      return;
+    }
     const genderDefaults = {
       'en-female': '21m00Tcm4TlvDq8ikWAM',  // Rachel
       'en-male': '29vD33N1CtxCmqQRPOHJ',    // Drew
@@ -143,9 +155,7 @@ export default function SaaShortsTab({ geminiApiKey, elevenLabsKey, falKey, uplo
     } else {
       setSelectedVoice(genderDefaults[`${language}-${actorGender}`] || genderDefaults['en-female']);
     }
-    // Re-pick only when the gender/language choice changes, not on every voices refresh.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [actorGender, language]);
+  }, [actorGender, language, voices]);
 
   // Poll generation status
   useEffect(() => {
@@ -183,20 +193,6 @@ export default function SaaShortsTab({ geminiApiKey, elevenLabsKey, falKey, uplo
     }
     return () => clearInterval(interval);
   }, [jobId, genStatus]);
-
-  const fetchVoices = async () => {
-    try {
-      const res = await fetch(getApiUrl('/api/saasshorts/voices'), {
-        headers: { 'X-ElevenLabs-Key': elevenLabsKey },
-      });
-      if (res.ok) {
-        const data = await res.json();
-        setVoices(data.voices || []);
-      }
-    } catch (e) {
-      console.error('Voices fetch error:', e);
-    }
-  };
 
   const handleAnalyze = async () => {
     if (!url.trim() && !description.trim()) return;
@@ -258,12 +254,16 @@ export default function SaaShortsTab({ geminiApiKey, elevenLabsKey, falKey, uplo
   const handleSelectScript = (idx) => {
     setSelectedScript(idx);
     if (scripts[idx]) {
+      setLanguage(scripts[idx].language || 'en');
       setActorDescription(scripts[idx].actor_description || '');
       setEditedNarration(scripts[idx].full_narration || '');
     }
   };
 
+  const koreanVoiceReady = language !== 'ko' || voices.some(v => v.voice_id === selectedVoice && v.supports_korean);
+
   const handleGenerate = async () => {
+    if (!koreanVoiceReady) { alert('한국어 음성을 확인하고 선택해 주세요. 영어 기본 음성으로 대체하지 않습니다.'); return; }
     if (!falKey) {
       alert('fal.ai API key required. Set it in Settings.');
       return;
@@ -281,7 +281,7 @@ export default function SaaShortsTab({ geminiApiKey, elevenLabsKey, falKey, uplo
 
     try {
       // Update script with edited narration
-      const scriptToSend = { ...scripts[selectedScript] };
+      const scriptToSend = { ...scripts[selectedScript], language: scripts[selectedScript].language || language };
       scriptToSend._product_name = analysis?.product_name || analysis?.name || '';
       scriptToSend._product_url = url;
       if (editedNarration !== scriptToSend.full_narration) {
@@ -321,6 +321,7 @@ export default function SaaShortsTab({ geminiApiKey, elevenLabsKey, falKey, uplo
   };
 
   const handleRetry = async () => {
+    if (!koreanVoiceReady) { alert('한국어 음성을 확인하고 선택해 주세요.'); return; }
     if (!jobId) return;
     setGenerating(true);
     setGenLogs(['Retrying from cached assets...']);
@@ -328,7 +329,7 @@ export default function SaaShortsTab({ geminiApiKey, elevenLabsKey, falKey, uplo
     setGenResult(null);
 
     try {
-      const scriptToSend = { ...scripts[selectedScript] };
+      const scriptToSend = { ...scripts[selectedScript], language: scripts[selectedScript].language || language };
       scriptToSend._product_name = analysis?.product_name || analysis?.name || '';
       scriptToSend._product_url = url;
       if (editedNarration !== scriptToSend.full_narration) {
@@ -491,6 +492,7 @@ export default function SaaShortsTab({ geminiApiKey, elevenLabsKey, falKey, uplo
                 <div className="mb-6">
                   <SegmentedControl
                     options={[
+                      { value: 'ko', label: '한국어 (ko-KR)', icon: '🇰🇷' },
                       { value: 'en', label: 'English', icon: '🇺🇸' },
                       { value: 'es', label: 'Español', icon: '🇪🇸' },
                     ]}
@@ -568,7 +570,7 @@ export default function SaaShortsTab({ geminiApiKey, elevenLabsKey, falKey, uplo
               </div>
               <div className="card p-4">
                 <h3 className="eyebrow">AI Actor Videos</h3>
-                <p className="text-xs text-muted mt-2">Realistic AI-generated actors with lip-sync, b-roll, and viral subtitles. From ~$0.50/video.</p>
+                <p className="text-xs text-muted mt-2">AI-generated actors, lip-sync, b-roll and subtitles. 한국어 립싱크·타이밍은 실제 결과 확인이 필요합니다. From ~$0.50/video.</p>
               </div>
             </div>
           </div>
@@ -807,9 +809,23 @@ export default function SaaShortsTab({ geminiApiKey, elevenLabsKey, falKey, uplo
               {/* Voice Selection */}
               <div>
                 <label className="eyebrow block mb-2">
-                  Voice {language === 'es' ? '(Spanish)' : '(English)'}
+                  Voice {language === 'ko' ? '(한국어 · ko-KR)' : language === 'es' ? '(Spanish)' : '(English)'}
                 </label>
                 {(() => {
+                  if (language === 'ko') {
+                    const available = voices.filter(v => v.supports_korean && (!v.labels?.gender || v.labels.gender.toLowerCase() === actorGender));
+                    const chosen = available.find(v => v.voice_id === selectedVoice);
+                    return <div className="space-y-2">
+                      <select aria-label="한국어 음성" className="input-field" value={chosen?.voice_id || ''} onChange={e => { setSelectedVoice(e.target.value); setVoicePreviewError(''); }}>
+                        <option value="">한국어 음성을 직접 선택해 주세요</option>
+                        {available.map(v => <option key={v.voice_id} value={v.voice_id}>{v.name}</option>)}
+                      </select>
+                      {!available.length && <p role="alert" className="text-xs text-warn">현재 ElevenLabs 계정에서 한국어 음성을 확인하지 못했습니다. 키와 음성 라이브러리를 확인해 주세요. 영어 기본 음성으로 대체하지 않습니다.</p>}
+                      {chosen?.korean_preview_url ? <audio key={chosen.korean_preview_url} aria-label="한국어 음성 미리듣기" controls preload="none" src={chosen.korean_preview_url} onError={() => setVoicePreviewError('미리듣기를 불러오지 못했습니다. 생성 전에 ElevenLabs에서 한국어 샘플을 확인해 주세요.')} /> : chosen && <p className="text-xs text-warn">한국어 미리듣기 URL이 제공되지 않았습니다. 생성 전에 ElevenLabs에서 한국어 샘플을 확인해 주세요.</p>}
+                      {voicePreviewError && <p role="alert" className="text-xs text-warn">{voicePreviewError}</p>}
+                      <p className="text-xs text-muted">계정 API의 한국어 언어 메타데이터를 기준으로 표시합니다. 실제 발음·립싱크 품질은 생성 영상으로 확인해야 합니다.</p>
+                    </div>;
+                  }
                   // Filter voices by language/accent
                   const filtered = voices.length > 0
                     ? voices.filter((v) => {
@@ -1151,7 +1167,7 @@ export default function SaaShortsTab({ geminiApiKey, elevenLabsKey, falKey, uplo
               </button>
               <button
                 onClick={handleGenerate}
-                disabled={!falKey || !elevenLabsKey || !selectedActor || generating}
+                disabled={!falKey || !elevenLabsKey || !selectedActor || generating || !koreanVoiceReady}
                 className="btn-primary px-6 py-2 text-sm"
               >
                 {generating ? (
