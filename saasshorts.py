@@ -1416,14 +1416,23 @@ def generate_full_video(
     os.makedirs(output_dir, exist_ok=True)
 
     fal_key = config["fal_key"]
-    elevenlabs_key = config["elevenlabs_key"]
+    tts_provider = config.get("tts_provider", "elevenlabs")
+    if tts_provider not in ("gemini", "elevenlabs"):
+        raise ValueError("Unsupported TTS provider")
+    elevenlabs_key = config.get("elevenlabs_key")
     language = normalize_saas_language(script.get("language", "en"))
-    if language == "ko" and not config.get("voice_id"):
+    if language == "ko" and tts_provider == "elevenlabs" and not config.get("voice_id"):
         raise ValueError("한국어 음성을 확인하고 선택해 주세요. 영어 기본 음성으로 대체하지 않습니다.")
-    voice_id = config.get("voice_id") or "21m00Tcm4TlvDq8ikWAM"
+    voice_id = (config.get("voice_id") or "21m00Tcm4TlvDq8ikWAM") if tts_provider == "elevenlabs" else None
     actor_desc = config.get("actor_description") or script.get("actor_description", "a young professional in their late 20s, wearing a casual modern outfit, clean background")
 
     title_slug = re.sub(r"[^a-z0-9]+", "_", script.get("title", "video").lower())[:30]
+
+    if tts_provider == "gemini":
+        import hashlib
+        # A retry with a different voice/model/script cannot reuse old ElevenLabs audio/head.
+        identity = json.dumps([config.get("gemini_tts_model"), config.get("gemini_voice", "Kore"), script], sort_keys=True)
+        title_slug += "_gemini_" + hashlib.sha256(identity.encode()).hexdigest()[:12]
 
     # Paths
     actor_img = os.path.join(output_dir, f"{title_slug}_actor.png")
@@ -1451,6 +1460,13 @@ def generate_full_video(
 
     need_img = not _exists(actor_img)
     need_voice = not _exists(audio_path)
+
+    if need_voice and tts_provider == "gemini":
+        from studio.gemini_tts import generate_voiceover as gemini_voiceover
+        log("Gemini TTS: generating Korean audio before any fal.ai assets; no provider fallback.")
+        audio_path = gemini_voiceover(full_narration, config.get("gemini_key"), audio_path,
+                                     config.get("gemini_voice", "Kore"), config.get("gemini_tts_model"))
+        need_voice = False
 
     if need_img or need_voice:
         tasks = []
@@ -1572,7 +1588,13 @@ def generate_full_video(
             "broll_kling": round(len(broll_clips) * 5 * 0.07, 2),
             "ffmpeg_compositing": 0.00,
         }
-    cost["total"] = round(sum(cost.values()), 2)
+    if tts_provider == "gemini":
+        cost.pop("voiceover_elevenlabs", None)
+        cost["known_subtotal"] = round(sum(cost.values()), 2)
+        cost["voiceover_gemini"] = None  # Unverified model pricing is not a zero-dollar estimate.
+        cost["total"] = None
+    else:
+        cost["total"] = round(sum(cost.values()), 2)
 
     return {
         "video_path": final_path,
