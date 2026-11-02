@@ -1652,7 +1652,7 @@ function App() {
         {gateThisTab && <TrialGate toolName={TOOL_NAMES[activeTab] || 'this'} />}
 
         {/* Advanced tools (AI Shorts, AI Agent): BYOK fal.ai + ElevenLabs notice. */}
-        {advancedThisTab && <AdvancedBanner needsPlan={needsPlan} onKeys={() => goToTab('settings')} />}
+        {advancedThisTab && <AdvancedBanner needsPlan={needsPlan} onKeys={() => goToTab('settings')} providerLabel={activeTab === 'saasshorts' ? 'fal.ai + (Gemini TTS or ElevenLabs)' : undefined} />}
 
         {discoveryOrigin && activeTab === 'dashboard' && (
           <section aria-label="탐색 영상 제작 정보" className="mx-3 sm:mx-6 my-2 rounded-card border border-rule bg-paper2 p-3 text-xs space-y-2 shrink-0">

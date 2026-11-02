@@ -7137,6 +7137,8 @@ async def saasshorts_actor_gallery():
 
 class SaaSGenerateRequest(BaseModel):
     script: dict
+    tts_provider: Optional[Literal["gemini", "elevenlabs"]] = None
+    gemini_voice: Literal["Kore", "Puck"] = "Kore"
     voice_id: Optional[str] = None
     actor_description: Optional[str] = None
     selected_actor_url: Optional[str] = None  # Pre-selected actor image URL
@@ -7145,6 +7147,21 @@ class SaaSGenerateRequest(BaseModel):
     # Publishing to the public /gallery is opt-in: generated videos carry the
     # user's product name, URL and full script.
     share_to_gallery: bool = False
+
+
+def saas_gemini_tts_key(request):
+    # TTS remains BYOK like fal.ai: never spend managed billing keys on a new path.
+    return request.headers.get("X-Gemini-Key") or (os.environ.get("GEMINI_API_KEY") if not BILLING_ENABLED else None)
+
+
+@app.get("/api/saasshorts/tts-model")
+async def saasshorts_tts_model(request: Request):
+    await require_managed_entitlement(request)
+    from studio.gemini_tts import verify_model, GeminiTTSError
+    try:
+        return await asyncio.to_thread(verify_model, saas_gemini_tts_key(request))
+    except GeminiTTSError as exc:
+        raise HTTPException(status_code=503, detail=str(exc)) from None
 
 
 @app.post("/api/saasshorts/generate")
@@ -7161,15 +7178,27 @@ async def saasshorts_generate(
 
     if not fal_key:
         raise HTTPException(status_code=400, detail="Missing fal.ai API Key (X-Fal-Key header)")
-    if not elevenlabs_key:
-        raise HTTPException(status_code=400, detail="Missing ElevenLabs API Key (X-ElevenLabs-Key header)")
-
     try:
         language = normalize_saas_language(req.script.get("language", "en"))
     except ValueError as exc:
         raise HTTPException(status_code=422, detail=str(exc)) from None
     req.script["language"] = language
-    if language == "ko":
+    tts_provider = req.tts_provider or ("gemini" if language == "ko" else "elevenlabs")
+    gemini_key = None
+    tts_model = None
+    if tts_provider == "gemini":
+        if language != "ko":
+            raise HTTPException(status_code=422, detail="Gemini TTS is currently available for Korean shopping shorts only.")
+        from studio.gemini_tts import verify_model, GeminiTTSError
+        gemini_key = saas_gemini_tts_key(request)
+        try:
+            checked = await asyncio.to_thread(verify_model, gemini_key)
+            tts_model = checked["model"]
+        except GeminiTTSError as exc:
+            raise HTTPException(status_code=503, detail=str(exc)) from None
+    elif not elevenlabs_key:
+        raise HTTPException(status_code=400, detail="Missing ElevenLabs API Key (X-ElevenLabs-Key header)")
+    if language == "ko" and tts_provider == "elevenlabs":
         # Fresh account availability check before paid generation; never use Rachel fallback.
         if not req.voice_id:
             raise HTTPException(status_code=400, detail="한국어 음성을 선택해 주세요. 영어 기본 음성으로 대체하지 않습니다.")
@@ -7256,7 +7285,11 @@ async def saasshorts_generate(
     config = {
         "fal_key": fal_key,
         "elevenlabs_key": elevenlabs_key,
-        "voice_id": req.voice_id or "21m00Tcm4TlvDq8ikWAM",
+        "tts_provider": tts_provider,
+        "gemini_key": gemini_key,
+        "gemini_tts_model": tts_model,
+        "gemini_voice": req.gemini_voice,
+        "voice_id": (req.voice_id or "21m00Tcm4TlvDq8ikWAM") if tts_provider == "elevenlabs" else None,
         "actor_description": req.actor_description,
         "selected_actor_path": selected_actor_path,
         "video_mode": req.video_mode,
