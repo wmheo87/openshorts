@@ -57,6 +57,9 @@ export default function SaaShortsTab({ geminiApiKey, elevenLabsKey, falKey, uplo
   const [description, setDescription] = useState('');
   const [style, setStyle] = useState('ugc');
   const [language, setLanguage] = useState(() => loadCache()?.scripts?.[0]?.language || (loadCache() ? 'en' : 'ko'));
+  const [ttsProvider, setTtsProvider] = useState(() => language === 'ko' ? 'gemini' : 'elevenlabs');
+  const [geminiVoice, setGeminiVoice] = useState('Kore');
+  const [ttsCheck, setTtsCheck] = useState(null);
   const [actorGender, setActorGender] = useState('female');
   const [numScripts, setNumScripts] = useState(3);
   const [analyzing, setAnalyzing] = useState(false);
@@ -156,6 +159,20 @@ export default function SaaShortsTab({ geminiApiKey, elevenLabsKey, falKey, uplo
       setSelectedVoice(genderDefaults[`${language}-${actorGender}`] || genderDefaults['en-female']);
     }
   }, [actorGender, language, voices]);
+
+  useEffect(() => { setTtsProvider(language === 'ko' ? 'gemini' : 'elevenlabs'); }, [language]);
+
+  useEffect(() => {
+    let cancelled = false;
+    setTtsCheck(null);
+    if (ttsProvider === 'gemini') {
+      apiFetch('/api/saasshorts/tts-model', { headers: geminiApiKey ? { 'X-Gemini-Key': geminiApiKey } : {} })
+        .then(async res => { const data = await res.json(); if (!res.ok) throw new Error(typeof data.detail === 'string' ? data.detail : 'Gemini TTS 모델 확인 실패'); return data; })
+        .then(data => { if (!cancelled) setTtsCheck(data); })
+        .catch(error => { if (!cancelled) setTtsCheck({ error: error.message }); });
+    }
+    return () => { cancelled = true; };
+  }, [ttsProvider, geminiApiKey]);
 
   // Poll generation status
   useEffect(() => {
@@ -260,7 +277,7 @@ export default function SaaShortsTab({ geminiApiKey, elevenLabsKey, falKey, uplo
     }
   };
 
-  const koreanVoiceReady = language !== 'ko' || voices.some(v => v.voice_id === selectedVoice && v.supports_korean);
+  const koreanVoiceReady = ttsProvider === 'gemini' ? !!ttsCheck?.catalog_confirmed : language !== 'ko' || voices.some(v => v.voice_id === selectedVoice && v.supports_korean);
 
   const handleGenerate = async () => {
     if (!koreanVoiceReady) { alert('한국어 음성을 확인하고 선택해 주세요. 영어 기본 음성으로 대체하지 않습니다.'); return; }
@@ -268,7 +285,7 @@ export default function SaaShortsTab({ geminiApiKey, elevenLabsKey, falKey, uplo
       alert('fal.ai API key required. Set it in Settings.');
       return;
     }
-    if (!elevenLabsKey) {
+    if (ttsProvider === 'elevenlabs' && !elevenLabsKey) {
       alert('ElevenLabs API key required. Set it in Settings.');
       return;
     }
@@ -293,11 +310,13 @@ export default function SaaShortsTab({ geminiApiKey, elevenLabsKey, falKey, uplo
         headers: {
           'Content-Type': 'application/json',
           'X-Fal-Key': falKey,
-          'X-ElevenLabs-Key': elevenLabsKey,
+          ...(ttsProvider === 'elevenlabs' ? { 'X-ElevenLabs-Key': elevenLabsKey } : geminiHeader),
         },
         body: JSON.stringify({
           script: scriptToSend,
-          voice_id: selectedVoice,
+          tts_provider: ttsProvider,
+          gemini_voice: geminiVoice,
+          voice_id: ttsProvider === 'elevenlabs' ? selectedVoice : undefined,
           actor_description: actorDescription || undefined,
           selected_actor_url: selectedActor || undefined,
           video_mode: videoMode,
@@ -341,11 +360,13 @@ export default function SaaShortsTab({ geminiApiKey, elevenLabsKey, falKey, uplo
         headers: {
           'Content-Type': 'application/json',
           'X-Fal-Key': falKey,
-          'X-ElevenLabs-Key': elevenLabsKey,
+          ...(ttsProvider === 'elevenlabs' ? { 'X-ElevenLabs-Key': elevenLabsKey } : geminiHeader),
         },
         body: JSON.stringify({
           script: scriptToSend,
-          voice_id: selectedVoice,
+          tts_provider: ttsProvider,
+          gemini_voice: geminiVoice,
+          voice_id: ttsProvider === 'elevenlabs' ? selectedVoice : undefined,
           actor_description: actorDescription || undefined,
           retry_job_id: jobId,
           video_mode: videoMode,
@@ -808,6 +829,19 @@ export default function SaaShortsTab({ geminiApiKey, elevenLabsKey, falKey, uplo
 
               {/* Voice Selection */}
               <div>
+                {language === 'ko' && <label className="eyebrow block mb-3">음성 공급자
+                  <select aria-label="음성 공급자" className="input-field mt-2" value={ttsProvider} onChange={e => setTtsProvider(e.target.value)}>
+                    <option value="gemini">Gemini TTS (기본)</option><option value="elevenlabs">ElevenLabs (선택)</option>
+                  </select>
+                </label>}
+                {ttsProvider === 'gemini' && <div className="space-y-2 mb-3">
+                  <p className="text-xs text-muted">모델: {ttsCheck?.model || 'gemini-3.8-flash-lite-tts'} · {ttsCheck?.catalog_confirmed ? '계정 모델 조회 확인 · 실제 음성 생성 미검증' : '모델 이용 가능 여부 확인 중'}</p>
+                  {ttsCheck?.error && <p role="alert" className="text-xs text-warn">{ttsCheck.error}</p>}
+                  <label className="text-xs">Gemini 음성<select aria-label="Gemini 음성" className="input-field" value={geminiVoice} onChange={e => setGeminiVoice(e.target.value)}>{['Kore', 'Puck'].map(voice => <option key={voice}>{voice}</option>)}</select></label>
+                  <p className="text-xs text-warn">Gemini TTS 예상 비용: 요금 미확인(0원 보장 아님). fal.ai 비용은 별도입니다. 모델 조회 성공은 한국어 합성·립싱크 품질 보장이 아닙니다. 실패해도 다른 유료 API로 자동 전환하지 않습니다. 미리듣기용 유료 합성을 자동 실행하지 않습니다.</p>
+                </div>}
+                {ttsProvider === 'elevenlabs' && <>
+
                 <label className="eyebrow block mb-2">
                   Voice {language === 'ko' ? '(한국어 · ko-KR)' : language === 'es' ? '(Spanish)' : '(English)'}
                 </label>
@@ -915,6 +949,7 @@ export default function SaaShortsTab({ geminiApiKey, elevenLabsKey, falKey, uplo
                 <p className="text-xs lowercase text-muted mt-1.5">
                   {actorGender === 'female' ? 'female' : 'male'} voices &middot; multilingual model speaks your selected language &middot; click speaker to preview
                 </p>
+                </>}
               </div>
 
               {/* Actor Selection: Gallery + Generate New */}
@@ -1110,20 +1145,20 @@ export default function SaaShortsTab({ geminiApiKey, elevenLabsKey, falKey, uplo
               <div className="card p-4">
                 <div className="flex items-center justify-between mb-3">
                   <span className="eyebrow">Estimated Cost</span>
-                  <span className="readout text-ink">~${videoMode === 'lowcost' ? '0.65' : '2.50'}</span>
+                  <span className="readout text-ink">{ttsProvider === 'gemini' ? 'Gemini 요금 미확인 + fal.ai 별도' : `~$${videoMode === 'lowcost' ? '0.65' : '2.50'}`}</span>
                 </div>
                 <div className="space-y-1">
                   {(videoMode === 'lowcost'
                     ? [
                         ['Flux image', '$0.05'],
-                        ['ElevenLabs voice', '$0.10'],
+                        [ttsProvider === 'gemini' ? 'Gemini TTS' : 'ElevenLabs voice', ttsProvider === 'gemini' ? '요금 미확인' : '$0.10'],
                         ['Hailuo 2.3 img2video', '$0.19'],
                         ['VEED Lipsync', '$0.20'],
                         ['Flux b-roll', '$0.10'],
                       ]
                     : [
                         ['Flux image', '$0.05'],
-                        ['ElevenLabs voice', '$0.10'],
+                        [ttsProvider === 'gemini' ? 'Gemini TTS' : 'ElevenLabs voice', ttsProvider === 'gemini' ? '요금 미확인' : '$0.10'],
                         ['Kling avatar', '$1.69'],
                         ['Kling b-roll', '$0.70'],
                       ]
@@ -1137,10 +1172,10 @@ export default function SaaShortsTab({ geminiApiKey, elevenLabsKey, falKey, uplo
               </div>
 
               {/* Missing keys warning */}
-              {(!falKey || !elevenLabsKey) && (
+              {(!falKey || (ttsProvider === 'elevenlabs' && !elevenLabsKey)) && (
                 <div className="p-3 bg-warn/10 rounded-input flex items-center gap-2 text-sm text-warn">
                   <AlertCircle size={14} />
-                  {!falKey && 'fal.ai API key missing. '}{!elevenLabsKey && 'ElevenLabs API key missing. '}
+                  {!falKey && 'fal.ai API key missing. '}{ttsProvider === 'elevenlabs' && !elevenLabsKey && 'ElevenLabs API key missing. '}
                   Set them in Settings.
                 </div>
               )}
@@ -1167,7 +1202,7 @@ export default function SaaShortsTab({ geminiApiKey, elevenLabsKey, falKey, uplo
               </button>
               <button
                 onClick={handleGenerate}
-                disabled={!falKey || !elevenLabsKey || !selectedActor || generating || !koreanVoiceReady}
+                disabled={!falKey || (ttsProvider === 'elevenlabs' && !elevenLabsKey) || !selectedActor || generating || !koreanVoiceReady}
                 className="btn-primary px-6 py-2 text-sm"
               >
                 {generating ? (
@@ -1175,7 +1210,7 @@ export default function SaaShortsTab({ geminiApiKey, elevenLabsKey, falKey, uplo
                 ) : !selectedActor ? (
                   <><User size={14} /> Select an actor first</>
                 ) : (
-                  <><Film size={14} /> Generate video (~${videoMode === 'lowcost' ? '0.65' : '2.00'})</>
+                  <><Film size={14} /> {ttsProvider === 'gemini' ? 'Generate video (Gemini 요금 미확인 + fal.ai)' : `Generate video (~$${videoMode === 'lowcost' ? '0.65' : '2.00'})`}</>
                 )}
               </button>
             </div>
@@ -1325,12 +1360,12 @@ export default function SaaShortsTab({ geminiApiKey, elevenLabsKey, falKey, uplo
                         {Object.entries(genResult.cost_estimate).filter(([k]) => k !== 'total').map(([k, v]) => (
                           <div key={k} className="flex justify-between readout">
                             <span>{k.replace(/_/g, ' ')}</span>
-                            <span>${v}</span>
+                            <span>{v == null ? '요금 미확인' : `$${v}`}</span>
                           </div>
                         ))}
                         <div className="flex justify-between readout text-ink border-t border-rule pt-1.5 mt-1.5">
                           <span>Total</span>
-                          <span>${genResult.cost_estimate.total}</span>
+                          <span>{genResult.cost_estimate.total == null ? 'Gemini 요금 미확인 + 위 부분합' : `$${genResult.cost_estimate.total}`}</span>
                         </div>
                       </div>
                     </div>
