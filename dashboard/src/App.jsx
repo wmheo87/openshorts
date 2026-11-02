@@ -1585,7 +1585,7 @@ function App() {
 
             {/* Hidden below sm: the standing banner underneath already says the
                 same thing, and two warnings in a 360px header is just noise. */}
-            {keysMissing && activeTab !== 'discovery' && !discoveryOrigin && (
+            {keysMissing && activeTab !== 'saasshorts' && activeTab !== 'discovery' && !discoveryOrigin && (
               <button
                 onClick={() => (billingEnabled && !isSignedIn ? setShowLogin(true) : goToTab('settings'))}
                 className="badge-warn hover:brightness-125 transition-all hidden sm:inline-flex"
@@ -1606,7 +1606,7 @@ function App() {
         </header>
 
         {/* Discovery uses its own server key; editor-key warnings do not apply there. */}
-        {keysMissing && activeTab !== 'settings' && activeTab !== 'discovery' && !discoveryOrigin && (
+        {keysMissing && activeTab !== 'settings' && activeTab !== 'saasshorts' && activeTab !== 'discovery' && !discoveryOrigin && (
           <div className="mx-3 sm:mx-6 mt-3 px-3.5 sm:px-4 py-3 bg-paper2 border border-rule rounded-card flex flex-wrap items-center justify-between gap-2.5 sm:gap-4 shrink-0 animate-fade">
             <div className="flex items-start sm:items-center gap-2.5 sm:gap-3 text-sm text-ink2 min-w-0 flex-1">
               <KeyRound size={16} className="shrink-0 text-warn mt-0.5 sm:mt-0" />
@@ -1652,7 +1652,7 @@ function App() {
         {gateThisTab && <TrialGate toolName={TOOL_NAMES[activeTab] || 'this'} />}
 
         {/* Advanced tools (AI Shorts, AI Agent): BYOK fal.ai + ElevenLabs notice. */}
-        {advancedThisTab && <AdvancedBanner needsPlan={needsPlan} onKeys={() => goToTab('settings')} providerLabel={activeTab === 'saasshorts' ? 'fal.ai + (Gemini TTS or ElevenLabs)' : undefined} />}
+        {advancedThisTab && <AdvancedBanner needsPlan={needsPlan} onKeys={() => goToTab('settings')} providerLabel={activeTab === 'saasshorts' ? 'Gemini (product) / fal.ai + selected TTS (actor)' : undefined} scriptNotice={activeTab === 'saasshorts' ? '제품형 대본·TTS는 사용자 Gemini 키 비용 별도입니다. 배우형은 기존 요금 체계를 유지합니다.' : undefined} />}
 
         {discoveryOrigin && activeTab === 'dashboard' && (
           <section aria-label="탐색 영상 제작 정보" className="mx-3 sm:mx-6 my-2 rounded-card border border-rule bg-paper2 p-3 text-xs space-y-2 shrink-0">

@@ -2391,6 +2391,8 @@ def _purge_local_jobs_for_user(user_id) -> int:
 
     if removed:
         print(f"🗑️  Purged {removed} local work item(s) for erased user {uid}.")
+    from studio.product_video.storage import purge_user
+    removed += purge_user(sys.modules[__name__], uid)
     return removed
 
 
@@ -6627,6 +6629,8 @@ saas_jobs: Dict[str, Dict] = {}
 
 
 class SaaSAnalyzeRequest(BaseModel):
+    request_id: Optional[str] = None
+    paid_confirmed: Optional[bool] = None
     url: Optional[str] = None
     description: Optional[str] = None  # Manual product/business description
     num_scripts: int = 3
@@ -6647,6 +6651,14 @@ async def saasshorts_analyze(
 
     if not req.url and not req.description:
         raise HTTPException(status_code=400, detail="Provide a URL or a product description")
+
+    if req.request_id:
+        from studio.product_video import storage as paid_ledger
+        if req.paid_confirmed is not True: raise HTTPException(400, "Confirm paid request first")
+        if not paid_ledger.claim(sys.modules[__name__], req.request_id, await _owner_id(request), {"action": "actor-analyze", **req.model_dump()}):
+            saved = await paid_ledger.read(sys.modules[__name__], request, req.request_id)
+            if saved.get("analysis_result"): return saved["analysis_result"]
+            raise HTTPException(409, "This paid request already exists. Check its status; do not resubmit.")
 
     # Meter the managed Gemini research/analysis (no-op for self-host).
     saas_minutes = _cloud_config.MANAGED_ANALYSIS_MINUTES if BILLING_ENABLED else 0
@@ -6691,15 +6703,19 @@ async def saasshorts_analyze(
         result = await loop.run_in_executor(None, run_analysis)
         if reservation_id:
             await _metering.commit_reservation(reservation_id)
+        if req.request_id: paid_ledger.update(sys.modules[__name__], req.request_id, "completed", {"analysis_result": result})
         return result
 
     except Exception as e:
+        if req.request_id: paid_ledger.update(sys.modules[__name__], req.request_id, "failed", {"error": "Analysis failed; no automatic paid retry"})
         if reservation_id:
             await _metering.release_reservation(reservation_id)
         raise HTTPException(status_code=500, detail=str(e))
 
 
 class SaaSActorRequest(BaseModel):
+    request_id: Optional[str] = None
+    paid_confirmed: Optional[bool] = None
     actor_description: str
     num_options: int = 3
     product_description: Optional[str] = None
@@ -6755,6 +6771,14 @@ async def saasshorts_actor_options(
     if not fal_key:
         raise HTTPException(status_code=400, detail="Missing fal.ai API Key")
 
+    if req.request_id:
+        from studio.product_video import storage as paid_ledger
+        if req.paid_confirmed is not True: raise HTTPException(400, "Confirm paid request first")
+        if not paid_ledger.claim(sys.modules[__name__], req.request_id, await _owner_id(request), {"action": "actor-options", **req.model_dump()}):
+            saved = await paid_ledger.read(sys.modules[__name__], request, req.request_id)
+            if saved.get("actor_result"): return saved["actor_result"]
+            raise HTTPException(409, "This paid request already exists; do not resubmit.")
+
     try:
         job_id = str(uuid.uuid4())
         out_dir = os.path.join(OUTPUT_DIR, f"saas_actors_{job_id}")
@@ -6784,9 +6808,11 @@ async def saasshorts_actor_options(
                 # Fallback to local URL if S3 fails
                 urls.append(f"/videos/saas_actors_{job_id}/{os.path.basename(p)}")
 
+        if req.request_id: paid_ledger.update(sys.modules[__name__], req.request_id, "completed", {"actor_result": {"images": urls}})
         return {"images": urls}
 
     except Exception as e:
+        if req.request_id: paid_ledger.update(sys.modules[__name__], req.request_id, "failed", {"error": "Actor image request failed; no automatic paid retry"})
         raise HTTPException(status_code=500, detail=str(e))
 
 
@@ -7136,6 +7162,8 @@ async def saasshorts_actor_gallery():
 
 
 class SaaSGenerateRequest(BaseModel):
+    request_id: Optional[str] = None
+    paid_confirmed: Optional[bool] = None
     script: dict
     tts_provider: Optional[Literal["gemini", "elevenlabs"]] = None
     gemini_voice: Literal["Kore", "Puck"] = "Kore"
@@ -7208,6 +7236,14 @@ async def saasshorts_generate(
             raise HTTPException(status_code=503, detail="한국어 음성 목록을 확인하지 못했습니다. 잠시 후 다시 확인해 주세요.") from None
         if not any(v["voice_id"] == req.voice_id and v.get("supports_korean") for v in available):
             raise HTTPException(status_code=400, detail="현재 계정에서 확인된 한국어 음성을 선택해 주세요.")
+
+    if req.request_id:
+        from studio.product_video import storage as paid_ledger
+        if req.paid_confirmed is not True: raise HTTPException(400, "Confirm paid request first")
+        if not paid_ledger.claim(sys.modules[__name__], req.request_id, await _owner_id(request), {"action": "actor-generate", **req.model_dump()}):
+            saved = await paid_ledger.read(sys.modules[__name__], request, req.request_id)
+            if saved.get("job_id"): return {"job_id": saved["job_id"], "status": "processing"}
+            raise HTTPException(409, "This paid request already exists. Check its status; do not resubmit.")
 
     # Support retry: reuse output_dir so cached assets (image, voice, head, broll) are kept
     reused = False
@@ -7306,7 +7342,8 @@ async def saasshorts_generate(
                     saas_jobs[job_id]["logs"].append(msg)
 
             def run():
-                return generate_full_video(req.script, config, job_output_dir, log_msg)
+                from studio.product_video.providers import PROVIDERS
+                return PROVIDERS['fal-actor'].render(req.script, {**config, '_legacy_render': generate_full_video}, job_output_dir, log_msg)
 
             result = await loop.run_in_executor(None, run)
 
@@ -7362,6 +7399,7 @@ async def saasshorts_generate(
         finally:
             concurrency_semaphore.release()
 
+    if req.request_id: paid_ledger.update(sys.modules[__name__], req.request_id, "accepted", {"job_id": job_id})
     asyncio.create_task(run_generation())
 
     return {"job_id": job_id, "status": "processing"}
@@ -7406,3 +7444,14 @@ async def saasshorts_voices(
         ],
         "source": "defaults",
     }
+
+# Approved-source product composition is independent of the legacy actor pipeline.
+from studio.product_video.api import create_router as create_product_video_router
+app.include_router(create_product_video_router(sys.modules[__name__]))
+
+
+@app.get("/api/saasshorts/paid-request/{ident}")
+async def saasshorts_paid_request(ident: str, request: Request):
+    await require_managed_entitlement(request)
+    from studio.product_video import storage
+    return await storage.read(sys.modules[__name__], request, ident)

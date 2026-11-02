@@ -29,9 +29,11 @@ async function setup(page, { voices = true, source = 'elevenlabs', elevenKey = t
     }
     return route.fulfill({ json: { status: 'processing', logs: [] } });
   });
+  page.on('dialog', dialog => dialog.accept());
   await page.goto('/#app');
   if (page.viewportSize().width < 768) await page.getByRole('button', { name: 'open navigation' }).click();
   await page.getByRole('button', { name: /^AI Shorts/ }).click();
+  await page.getByRole('button', { name: 'AI 배우형 (fal.ai)', exact: true }).click();
   return requests;
 }
 
