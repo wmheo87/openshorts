@@ -1,3 +1,4 @@
+import { t as uiT, useUiLocale } from "../i18n/runtime.js";
 // The consent banner. Small on purpose — it is a legal control, not a feature.
 //
 // Two rules it exists to satisfy, both of which the previous "no banner at all"
@@ -37,6 +38,7 @@ const CATEGORY_COPY = [
 ];
 
 export default function CookieBanner() {
+  useUiLocale();
   const [open, setOpen] = useState(() => !hasDecided());
   const [details, setDetails] = useState(false);
   const [draft, setDraft] = useState(() => getConsent());
@@ -55,17 +57,14 @@ export default function CookieBanner() {
     <div
       role="dialog"
       aria-modal="false"
-      aria-label="Cookie and tracker preferences"
+      aria-label={uiT("Cookie and tracker preferences")}
       className="fixed inset-x-0 bottom-0 z-50 p-3 sm:p-4 pb-[max(0.75rem,env(safe-area-inset-bottom))]"
     >
       <div className="card mx-auto max-w-3xl p-4 sm:p-5 space-y-4 shadow-2xl">
         <div className="space-y-2">
-          <h2 className="font-display lowercase text-lg text-ink">Before we count anything</h2>
-          <p className="text-sm text-ink2">
-            We only store what the app needs to work unless you tell us otherwise.
-            Audience measurement stays off until you say yes, and you can change
-            this at any time from the “cookies” link in the footer.{' '}
-            <a href="#legal" className="underline hover:text-ink">Privacy policy</a>.
+          <h2 className="font-display lowercase text-lg text-ink">{uiT("Before we count anything")}</h2>
+          <p className="text-sm text-ink2">{uiT("We only store what the app needs to work unless you tell us otherwise. Audience measurement stays off until you say yes, and you can change this at any time from the “cookies” link in the footer.")}{uiT(' ')}
+            <a href="#legal" className="underline hover:text-ink">{uiT("Privacy policy")}</a>.
           </p>
         </div>
 
@@ -82,9 +81,9 @@ export default function CookieBanner() {
                   onChange={(e) => setDraft({ ...draft, [cat.key]: e.target.checked })}
                 />
                 <label htmlFor={`consent-${cat.key}`} className="text-sm">
-                  <span className="text-ink">{cat.label}</span>
-                  {cat.locked && <span className="text-muted"> · always on</span>}
-                  <span className="block text-muted">{cat.body}</span>
+                  <span className="text-ink">{uiT(cat.label)}</span>
+                  {cat.locked && <span className="text-muted">{uiT(" · always on")}</span>}
+                  <span className="block text-muted">{uiT(cat.body)}</span>
                 </label>
               </li>
             ))}
@@ -97,32 +96,24 @@ export default function CookieBanner() {
             type="button"
             className="btn-ghost flex-1"
             onClick={() => { rejectAll(); close(); }}
-          >
-            Reject all
-          </button>
+          >{uiT("Reject all")}</button>
           <button
             type="button"
             className="btn-ghost flex-1"
             onClick={() => { acceptAll(); close(); }}
-          >
-            Accept all
-          </button>
+          >{uiT("Accept all")}</button>
           {details ? (
             <button
               type="button"
               className="btn-quiet sm:w-auto"
               onClick={() => { setConsent(draft); close(); }}
-            >
-              Save my choice
-            </button>
+            >{uiT("Save my choice")}</button>
           ) : (
             <button
               type="button"
               className="btn-quiet sm:w-auto"
               onClick={() => setDetails(true)}
-            >
-              Choose
-            </button>
+            >{uiT("Choose")}</button>
           )}
         </div>
       </div>

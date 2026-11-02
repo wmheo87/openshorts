@@ -1,3 +1,4 @@
+import { t as uiT, useUiLocale } from "../i18n/runtime.js";
 import { Github } from 'lucide-react';
 
 export const REPO_URL = 'https://github.com/mutonby/openshorts';
@@ -8,6 +9,7 @@ export const REPO_URL = 'https://github.com/mutonby/openshorts';
 // word free next to the product name for anyone who missed the pun — the one
 // thing our copy must never do. No incentive attached.
 export default function StarBanner({ message = 'Enjoying OpenShorts?' }) {
+  useUiLocale();
   return (
     <a
       href={REPO_URL}
@@ -16,7 +18,7 @@ export default function StarBanner({ message = 'Enjoying OpenShorts?' }) {
       className="flex items-center gap-2 px-3 py-2 rounded-input bg-paper3 border border-rule text-sm text-muted hover:text-ink transition-colors"
     >
       <Github size={14} className="shrink-0" />
-      <span>{message} <span className="text-brass">Star us on GitHub ⭐</span></span>
+      <span>{uiT(message)} <span className="text-brass">{uiT("Star us on GitHub ⭐")}</span></span>
     </a>
   );
 }

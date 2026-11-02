@@ -1,3 +1,4 @@
+import { t as uiT, useUiLocale } from "../i18n/runtime.js";
 import React, { useState, useRef } from 'react';
 import { Loader2 } from 'lucide-react';
 import { apiJson } from '../lib/api';
@@ -47,6 +48,7 @@ const chip = (on) => `rounded-full border px-3 py-1.5 text-xs transition-colors 
 // cloud/onboarding.py). One screen, every question optional, skippable: it
 // must cost the new user seconds, not their first clip.
 export default function OnboardingSurvey({ onDone }) {
+  useUiLocale();
   const [source, setSource] = useState('');
   const [sourceOther, setSourceOther] = useState('');
   const [goals, setGoals] = useState([]);
@@ -79,48 +81,47 @@ export default function OnboardingSurvey({ onDone }) {
 
   return (
     <Modal isOpen onClose={busy ? undefined : () => send(true)} eyebrow="WELCOME · 3 QUICK QUESTIONS"
-           title="Help us build what you need" size="lg"
+           title={uiT("Help us build what you need")} size="lg"
            footer={(
              <div className="flex items-center justify-between gap-2">
-               <button onClick={() => send(true)} disabled={busy} className="btn-quiet">Skip</button>
+               <button onClick={() => send(true)} disabled={busy} className="btn-quiet">{uiT("Skip")}</button>
                <button onClick={() => send(false)} disabled={busy || !answered} className="btn-primary px-4 py-2 text-xs">
-                 {busy && <Loader2 size={14} className="animate-spin" />} Continue
-               </button>
+                 {busy && <Loader2 size={14} className="animate-spin" />}{uiT(" Continue")}</button>
              </div>
            )}>
       <div className="space-y-6">
         <section>
-          <h3 className="text-sm text-ink mb-2">What do you want to make with OpenShorts? <span className="text-muted">(pick any)</span></h3>
+          <h3 className="text-sm text-ink mb-2">{uiT("What do you want to make with OpenShorts? ")}<span className="text-muted">{uiT("(pick any)")}</span></h3>
           <div className="flex flex-wrap gap-2">
             {GOALS.map(([value, label]) => (
               <button key={value} type="button" onClick={() => toggleGoal(value)} className={chip(goals.includes(value))}>
-                {label}
+                {uiT(label)}
               </button>
             ))}
           </div>
         </section>
 
         <section>
-          <h3 className="text-sm text-ink mb-2">How did you hear about us?</h3>
+          <h3 className="text-sm text-ink mb-2">{uiT("How did you hear about us?")}</h3>
           <div className="flex flex-wrap gap-2">
             {SOURCES.map(([value, label]) => (
               <button key={value} type="button" onClick={() => setSource(source === value ? '' : value)} className={chip(source === value)}>
-                {label}
+                {uiT(label)}
               </button>
             ))}
           </div>
           {source === 'other' && (
             <input value={sourceOther} onChange={(e) => setSourceOther(e.target.value)} maxLength={120}
-                   placeholder="Where?" className="input-field w-full text-sm mt-2" />
+                   placeholder={uiT("Where?")} className="input-field w-full text-sm mt-2" />
           )}
         </section>
 
         <section>
-          <h3 className="text-sm text-ink mb-2">What describes you best?</h3>
+          <h3 className="text-sm text-ink mb-2">{uiT("What describes you best?")}</h3>
           <div className="flex flex-wrap gap-2">
             {ROLES.map(([value, label]) => (
               <button key={value} type="button" onClick={() => setRole(role === value ? '' : value)} className={chip(role === value)}>
-                {label}
+                {uiT(label)}
               </button>
             ))}
           </div>

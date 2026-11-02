@@ -1,3 +1,5 @@
+import LanguageSwitcher from './i18n/LanguageSwitcher';
+import { t as uiT, useUiLocale } from "./i18n/runtime.js";
 import React from 'react';
 import { Sparkles, Zap, Globe, FileVideo, Subtitles, Youtube, Instagram, Shield, Github, ArrowRight, Check, ChevronDown, Monitor, Cpu, Languages, Type, Upload, Scissors, Link2, Bot } from 'lucide-react';
 import PricingSection from './components/PricingSection';
@@ -24,6 +26,7 @@ const EPISODE_CLIPS = [
 // Mounts the video only once it scrolls near the viewport, so five clip
 // previews cost nothing to a visitor who never gets that far.
 function LazyLoopVideo({ src, poster }) {
+  useUiLocale();
   const ref = React.useRef(null);
   const [show, setShow] = React.useState(false);
   React.useEffect(() => {
@@ -71,9 +74,9 @@ const DEMOS = [
 
 const SectionHeader = ({ eyebrow, title, children }) => (
   <div className="mb-12">
-    <p className="eyebrow mb-3">{eyebrow}</p>
-    <h2 className="font-display text-3xl md:text-4xl lowercase text-ink tracking-tight mb-4">{title}</h2>
-    {children && <p className="text-muted max-w-2xl leading-relaxed">{children}</p>}
+    <p className="eyebrow mb-3">{uiT(eyebrow)}</p>
+    <h2 className="font-display text-3xl md:text-4xl lowercase text-ink tracking-tight mb-4">{uiT(title)}</h2>
+    {children && <p className="text-muted max-w-2xl leading-relaxed">{uiT(children)}</p>}
   </div>
 );
 
@@ -135,6 +138,7 @@ const CAPTION_STYLES = [
 ];
 
 function ShowcaseMedia({ media }) {
+  useUiLocale();
   if (media.type === 'video') {
     return (
       <video src={media.src} poster={media.poster} autoPlay muted loop playsInline preload="metadata"
@@ -148,19 +152,20 @@ function ShowcaseMedia({ media }) {
           <figure key={id} className="m-0 min-w-0">
             <video src={`/demo/caption-${id}.mp4`} poster={`/screens/caption-${id}.webp`} autoPlay muted loop playsInline
               preload="metadata" className="w-full aspect-[9/16] object-cover block rounded-card border border-rule" />
-            <figcaption className="readout text-[10px] text-muted mt-2 text-center">{label}</figcaption>
+            <figcaption className="readout text-[10px] text-muted mt-2 text-center">{uiT(label)}</figcaption>
           </figure>
         ))}
       </div>
     );
   }
   return (
-    <img src={media.src} alt={media.alt} width={media.w} height={media.h} loading="lazy"
+    <img src={media.src} alt={uiT(media.alt)} width={media.w} height={media.h} loading="lazy"
       className="w-full h-auto block rounded-card border border-rule" />
   );
 }
 
 function FeatureShowcase() {
+  useUiLocale();
   const [active, setActive] = React.useState(0);
   const [auto, setAuto] = React.useState(true);
   React.useEffect(() => {
@@ -171,7 +176,7 @@ function FeatureShowcase() {
   const item = SHOWCASE[active];
   return (
     <div className="grid lg:grid-cols-[17rem_minmax(0,1fr)] gap-6 lg:gap-10 items-start">
-      <div className="flex lg:flex-col gap-2 overflow-x-auto pb-1 -mx-1 px-1" role="tablist" aria-label="Features">
+      <div className="flex lg:flex-col gap-2 overflow-x-auto pb-1 -mx-1 px-1" role="tablist" aria-label={uiT("Features")}>
         {SHOWCASE.map((f, i) => (
           <button
             key={f.id}
@@ -181,7 +186,7 @@ function FeatureShowcase() {
             onClick={() => { setActive(i); setAuto(false); }}
             className={`relative shrink-0 text-left rounded-card border px-4 py-3 text-sm lowercase transition-colors overflow-hidden ${i === active ? 'border-brass text-ink bg-paper2' : 'border-rule text-muted hover:text-ink'}`}
           >
-            {f.tab}
+            {uiT(f.tab)}
             {i === active && auto && (
               <span key={`p-${active}`} className="showcase-progress absolute left-0 bottom-0 h-0.5 bg-brass" aria-hidden="true" />
             )}
@@ -189,8 +194,8 @@ function FeatureShowcase() {
         ))}
       </div>
       <div key={item.id} className="showcase-in min-w-0" role="tabpanel">
-        <h3 className="font-display text-3xl md:text-4xl lowercase text-ink mb-3">{item.title}</h3>
-        <p className="text-muted max-w-2xl mb-6 leading-relaxed">{item.body}</p>
+        <h3 className="font-display text-3xl md:text-4xl lowercase text-ink mb-3">{uiT(item.title)}</h3>
+        <p className="text-muted max-w-2xl mb-6 leading-relaxed">{uiT(item.body)}</p>
         <ShowcaseMedia media={item.media} />
       </div>
     </div>
@@ -198,14 +203,15 @@ function FeatureShowcase() {
 }
 
 const FeatureCard = ({ icon, title, description }) => {
+  useUiLocale();
   const Icon = icon;
   return (
     <div className="card card-hover p-6">
       <div className="w-10 h-10 rounded-input bg-paper3 flex items-center justify-center mb-4">
         <Icon size={18} className="text-brass" />
       </div>
-      <h3 className="font-display text-xl lowercase text-ink mb-2">{title}</h3>
-      <p className="text-muted text-sm leading-relaxed">{description}</p>
+      <h3 className="font-display text-xl lowercase text-ink mb-2">{uiT(title)}</h3>
+      <p className="text-muted text-sm leading-relaxed">{uiT(description)}</p>
     </div>
   );
 };
@@ -213,21 +219,21 @@ const FeatureCard = ({ icon, title, description }) => {
 const StepCard = ({ number, title, description }) => (
   <div className="flex gap-5">
     <span className="font-mono text-micro text-brass uppercase pt-1.5 flex-shrink-0">
-      {String(number).padStart(2, '0')}
+      {uiT(String(number).padStart(2, '0'))}
     </span>
     <div>
-      <h3 className="text-ink font-medium mb-1">{title}</h3>
-      <p className="text-muted text-sm leading-relaxed">{description}</p>
+      <h3 className="text-ink font-medium mb-1">{uiT(title)}</h3>
+      <p className="text-muted text-sm leading-relaxed">{uiT(description)}</p>
     </div>
   </div>
 );
 
 const ComparisonRow = ({ feature, openshorts, opusclip, kapwing }) => (
   <tr className="border-b border-rule">
-    <td className="py-3 px-4 text-sm text-ink2">{feature}</td>
-    <td className="py-3 px-4 text-center">{openshorts}</td>
-    <td className="py-3 px-4 text-center">{opusclip}</td>
-    <td className="py-3 px-4 text-center">{kapwing}</td>
+    <td className="py-3 px-4 text-sm text-ink2">{uiT(feature)}</td>
+    <td className="py-3 px-4 text-center">{uiT(openshorts)}</td>
+    <td className="py-3 px-4 text-center">{uiT(opusclip)}</td>
+    <td className="py-3 px-4 text-center">{uiT(kapwing)}</td>
   </tr>
 );
 
@@ -237,18 +243,19 @@ const FAQItem = ({ question, answer, isOpen, onClick }) => (
       onClick={onClick}
       className="w-full flex items-center justify-between px-1 py-5 text-left"
     >
-      <span className="text-ink font-medium pr-4">{question}</span>
+      <span className="text-ink font-medium pr-4">{uiT(question)}</span>
       <ChevronDown size={18} className={`text-muted flex-shrink-0 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
     </button>
     {isOpen && (
       <div className="px-1 pb-6">
-        <p className="faq-answer text-muted text-sm leading-relaxed">{answer}</p>
+        <p className="faq-answer text-muted text-sm leading-relaxed">{uiT(answer)}</p>
       </div>
     )}
   </div>
 );
 
 export default function Landing({ onLaunchApp }) {
+  useUiLocale();
   const { billingEnabled } = useAuth();
   const [openFaq, setOpenFaq] = React.useState(null);
   const [heroUrl, setHeroUrl] = React.useState('');
@@ -417,30 +424,29 @@ export default function Landing({ onLaunchApp }) {
 
   const checkIcon = <Check size={16} className="text-brass mx-auto" />;
   const checkMuted = <Check size={16} className="text-muted mx-auto" />;
-  const xIcon = <span className="text-muted text-sm">Paid</span>;
+  const xIcon = <span className="text-muted text-sm">{uiT("Paid")}</span>;
 
   return (
     <div className="min-h-screen bg-paper text-ink2 overflow-x-clip">
       {/* Navigation — N9 edge-aligned minimal */}
       <nav className="fixed top-0 w-full z-50 bg-paper border-b border-rule">
-        <div className="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
+        <div className="max-w-6xl mx-auto px-3 sm:px-6 py-4 flex flex-wrap gap-2 items-center justify-between">
           <a href="/" className="flex items-center gap-2.5 font-display text-xl lowercase text-ink tracking-tight">
-            <img src="/logo-openshorts.png" alt="OpenShorts logo" className="w-7 h-7" width="28" height="28" />
-            <span>openshorts</span>
+            <img src="/logo-openshorts.png" alt={uiT("OpenShorts logo")} className="w-7 h-7" width="28" height="28" />
+            <span>{uiT("openshorts")}</span>
           </a>
           <div className="hidden md:flex items-center gap-7 text-sm lowercase text-muted">
-            <a href="#features" className="hover:text-ink transition-colors">Features</a>
-            <a href="#how-it-works" className="hover:text-ink transition-colors">How It Works</a>
-            {billingEnabled && <a href="#pricing" className="hover:text-ink transition-colors">Pricing</a>}
-            <a href="#comparison" className="hover:text-ink transition-colors">Comparison</a>
-            <a href="#faq" className="hover:text-ink transition-colors">FAQ</a>
-            <a href="/tools" className="hover:text-ink transition-colors">Free tools</a>
+            <a href="#features" className="hover:text-ink transition-colors">{uiT("Features")}</a>
+            <a href="#how-it-works" className="hover:text-ink transition-colors">{uiT("How It Works")}</a>
+            {billingEnabled && <a href="#pricing" className="hover:text-ink transition-colors">{uiT("Pricing")}</a>}
+            <a href="#comparison" className="hover:text-ink transition-colors">{uiT("Comparison")}</a>
+            <a href="#faq" className="hover:text-ink transition-colors">{uiT("FAQ")}</a>
+            <a href="/tools" className="hover:text-ink transition-colors">{uiT("Free tools")}</a>
           </div>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 sm:gap-3">
+            <LanguageSwitcher />
             {billingEnabled && (
-              <a href="#pricing" className="md:hidden text-sm lowercase text-muted hover:text-ink transition-colors">
-                Pricing
-              </a>
+              <a href="#pricing" className="md:hidden text-sm lowercase text-muted hover:text-ink transition-colors">{uiT("Pricing")}</a>
             )}
             <a
               href="https://github.com/mutonby/openshorts"
@@ -449,11 +455,9 @@ export default function Landing({ onLaunchApp }) {
               className="hidden sm:flex items-center gap-2 text-sm lowercase text-muted hover:text-ink transition-colors"
             >
               <Github size={16} />
-              <span>GitHub</span>
+              <span>{uiT("GitHub")}</span>
             </a>
-            <button onClick={onLaunchApp} className="btn-primary px-5 py-2 whitespace-nowrap">
-              Launch App
-            </button>
+            <button onClick={onLaunchApp} className="btn-primary px-5 py-2 whitespace-nowrap">{uiT("Launch App")}</button>
           </div>
         </div>
       </nav>
@@ -462,17 +466,14 @@ export default function Landing({ onLaunchApp }) {
       <section className="hero-blueprint relative overflow-clip border-b border-rule pt-32 pb-20 px-6">
         <div className="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_auto] gap-14 items-center">
           <div className="min-w-0">
-            <p className="eyebrow mb-6">00 · Free AI Clip Generator · Open Source</p>
+            <p className="eyebrow mb-6">{uiT("00 · Free AI Clip Generator · Open Source")}</p>
 
             <h1 className="hero-h1 mb-6">
-              <span className="block">long video in.</span>
-              <span className="block"><em>viral shorts</em> out.</span>
+              <span className="block">{uiT("long video in.")}</span>
+              <span className="block"><em>{uiT("viral shorts")}</em>{uiT(" out.")}</span>
             </h1>
 
-            <p className="hero-description text-muted max-w-2xl mb-8 leading-relaxed lowercase">
-              paste a youtube link or upload a podcast, stream or interview. the ai picks the 3 to 15 moments worth posting,
-              reframes them to 9:16 around the people talking, and burns in the captions. ready for tiktok, reels and shorts in minutes.
-            </p>
+            <p className="hero-description text-muted max-w-2xl mb-8 leading-relaxed lowercase">{uiT("paste a youtube link or upload a podcast, stream or interview. the ai picks the 3 to 15 moments worth posting, reframes them to 9:16 around the people talking, and burns in the captions. ready for tiktok, reels and shorts in minutes.")}</p>
 
             {/* The hero CTA is the product itself: paste a link and land in the
                 app with it loaded. Sign-in is asked for at generate time, not
@@ -485,19 +486,15 @@ export default function Landing({ onLaunchApp }) {
                     type="url"
                     value={heroUrl}
                     onChange={(e) => setHeroUrl(e.target.value)}
-                    placeholder="paste a video link"
+                    placeholder={uiT("paste a video link")}
                     className="input-field pl-11"
-                    aria-label="Video link"
+                    aria-label={uiT("Video link")}
                   />
                 </div>
-                <button type="submit" className="btn-primary whitespace-nowrap">
-                  get free clips
-                  <ArrowRight size={16} />
+                <button type="submit" className="btn-primary whitespace-nowrap">{uiT("get free clips")}<ArrowRight size={16} />
                 </button>
                 <button type="button" onClick={onLaunchApp} className="btn-ghost whitespace-nowrap">
-                  <Upload size={16} />
-                  upload a file
-                </button>
+                  <Upload size={16} />{uiT("upload a file")}</button>
               </div>
             </form>
 
@@ -505,26 +502,23 @@ export default function Landing({ onLaunchApp }) {
                 (a card) is the whole point of the free plan. */}
             <div className="flex flex-wrap items-center gap-x-5 gap-y-2 mb-5 text-sm">
               <span className="badge-ok whitespace-nowrap">
-                <Check size={12} /> no credit card required
-              </span>
-              <span className="text-muted lowercase">first video free (up to 60 min) · then 20 min every month</span>
+                <Check size={12} />{uiT(" no credit card required")}</span>
+              <span className="text-muted lowercase">{uiT("first video free (up to 60 min) · then 20 min every month")}</span>
             </div>
 
             <p className="text-sm text-muted lowercase">
-              <a href="#pricing" className="underline underline-offset-2 hover:text-ink">paid plans from $12/mo</a> without watermark. prefer to run it yourself?{' '}
+              <a href="#pricing" className="underline underline-offset-2 hover:text-ink">{uiT("paid plans from $12/mo")}</a>{uiT(" without watermark. prefer to run it yourself?")}{uiT(' ')}
               <a
                 href="https://github.com/mutonby/openshorts"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-ink2 underline hover:text-ink transition-colors"
-              >
-                self-host free on github →
-              </a>
+              >{uiT("self-host free on github →")}</a>
             </p>
           </div>
 
           {/* Apparatus — instrument bezel holding a real 9:16 clip */}
-          <figure className="apparatus" aria-label="example vertical clip generated by openshorts">
+          <figure className="apparatus" aria-label={uiT("example vertical clip generated by openshorts")}>
             <div className="apparatus-shell">
               <span className="apparatus-glow" aria-hidden="true" />
               <div className="apparatus-chamber">
@@ -540,12 +534,12 @@ export default function Landing({ onLaunchApp }) {
                   preload="metadata"
                   className="w-full h-full object-cover"
                 />
-                <span className="apparatus-stencil">OS-9:16</span>
+                <span className="apparatus-stencil">{uiT("OS-9:16")}</span>
               </div>
             </div>
             <ul className="apparatus-callouts" aria-hidden="true">
               {APPARATUS_CALLOUTS.map((c) => (
-                <li key={c}><span className="apparatus-leader" />{c}</li>
+                <li key={c}><span className="apparatus-leader" />{uiT(c)}</li>
               ))}
             </ul>
           </figure>
@@ -562,8 +556,8 @@ export default function Landing({ onLaunchApp }) {
             ['6.1k', 'github stars'],
           ].map(([n, label]) => (
             <div key={label} className="px-4">
-              <div className="font-display text-4xl md:text-5xl text-ink tabular-nums">{n}</div>
-              <div className="eyebrow mt-2">{label}</div>
+              <div className="font-display text-4xl md:text-5xl text-ink tabular-nums">{uiT(n)}</div>
+              <div className="eyebrow mt-2">{uiT(label)}</div>
             </div>
           ))}
         </div>
@@ -572,13 +566,10 @@ export default function Landing({ onLaunchApp }) {
       {/* Features Section */}
       <section id="features" className="py-20 px-6 border-t border-rule">
         <div className="max-w-6xl mx-auto">
-          <SectionHeader eyebrow="01 · Features" title="everything it does, on real clips">
-            Screens from the app and clips it made. Pick a feature, or let it play.
-          </SectionHeader>
+          <SectionHeader eyebrow="01 · Features" title={uiT("everything it does, on real clips")}>{uiT("Screens from the app and clips it made. Pick a feature, or let it play.")}</SectionHeader>
           <FeatureShowcase />
           <details className="mt-12 group">
-            <summary className="list-none cursor-pointer text-sm text-muted hover:text-ink lowercase [&::-webkit-details-marker]:hidden">
-              the full feature list <ChevronDown size={14} className="inline transition-transform group-open:rotate-180" />
+            <summary className="list-none cursor-pointer text-sm text-muted hover:text-ink lowercase [&::-webkit-details-marker]:hidden">{uiT("the full feature list ")}<ChevronDown size={14} className="inline transition-transform group-open:rotate-180" />
             </summary>
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-5 mt-6">
               {features.map((feature, i) => (
@@ -594,16 +585,14 @@ export default function Landing({ onLaunchApp }) {
           The pattern the market leader opens with, shown with our own output. */}
       <section className="py-20 px-6 border-b border-rule">
         <div className="max-w-6xl mx-auto">
-          <SectionHeader eyebrow="02 · One Video, Six Clips" title="one 27-minute episode in. six ready-to-post clips out.">
-            No prompts, no settings and no scrubbing: the AI scored every moment, kept the six that stand on their own and cut them with captions and a hook.
-          </SectionHeader>
+          <SectionHeader eyebrow="02 · One Video, Six Clips" title={uiT("one 27-minute episode in. six ready-to-post clips out.")}>{uiT("No prompts, no settings and no scrubbing: the AI scored every moment, kept the six that stand on their own and cut them with captions and a hook.")}</SectionHeader>
           <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,15rem)_auto_minmax(0,1fr)] gap-6 items-center">
             <figure className="m-0 max-w-[16rem] lg:max-w-none">
               <div className="relative rounded-card overflow-hidden border border-rule">
-                <img src="/screens/ep-source.webp" alt="The original 16:9 podcast episode" width="640" height="360" loading="lazy" className="block w-full h-auto" />
+                <img src="/screens/ep-source.webp" alt={uiT("The original 16:9 podcast episode")} width="640" height="360" loading="lazy" className="block w-full h-auto" />
                 <span className="absolute bottom-2 right-2 readout bg-paper/80 px-2 py-0.5 rounded">26:54</span>
               </div>
-              <figcaption className="text-xs text-muted mt-2">the full episode, 16:9</figcaption>
+              <figcaption className="text-xs text-muted mt-2">{uiT("the full episode, 16:9")}</figcaption>
             </figure>
             <ArrowRight size={28} className="text-brass mx-auto rotate-90 lg:rotate-0" aria-hidden="true" />
             <div className="grid grid-cols-3 sm:grid-cols-6 gap-3">
@@ -611,27 +600,23 @@ export default function Landing({ onLaunchApp }) {
                 <figure key={c.n} className="m-0 min-w-0">
                   <div className="relative rounded-card overflow-hidden border border-rule bg-paper2">
                     <LazyLoopVideo src={`/demo/ep-clip-${c.n}.mp4`} poster={`/screens/ep-clip-${c.n}.webp`} />
-                    <span className="absolute top-1.5 left-1.5 readout text-[10px] bg-paper/85 text-ok px-1.5 py-0.5 rounded">score {c.score}</span>
+                    <span className="absolute top-1.5 left-1.5 readout text-[10px] bg-paper/85 text-ok px-1.5 py-0.5 rounded">{uiT("score ")}{uiT(c.score)}</span>
                   </div>
-                  <figcaption className="text-xs text-ink2 mt-2 leading-snug">{c.title}</figcaption>
+                  <figcaption className="text-xs text-ink2 mt-2 leading-snug">{uiT(c.title)}</figcaption>
                 </figure>
               ))}
             </div>
           </div>
-          <p className="mt-6 text-xs text-muted">
-            Source: <a href="https://www.youtube.com/watch?v=-KbQj_vboOU" target="_blank" rel="noopener noreferrer" className="underline underline-offset-2 hover:text-ink">Turn the Tables with Dan and Shoshana Jordan</a>, Heritage of Faith, licensed CC BY. Clipped by OpenShorts, scores as the AI gave them.
-          </p>
+          <p className="mt-6 text-xs text-muted">{uiT("Source: ")}<a href="https://www.youtube.com/watch?v=-KbQj_vboOU" target="_blank" rel="noopener noreferrer" className="underline underline-offset-2 hover:text-ink">{uiT("Turn the Tables with Dan and Shoshana Jordan")}</a>{uiT(", Heritage of Faith, licensed CC BY. Clipped by OpenShorts, scores as the AI gave them.")}</p>
         </div>
       </section>
 
       {/* Smart crop — real product output: 16:9 source to 9:16 result */}
       <section className="py-20 px-6">
         <div className="max-w-5xl mx-auto">
-          <SectionHeader eyebrow="03 · Smart Crop" title="one video in. the moment, reframed.">
-            Real output, not a mock-up: the AI picks the moment, reframes 16:9 to vertical 9:16 and burns in the captions.
-          </SectionHeader>
+          <SectionHeader eyebrow="03 · Smart Crop" title={uiT("one video in. the moment, reframed.")}>{uiT("Real output, not a mock-up: the AI picks the moment, reframes 16:9 to vertical 9:16 and burns in the captions.")}</SectionHeader>
           {DEMOS.length > 1 && (
-            <div className="flex flex-wrap gap-2 mb-8" role="tablist" aria-label="Example clips">
+            <div className="flex flex-wrap gap-2 mb-8" role="tablist" aria-label={uiT("Example clips")}>
               {DEMOS.map((d, i) => (
                 <button
                   key={d.id}
@@ -641,12 +626,12 @@ export default function Landing({ onLaunchApp }) {
                   onClick={() => setCropDemo(i)}
                   className={`px-4 py-1.5 rounded-full border text-sm lowercase transition-colors ${cropDemo === i ? 'bg-brass text-brassink border-brass' : 'border-rule text-muted hover:text-ink'}`}
                 >
-                  {d.tab}
+                  {uiT(d.tab)}
                 </button>
               ))}
             </div>
           )}
-          <figure className="crop-frame crop-frame-16-9 w-full" aria-label="original video next to the vertical clip OpenShorts made from it">
+          <figure className="crop-frame crop-frame-16-9 w-full" aria-label={uiT("original video next to the vertical clip OpenShorts made from it")}>
             <video
               key={DEMOS[cropDemo].id}
               src={DEMOS[cropDemo].video}
@@ -661,9 +646,7 @@ export default function Landing({ onLaunchApp }) {
               className="w-full h-auto block"
             />
           </figure>
-          <p className="mt-6 text-xs text-muted">
-            Source: <a href={DEMOS[cropDemo].creditUrl} target="_blank" rel="noopener noreferrer" className="underline underline-offset-2 hover:text-ink">{DEMOS[cropDemo].credit}</a>, {DEMOS[cropDemo].creditBy}, licensed CC BY. Clipped by OpenShorts.
-          </p>
+          <p className="mt-6 text-xs text-muted">{uiT("Source: ")}<a href={DEMOS[cropDemo].creditUrl} target="_blank" rel="noopener noreferrer" className="underline underline-offset-2 hover:text-ink">{uiT(DEMOS[cropDemo].credit)}</a>, {uiT(DEMOS[cropDemo].creditBy)}{uiT(", licensed CC BY. Clipped by OpenShorts.")}</p>
           <div className="mt-10 flex flex-wrap items-center gap-4">
             <button
               type="button"
@@ -672,10 +655,9 @@ export default function Landing({ onLaunchApp }) {
                 document.querySelector('.hero-input-row input')?.focus({ preventScroll: true });
               }}
               className="btn-primary whitespace-nowrap"
-            >
-              try it on your own video <ArrowRight size={16} />
+            >{uiT("try it on your own video ")}<ArrowRight size={16} />
             </button>
-            <span className="text-sm text-muted">first video free up to 60 min, no credit card</span>
+            <span className="text-sm text-muted">{uiT("first video free up to 60 min, no credit card")}</span>
           </div>
         </div>
       </section>
@@ -683,9 +665,7 @@ export default function Landing({ onLaunchApp }) {
       {/* How It Works Section */}
       <section id="how-it-works" className="py-20 px-6 border-t border-rule">
         <div className="max-w-4xl mx-auto">
-          <SectionHeader eyebrow="04 · Pipeline" title="How It Works">
-            From long-form video to viral-ready clips in 5 automated steps.
-          </SectionHeader>
+          <SectionHeader eyebrow="04 · Pipeline" title={uiT("How It Works")}>{uiT("From long-form video to viral-ready clips in 5 automated steps.")}</SectionHeader>
           <div className="space-y-8">
             {steps.map((step, i) => (
               <StepCard key={i} number={i + 1} {...step} />
@@ -697,46 +677,41 @@ export default function Landing({ onLaunchApp }) {
       {/* Two ways to use it: free self-host vs paid hosted */}
       <section className="py-20 px-6 border-t border-rule">
         <div className="max-w-4xl mx-auto">
-          <SectionHeader eyebrow="05 · Deploy" title="Two ways to use OpenShorts">
-            The same open source software, running either on our GPU or on your machine.
-          </SectionHeader>
+          <SectionHeader eyebrow="05 · Deploy" title={uiT("Two ways to use OpenShorts")}>{uiT("The same open source software, running either on our GPU or on your machine.")}</SectionHeader>
           <div className="grid md:grid-cols-2 gap-6">
             <div className="card p-8 flex flex-col border-brass">
               <div className="flex flex-wrap items-center gap-3 mb-3">
                 <Sparkles size={18} className="text-brass" />
-                <h3 className="font-display text-2xl lowercase text-ink">cloud · openshorts.app</h3>
-                <span className="badge-brass">Recommended · Free Plan</span>
+                <h3 className="font-display text-2xl lowercase text-ink">{uiT("cloud · openshorts.app")}</h3>
+                <span className="badge-brass">{uiT("Recommended · Free Plan")}</span>
               </div>
               <ul className="space-y-1.5 mb-6 flex-1">
                 {['Our NVIDIA GPU: an 8-min video in about 50s', 'Gemini key included, nothing to set up', 'Social publishing built in', 'Connect Claude or ChatGPT directly: paste one URL, no API key', 'First video free up to 60 min, then 20 min/month, no card'].map((f, i) => (
-                  <li key={i} className="flex items-center gap-2 text-sm text-muted"><Check size={14} className="text-ok shrink-0" />{f}</li>
+                  <li key={i} className="flex items-center gap-2 text-sm text-muted"><Check size={14} className="text-ok shrink-0" />{uiT(f)}</li>
                 ))}
               </ul>
               {billingEnabled ? (
-                <a href="#pricing" className="btn-primary whitespace-nowrap">
-                  start free <ArrowRight size={16} />
+                <a href="#pricing" className="btn-primary whitespace-nowrap">{uiT("start free ")}<ArrowRight size={16} />
                 </a>
               ) : (
-                <button onClick={onLaunchApp} className="btn-primary whitespace-nowrap">
-                  launch openshorts <ArrowRight size={16} />
+                <button onClick={onLaunchApp} className="btn-primary whitespace-nowrap">{uiT("launch openshorts ")}<ArrowRight size={16} />
                 </button>
               )}
             </div>
             <div className="card p-8 flex flex-col">
               <div className="flex flex-wrap items-center gap-3 mb-3">
                 <Github size={18} className="text-muted" />
-                <h3 className="font-display text-2xl lowercase text-ink">self-hosted · for developers</h3>
-                <span className="readout border border-rule rounded-full px-2.5 py-1">Free · Docker</span>
+                <h3 className="font-display text-2xl lowercase text-ink">{uiT("self-hosted · for developers")}</h3>
+                <span className="readout border border-rule rounded-full px-2.5 py-1">{uiT("Free · Docker")}</span>
               </div>
               <ul className="space-y-1.5 mb-6 flex-1">
                 {['Your machine: 5 to 8 min on a typical CPU', 'Bring your own Gemini, ElevenLabs and fal.ai keys', 'You install it, you maintain it, you back it up', 'Free forever, and always will be'].map((f, i) => (
-                  <li key={i} className="flex items-center gap-2 text-sm text-muted"><Check size={14} className="text-ok shrink-0" />{f}</li>
+                  <li key={i} className="flex items-center gap-2 text-sm text-muted"><Check size={14} className="text-ok shrink-0" />{uiT(f)}</li>
                 ))}
               </ul>
               <a href="https://github.com/mutonby/openshorts" target="_blank" rel="noopener noreferrer"
                 className="btn-ghost whitespace-nowrap">
-                <Github size={16} /> view on github
-              </a>
+                <Github size={16} />{uiT(" view on github")}</a>
             </div>
           </div>
         </div>
@@ -746,9 +721,7 @@ export default function Landing({ onLaunchApp }) {
       {billingEnabled && (
         <section id="pricing" className="py-20 px-6 border-t border-rule">
           <div className="max-w-6xl mx-auto">
-            <SectionHeader eyebrow="06 · Pricing" title="Simple, transparent pricing">
-              Your first video is free, up to 60 minutes. Then 20 free minutes a month — no credit card. Cancel anytime.
-            </SectionHeader>
+            <SectionHeader eyebrow="06 · Pricing" title={uiT("Simple, transparent pricing")}>{uiT("Your first video is free, up to 60 minutes. Then 20 free minutes a month — no credit card. Cancel anytime.")}</SectionHeader>
             <PricingSection onRequireLogin={() => { window.location.hash = '#/pricing'; }} />
           </div>
         </section>
@@ -757,37 +730,35 @@ export default function Landing({ onLaunchApp }) {
       {/* Comparison Table */}
       <section id="comparison" className="py-20 px-6 border-t border-rule">
         <div className="max-w-4xl mx-auto">
-          <SectionHeader eyebrow="07 · Comparison" title="Free Clip Generator vs Paid Alternatives">
-            Hosted OpenShorts starts at $12/mo, or self-host it free. Opus Clip starts at $15/month, Kapwing at $24/month.
-          </SectionHeader>
+          <SectionHeader eyebrow="07 · Comparison" title={uiT("Free Clip Generator vs Paid Alternatives")}>{uiT("Hosted OpenShorts starts at $12/mo, or self-host it free. Opus Clip starts at $15/month, Kapwing at $24/month.")}</SectionHeader>
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead>
                 <tr className="border-b border-rule2">
-                  <th className="py-3 px-4 text-left text-sm text-muted font-medium">Feature</th>
+                  <th className="py-3 px-4 text-left text-sm text-muted font-medium">{uiT("Feature")}</th>
                   <th className="py-3 px-4 text-center text-sm font-medium">
-                    <span className="text-brass">OpenShorts</span>
+                    <span className="text-brass">{uiT("OpenShorts")}</span>
                   </th>
-                  <th className="py-3 px-4 text-center text-sm text-muted font-medium">Opus Clip</th>
-                  <th className="py-3 px-4 text-center text-sm text-muted font-medium">Kapwing</th>
+                  <th className="py-3 px-4 text-center text-sm text-muted font-medium">{uiT("Opus Clip")}</th>
+                  <th className="py-3 px-4 text-center text-sm text-muted font-medium">{uiT("Kapwing")}</th>
                 </tr>
               </thead>
               <tbody>
-                <ComparisonRow feature="Price" openshorts={<span className="text-ok font-medium">$0 Free</span>} opusclip={xIcon} kapwing={xIcon} />
+                <ComparisonRow feature="Price" openshorts={<span className="text-ok font-medium">{uiT("$0 Free")}</span>} opusclip={xIcon} kapwing={xIcon} />
                 <ComparisonRow feature="AI Viral Moment Detection" openshorts={checkIcon} opusclip={checkMuted} kapwing={checkMuted} />
                 <ComparisonRow feature="Smart Vertical Cropping" openshorts={checkIcon} opusclip={checkMuted} kapwing={checkMuted} />
                 <ComparisonRow feature="Auto Subtitles" openshorts={checkIcon} opusclip={checkMuted} kapwing={checkMuted} />
-                <ComparisonRow feature="AI Voice Dubbing (30+ langs, your ElevenLabs key)" openshorts={checkIcon} opusclip={<span className="text-muted text-sm">Limited</span>} kapwing={<span className="text-muted text-sm">No</span>} />
-                <ComparisonRow feature="AI Video Effects" openshorts={checkIcon} opusclip={<span className="text-muted text-sm">No</span>} kapwing={checkMuted} />
+                <ComparisonRow feature="AI Voice Dubbing (30+ langs, your ElevenLabs key)" openshorts={checkIcon} opusclip={<span className="text-muted text-sm">{uiT("Limited")}</span>} kapwing={<span className="text-muted text-sm">{uiT("No")}</span>} />
+                <ComparisonRow feature="AI Video Effects" openshorts={checkIcon} opusclip={<span className="text-muted text-sm">{uiT("No")}</span>} kapwing={checkMuted} />
                 <ComparisonRow feature="Hook Text Overlays" openshorts={checkIcon} opusclip={checkMuted} kapwing={checkMuted} />
-                <ComparisonRow feature="Self-Hosted / Privacy" openshorts={checkIcon} opusclip={<span className="text-muted text-sm">Cloud only</span>} kapwing={<span className="text-muted text-sm">Cloud only</span>} />
-                <ComparisonRow feature="No Watermark" openshorts={checkIcon} opusclip={<span className="text-muted text-sm">Free tier only</span>} kapwing={<span className="text-muted text-sm">Paid</span>} />
-                <ComparisonRow feature="Open Source" openshorts={checkIcon} opusclip={<span className="text-muted text-sm">No</span>} kapwing={<span className="text-muted text-sm">No</span>} />
-                <ComparisonRow feature="AI YouTube Thumbnail Generator" openshorts={checkIcon} opusclip={<span className="text-muted text-sm">No</span>} kapwing={<span className="text-muted text-sm">Paid</span>} />
-                <ComparisonRow feature="AI Title & Description Generator" openshorts={checkIcon} opusclip={<span className="text-muted text-sm">Limited</span>} kapwing={<span className="text-muted text-sm">Paid</span>} />
-                <ComparisonRow feature="AI UGC Video Generator" openshorts={checkIcon} opusclip={<span className="text-muted text-sm">No</span>} kapwing={<span className="text-muted text-sm">No</span>} />
-                <ComparisonRow feature="AI Actors with Lip-Sync" openshorts={checkIcon} opusclip={<span className="text-muted text-sm">No</span>} kapwing={<span className="text-muted text-sm">No</span>} />
-                <ComparisonRow feature="Usage Limits" openshorts={<span className="text-ok text-sm">Unlimited</span>} opusclip={<span className="text-muted text-sm">Per plan</span>} kapwing={<span className="text-muted text-sm">Per plan</span>} />
+                <ComparisonRow feature="Self-Hosted / Privacy" openshorts={checkIcon} opusclip={<span className="text-muted text-sm">{uiT("Cloud only")}</span>} kapwing={<span className="text-muted text-sm">{uiT("Cloud only")}</span>} />
+                <ComparisonRow feature="No Watermark" openshorts={checkIcon} opusclip={<span className="text-muted text-sm">{uiT("Free tier only")}</span>} kapwing={<span className="text-muted text-sm">{uiT("Paid")}</span>} />
+                <ComparisonRow feature="Open Source" openshorts={checkIcon} opusclip={<span className="text-muted text-sm">{uiT("No")}</span>} kapwing={<span className="text-muted text-sm">{uiT("No")}</span>} />
+                <ComparisonRow feature="AI YouTube Thumbnail Generator" openshorts={checkIcon} opusclip={<span className="text-muted text-sm">{uiT("No")}</span>} kapwing={<span className="text-muted text-sm">{uiT("Paid")}</span>} />
+                <ComparisonRow feature="AI Title & Description Generator" openshorts={checkIcon} opusclip={<span className="text-muted text-sm">{uiT("Limited")}</span>} kapwing={<span className="text-muted text-sm">{uiT("Paid")}</span>} />
+                <ComparisonRow feature="AI UGC Video Generator" openshorts={checkIcon} opusclip={<span className="text-muted text-sm">{uiT("No")}</span>} kapwing={<span className="text-muted text-sm">{uiT("No")}</span>} />
+                <ComparisonRow feature="AI Actors with Lip-Sync" openshorts={checkIcon} opusclip={<span className="text-muted text-sm">{uiT("No")}</span>} kapwing={<span className="text-muted text-sm">{uiT("No")}</span>} />
+                <ComparisonRow feature="Usage Limits" openshorts={<span className="text-ok text-sm">{uiT("Unlimited")}</span>} opusclip={<span className="text-muted text-sm">{uiT("Per plan")}</span>} kapwing={<span className="text-muted text-sm">{uiT("Per plan")}</span>} />
               </tbody>
             </table>
           </div>
@@ -797,9 +768,7 @@ export default function Landing({ onLaunchApp }) {
       {/* Use Cases */}
       <section className="py-20 px-6 border-t border-rule">
         <div className="max-w-5xl mx-auto">
-          <SectionHeader eyebrow="08 · Use Cases" title="Who Uses OpenShorts?">
-            Creators, marketers, and agencies scaling short-form video production.
-          </SectionHeader>
+          <SectionHeader eyebrow="08 · Use Cases" title={uiT("Who Uses OpenShorts?")}>{uiT("Creators, marketers, and agencies scaling short-form video production.")}</SectionHeader>
           <div className="grid md:grid-cols-3 gap-5">
             {[
               {
@@ -825,8 +794,8 @@ export default function Landing({ onLaunchApp }) {
             ].map((useCase, i) => (
               <div key={i} className="card p-6">
                 <useCase.icon size={18} className="text-brass mb-4" />
-                <h3 className="font-display text-xl lowercase text-ink mb-2">{useCase.title}</h3>
-                <p className="text-muted text-sm leading-relaxed">{useCase.description}</p>
+                <h3 className="font-display text-xl lowercase text-ink mb-2">{uiT(useCase.title)}</h3>
+                <p className="text-muted text-sm leading-relaxed">{uiT(useCase.description)}</p>
               </div>
             ))}
           </div>
@@ -836,29 +805,27 @@ export default function Landing({ onLaunchApp }) {
       {/* Also included: the two tools that are not the clipper */}
       <section className="py-20 px-6 border-t border-rule">
         <div className="max-w-6xl mx-auto">
-          <SectionHeader eyebrow="09 · Also Included" title="two more tools, same account">
-            In the same openshorts.app account, with no keys and no setup.
-          </SectionHeader>
+          <SectionHeader eyebrow="09 · Also Included" title={uiT("two more tools, same account")}>{uiT("In the same openshorts.app account, with no keys and no setup.")}</SectionHeader>
           <div className="grid md:grid-cols-2 gap-5">
             <div className="card p-8">
-              <p className="eyebrow mb-4">01 · AI Shorts</p>
+              <p className="eyebrow mb-4">{uiT("01 · AI Shorts")}</p>
               <Sparkles size={20} className="text-brass mb-4" />
-              <h3 className="font-display text-2xl lowercase text-ink mb-2">AI Shorts</h3>
-              <p className="text-muted text-sm leading-relaxed mb-4">UGC marketing videos with AI actors for any business.</p>
+              <h3 className="font-display text-2xl lowercase text-ink mb-2">{uiT("AI Shorts")}</h3>
+              <p className="text-muted text-sm leading-relaxed mb-4">{uiT("UGC marketing videos with AI actors for any business.")}</p>
               <ul className="space-y-1.5">
                 {['AI actor generation + lip-sync', 'B-roll + TikTok-style subtitles', 'From $0.65 per video'].map((f, i) => (
-                  <li key={i} className="flex items-center gap-2 text-xs text-muted"><Check size={12} className="text-ok shrink-0" />{f}</li>
+                  <li key={i} className="flex items-center gap-2 text-xs text-muted"><Check size={12} className="text-ok shrink-0" />{uiT(f)}</li>
                 ))}
               </ul>
             </div>
             <div className="card p-8">
-              <p className="eyebrow mb-4">02 · Studio</p>
+              <p className="eyebrow mb-4">{uiT("02 · Studio")}</p>
               <Monitor size={20} className="text-brass mb-4" />
-              <h3 className="font-display text-2xl lowercase text-ink mb-2">YouTube Studio</h3>
-              <p className="text-muted text-sm leading-relaxed mb-4">Free AI YouTube toolkit: thumbnails, titles, descriptions.</p>
+              <h3 className="font-display text-2xl lowercase text-ink mb-2">{uiT("YouTube Studio")}</h3>
+              <p className="text-muted text-sm leading-relaxed mb-4">{uiT("Free AI YouTube toolkit: thumbnails, titles, descriptions.")}</p>
               <ul className="space-y-1.5">
                 {['AI thumbnail generator (with face upload)', '10 viral title suggestions + chat', 'Direct publish to YouTube'].map((f, i) => (
-                  <li key={i} className="flex items-center gap-2 text-xs text-muted"><Check size={12} className="text-ok shrink-0" />{f}</li>
+                  <li key={i} className="flex items-center gap-2 text-xs text-muted"><Check size={12} className="text-ok shrink-0" />{uiT(f)}</li>
                 ))}
               </ul>
             </div>
@@ -869,9 +836,7 @@ export default function Landing({ onLaunchApp }) {
       {/* FAQ Section */}
       <section id="faq" className="py-20 px-6 border-t border-rule">
         <div className="max-w-3xl mx-auto">
-          <SectionHeader eyebrow="10 · FAQ" title="Frequently Asked Questions">
-            Everything you need to know about OpenShorts, from setup to features.
-          </SectionHeader>
+          <SectionHeader eyebrow="10 · FAQ" title={uiT("Frequently Asked Questions")}>{uiT("Everything you need to know about OpenShorts, from setup to features.")}</SectionHeader>
           <div className="divide-y divide-rule border-y border-rule">
             {faqs.map((faq, i) => (
               <FAQItem
@@ -894,64 +859,62 @@ export default function Landing({ onLaunchApp }) {
           <details className="group">
             <summary className="list-none cursor-pointer flex items-center justify-between gap-6 [&::-webkit-details-marker]:hidden">
               <span>
-                <span className="eyebrow block mb-3">11 · Self-Hosting</span>
-                <span className="font-display text-2xl md:text-3xl lowercase text-ink">running it yourself? the api keys and the stack</span>
+                <span className="eyebrow block mb-3">{uiT("11 · Self-Hosting")}</span>
+                <span className="font-display text-2xl md:text-3xl lowercase text-ink">{uiT("running it yourself? the api keys and the stack")}</span>
               </span>
               <ChevronDown size={22} className="text-muted shrink-0 transition-transform group-open:rotate-180" />
             </summary>
             {/* API Keys Section */}
             <section className="pt-12">
               <div className="max-w-5xl mx-auto">
-                <SectionHeader eyebrow="API Keys" title="Self-hosting? Every API has a free tier">
-                  Cloud plans include managed Gemini and social publishing: you never touch an API key. Self-hosters bring their own keys (all with generous free tiers):
-                </SectionHeader>
+                <SectionHeader eyebrow="API Keys" title={uiT("Self-hosting? Every API has a free tier")}>{uiT("Cloud plans include managed Gemini and social publishing: you never touch an API key. Self-hosters bring their own keys (all with generous free tiers):")}</SectionHeader>
                 <div className="grid md:grid-cols-3 gap-5">
                   <div className="card p-6 relative">
-                    <span className="badge-brass absolute top-4 right-4">Required</span>
+                    <span className="badge-brass absolute top-4 right-4">{uiT("Required")}</span>
                     <div className="w-10 h-10 rounded-input bg-paper3 flex items-center justify-center mb-4">
                       <Cpu size={18} className="text-brass" />
                     </div>
-                    <h3 className="font-display text-xl lowercase text-ink mb-1">Google Gemini API</h3>
-                    <div className="mb-3"><span className="badge-ok">Free tier: 1,500 req/day</span></div>
-                    <p className="text-muted text-sm leading-relaxed">Powers all AI features: viral moment detection, title generation, video effects, YouTube thumbnail creation, and description writing. The core engine of OpenShorts.</p>
+                    <h3 className="font-display text-xl lowercase text-ink mb-1">{uiT("Google Gemini API")}</h3>
+                    <div className="mb-3"><span className="badge-ok">{uiT("Free tier: 1,500 req/day")}</span></div>
+                    <p className="text-muted text-sm leading-relaxed">{uiT("Powers all AI features: viral moment detection, title generation, video effects, YouTube thumbnail creation, and description writing. The core engine of OpenShorts.")}</p>
                   </div>
                   <div className="card p-6 relative">
-                    <span className="readout absolute top-4 right-4 border border-rule rounded-full px-2.5 py-1">Optional</span>
+                    <span className="readout absolute top-4 right-4 border border-rule rounded-full px-2.5 py-1">{uiT("Optional")}</span>
                     <div className="w-10 h-10 rounded-input bg-paper3 flex items-center justify-center mb-4">
                       <Languages size={18} className="text-brass" />
                     </div>
-                    <h3 className="font-display text-xl lowercase text-ink mb-1">ElevenLabs API</h3>
-                    <div className="mb-3"><span className="badge-ok">Free tier included</span></div>
-                    <p className="text-muted text-sm leading-relaxed">Enables AI voice dubbing and translation in 30+ languages. Preserves the original speaker's voice while translating audio. Dubbed clips are auto-subtitled.</p>
+                    <h3 className="font-display text-xl lowercase text-ink mb-1">{uiT("ElevenLabs API")}</h3>
+                    <div className="mb-3"><span className="badge-ok">{uiT("Free tier included")}</span></div>
+                    <p className="text-muted text-sm leading-relaxed">{uiT("Enables AI voice dubbing and translation in 30+ languages. Preserves the original speaker's voice while translating audio. Dubbed clips are auto-subtitled.")}</p>
                   </div>
                   <div className="card p-6 relative">
-                    <span className="readout absolute top-4 right-4 border border-rule rounded-full px-2.5 py-1">Optional</span>
+                    <span className="readout absolute top-4 right-4 border border-rule rounded-full px-2.5 py-1">{uiT("Optional")}</span>
                     <div className="w-10 h-10 rounded-input bg-paper3 flex items-center justify-center mb-4">
                       <Globe size={18} className="text-brass" />
                     </div>
-                    <h3 className="font-display text-xl lowercase text-ink mb-1">Upload-Post API</h3>
-                    <div className="mb-3"><span className="badge-ok">Free tier included</span></div>
-                    <p className="text-muted text-sm leading-relaxed">Enables direct publishing to YouTube, TikTok, and Instagram Reels from the dashboard. <a href="https://www.upload-post.com" target="_blank" rel="noopener noreferrer" className="text-brass underline hover:brightness-110">Social media API</a> that lets you post your clips and thumbnails without leaving OpenShorts.</p>
+                    <h3 className="font-display text-xl lowercase text-ink mb-1">{uiT("Upload-Post API")}</h3>
+                    <div className="mb-3"><span className="badge-ok">{uiT("Free tier included")}</span></div>
+                    <p className="text-muted text-sm leading-relaxed">{uiT("Enables direct publishing to YouTube, TikTok, and Instagram Reels from the dashboard. ")}<a href="https://www.upload-post.com" target="_blank" rel="noopener noreferrer" className="text-brass underline hover:brightness-110">{uiT("Social media API")}</a>{uiT(" that lets you post your clips and thumbnails without leaving OpenShorts.")}</p>
                   </div>
                 </div>
                 <div className="grid md:grid-cols-2 gap-5 mt-5">
                   <div className="card p-6 relative">
-                    <span className="readout absolute top-4 right-4 border border-rule rounded-full px-2.5 py-1">AI Shorts</span>
+                    <span className="readout absolute top-4 right-4 border border-rule rounded-full px-2.5 py-1">{uiT("AI Shorts")}</span>
                     <div className="w-10 h-10 rounded-input bg-paper3 flex items-center justify-center mb-4">
                       <Zap size={18} className="text-brass" />
                     </div>
-                    <h3 className="font-display text-xl lowercase text-ink mb-1">fal.ai API</h3>
-                    <div className="mb-3"><span className="badge-ok">Pay-per-use from $0.04</span></div>
-                    <p className="text-muted text-sm leading-relaxed">Powers AI Shorts: generates AI actor images (Flux), talking head videos (Hailuo/Kling), and lip-sync (VEED). Required only for the AI UGC video generator.</p>
+                    <h3 className="font-display text-xl lowercase text-ink mb-1">{uiT("fal.ai API")}</h3>
+                    <div className="mb-3"><span className="badge-ok">{uiT("Pay-per-use from $0.04")}</span></div>
+                    <p className="text-muted text-sm leading-relaxed">{uiT("Powers AI Shorts: generates AI actor images (Flux), talking head videos (Hailuo/Kling), and lip-sync (VEED). Required only for the AI UGC video generator.")}</p>
                   </div>
                   <div className="card p-6 relative">
-                    <span className="readout absolute top-4 right-4 border border-rule rounded-full px-2.5 py-1">AI Shorts</span>
+                    <span className="readout absolute top-4 right-4 border border-rule rounded-full px-2.5 py-1">{uiT("AI Shorts")}</span>
                     <div className="w-10 h-10 rounded-input bg-paper3 flex items-center justify-center mb-4">
                       <Languages size={18} className="text-brass" />
                     </div>
-                    <h3 className="font-display text-xl lowercase text-ink mb-1">ElevenLabs TTS</h3>
-                    <div className="mb-3"><span className="badge-ok">Free tier included</span></div>
-                    <p className="text-muted text-sm leading-relaxed">Generates natural voiceovers for AI Shorts from the script. Multiple voice options for male and female actors in English and Spanish.</p>
+                    <h3 className="font-display text-xl lowercase text-ink mb-1">{uiT("ElevenLabs TTS")}</h3>
+                    <div className="mb-3"><span className="badge-ok">{uiT("Free tier included")}</span></div>
+                    <p className="text-muted text-sm leading-relaxed">{uiT("Generates natural voiceovers for AI Shorts from the script. Multiple voice options for male and female actors in English and Spanish.")}</p>
                   </div>
                 </div>
               </div>
@@ -960,9 +923,7 @@ export default function Landing({ onLaunchApp }) {
             {/* Tech Stack */}
             <section className="pt-12">
               <div className="max-w-5xl mx-auto">
-                <SectionHeader eyebrow="Stack" title="Built with Proven Technology">
-                  Industry-leading AI models and open source tools in one pipeline.
-                </SectionHeader>
+                <SectionHeader eyebrow="Stack" title={uiT("Built with Proven Technology")}>{uiT("Industry-leading AI models and open source tools in one pipeline.")}</SectionHeader>
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                   {[
                     { name: "Google Gemini 3.1", desc: "AI Analysis" },
@@ -976,8 +937,8 @@ export default function Landing({ onLaunchApp }) {
                     { name: "Docker", desc: "Deployment" }
                   ].map((tech, i) => (
                     <div key={i} className="border border-rule rounded-input bg-paper2 px-4 py-3 text-center">
-                      <div className="readout text-ink2">{tech.name}</div>
-                      <div className="text-xs text-muted mt-1">{tech.desc}</div>
+                      <div className="readout text-ink2">{uiT(tech.name)}</div>
+                      <div className="text-xs text-muted mt-1">{uiT(tech.desc)}</div>
                     </div>
                   ))}
                 </div>
@@ -991,18 +952,14 @@ export default function Landing({ onLaunchApp }) {
       {/* CTA Section — final statement */}
       <section className="py-24 px-6 border-t border-rule">
         <div className="max-w-3xl mx-auto text-center">
-          <h2 className="font-display text-4xl md:text-5xl lowercase text-ink tracking-tight mb-5">start creating viral videos today.</h2>
-          <p className="text-muted mb-10 max-w-xl mx-auto leading-relaxed lowercase">first video free (up to 60 min) · then 20 min/month · no credit card, or self-host it free with docker.</p>
+          <h2 className="font-display text-4xl md:text-5xl lowercase text-ink tracking-tight mb-5">{uiT("start creating viral videos today.")}</h2>
+          <p className="text-muted mb-10 max-w-xl mx-auto leading-relaxed lowercase">{uiT("first video free (up to 60 min) · then 20 min/month · no credit card, or self-host it free with docker.")}</p>
           <div className="flex flex-wrap items-center justify-center gap-4">
             {billingEnabled ? (
-              <a href="#pricing" className="btn-primary whitespace-nowrap">
-                start free
-                <ArrowRight size={16} />
+              <a href="#pricing" className="btn-primary whitespace-nowrap">{uiT("start free")}<ArrowRight size={16} />
               </a>
             ) : (
-              <button onClick={onLaunchApp} className="btn-primary whitespace-nowrap">
-                launch openshorts
-                <ArrowRight size={16} />
+              <button onClick={onLaunchApp} className="btn-primary whitespace-nowrap">{uiT("launch openshorts")}<ArrowRight size={16} />
               </button>
             )}
             <a
@@ -1011,9 +968,7 @@ export default function Landing({ onLaunchApp }) {
               rel="noopener noreferrer"
               className="btn-ghost whitespace-nowrap"
             >
-              <Github size={16} />
-              Star on GitHub
-            </a>
+              <Github size={16} />{uiT("Star on GitHub")}</a>
           </div>
         </div>
       </section>
@@ -1029,64 +984,63 @@ export default function Landing({ onLaunchApp }) {
           type="url"
           value={heroUrl}
           onChange={(e) => setHeroUrl(e.target.value)}
-          placeholder="paste a video link"
+          placeholder={uiT("paste a video link")}
           tabIndex={stickyCta ? 0 : -1}
           className="flex-1 min-w-0 bg-transparent outline-none text-sm text-ink placeholder:text-muted px-2"
-          aria-label="Video link"
+          aria-label={uiT("Video link")}
         />
-        <button type="submit" tabIndex={stickyCta ? 0 : -1} className="btn-primary whitespace-nowrap rounded-full text-sm">
-          get free clips <ArrowRight size={14} />
+        <button type="submit" tabIndex={stickyCta ? 0 : -1} className="btn-primary whitespace-nowrap rounded-full text-sm">{uiT("get free clips ")}<ArrowRight size={14} />
         </button>
       </form>
 
       {/* Footer — Ft5 Statement */}
       <footer className="border-t border-rule py-16 px-6">
         <div className="max-w-6xl mx-auto">
-          <p className="font-display text-3xl md:text-5xl lowercase text-ink tracking-tight mb-10">clip it before it scrolls past.</p>
-          <nav aria-label="Guides and comparisons" className="border-t border-rule pt-6 mb-6 flex flex-wrap items-center gap-x-6 gap-y-2 text-sm lowercase text-muted">
-            <a href="/free-ai-clip-generator" className="hover:text-ink transition-colors">free ai clip generator</a>
-            <a href="/tools" className="hover:text-ink transition-colors">free tools</a>
-            <a href="/youtube-transcript-generator" className="hover:text-ink transition-colors">youtube transcript generator</a>
-            <a href="/youtube-tag-generator" className="hover:text-ink transition-colors">youtube tag generator</a>
-            <a href="/video-aspect-ratio-converter" className="hover:text-ink transition-colors">video to 9:16 converter</a>
-            <a href="/auto-clip" className="hover:text-ink transition-colors">auto clip</a>
-            <a href="/youtube-automation" className="hover:text-ink transition-colors">youtube automation</a>
-            <a href="/free-ai-clip-generator-no-watermark" className="hover:text-ink transition-colors">no watermark</a>
-            <a href="/open-source-video-clipper" className="hover:text-ink transition-colors">open source video clipper</a>
-            <a href="/podcast-to-shorts" className="hover:text-ink transition-colors">podcast clips</a>
-            <a href="/youtube-to-shorts-converter" className="hover:text-ink transition-colors">youtube to shorts</a>
-            <a href="/how-openshorts-works" className="hover:text-ink transition-colors">how it works</a>
-            <a href="/alternatives" className="hover:text-ink transition-colors">alternatives</a>
-            <a href="/alternativas" className="hover:text-ink transition-colors">alternativas</a>
-            <a href="/alternatives/opus-clip" className="hover:text-ink transition-colors">vs opus clip</a>
-            <a href="/opus-clip-pricing" className="hover:text-ink transition-colors">opus clip pricing</a>
-            <a href="/opus-clip-free-alternative" className="hover:text-ink transition-colors">free opus clip alternative</a>
-            <a href="/opus-ai" className="hover:text-ink transition-colors">opus ai</a>
-            <a href="/opus-pro" className="hover:text-ink transition-colors">opus pro</a>
-            <a href="/vizard-ai" className="hover:text-ink transition-colors">vizard ai</a>
-            <a href="/vizard-ai-video-to-text" className="hover:text-ink transition-colors">vizard ai video to text</a>
-            <a href="/alternatives/vidyo-ai" className="hover:text-ink transition-colors">vidyo ai (quso)</a>
-            <a href="/alternatives/2short" className="hover:text-ink transition-colors">2short ai</a>
-            <a href="/alternatives/sendshort" className="hover:text-ink transition-colors">sendshort</a>
-            <a href="/submagic-reviews" className="hover:text-ink transition-colors">submagic review</a>
-            <a href="/mcp" className="hover:text-ink transition-colors">mcp server & api</a>
-            <a href="/automate-shorts-api" className="hover:text-ink transition-colors">automate shorts</a>
-            <a href="/n8n-youtube-shorts-automation" className="hover:text-ink transition-colors">n8n workflow</a>
+          <p className="font-display text-3xl md:text-5xl lowercase text-ink tracking-tight mb-10">{uiT("clip it before it scrolls past.")}</p>
+          <nav aria-label={uiT("Guides and comparisons")} className="border-t border-rule pt-6 mb-6 flex flex-wrap items-center gap-x-6 gap-y-2 text-sm lowercase text-muted">
+            <a href="/free-ai-clip-generator" className="hover:text-ink transition-colors">{uiT("free ai clip generator")}</a>
+            <a href="/tools" className="hover:text-ink transition-colors">{uiT("free tools")}</a>
+            <a href="/youtube-transcript-generator" className="hover:text-ink transition-colors">{uiT("youtube transcript generator")}</a>
+            <a href="/youtube-tag-generator" className="hover:text-ink transition-colors">{uiT("youtube tag generator")}</a>
+            <a href="/video-aspect-ratio-converter" className="hover:text-ink transition-colors">{uiT("video to 9:16 converter")}</a>
+            <a href="/auto-clip" className="hover:text-ink transition-colors">{uiT("auto clip")}</a>
+            <a href="/youtube-automation" className="hover:text-ink transition-colors">{uiT("youtube automation")}</a>
+            <a href="/free-ai-clip-generator-no-watermark" className="hover:text-ink transition-colors">{uiT("no watermark")}</a>
+            <a href="/open-source-video-clipper" className="hover:text-ink transition-colors">{uiT("open source video clipper")}</a>
+            <a href="/podcast-to-shorts" className="hover:text-ink transition-colors">{uiT("podcast clips")}</a>
+            <a href="/youtube-to-shorts-converter" className="hover:text-ink transition-colors">{uiT("youtube to shorts")}</a>
+            <a href="/how-openshorts-works" className="hover:text-ink transition-colors">{uiT("how it works")}</a>
+            <a href="/alternatives" className="hover:text-ink transition-colors">{uiT("alternatives")}</a>
+            <a href="/alternativas" className="hover:text-ink transition-colors">{uiT("alternativas")}</a>
+            <a href="/alternatives/opus-clip" className="hover:text-ink transition-colors">{uiT("vs opus clip")}</a>
+            <a href="/opus-clip-pricing" className="hover:text-ink transition-colors">{uiT("opus clip pricing")}</a>
+            <a href="/opus-clip-free-alternative" className="hover:text-ink transition-colors">{uiT("free opus clip alternative")}</a>
+            <a href="/opus-ai" className="hover:text-ink transition-colors">{uiT("opus ai")}</a>
+            <a href="/opus-pro" className="hover:text-ink transition-colors">{uiT("opus pro")}</a>
+            <a href="/vizard-ai" className="hover:text-ink transition-colors">{uiT("vizard ai")}</a>
+            <a href="/vizard-ai-video-to-text" className="hover:text-ink transition-colors">{uiT("vizard ai video to text")}</a>
+            <a href="/alternatives/vidyo-ai" className="hover:text-ink transition-colors">{uiT("vidyo ai (quso)")}</a>
+            <a href="/alternatives/2short" className="hover:text-ink transition-colors">{uiT("2short ai")}</a>
+            <a href="/alternatives/sendshort" className="hover:text-ink transition-colors">{uiT("sendshort")}</a>
+            <a href="/submagic-reviews" className="hover:text-ink transition-colors">{uiT("submagic review")}</a>
+            <a href="/mcp" className="hover:text-ink transition-colors">{uiT("mcp server & api")}</a>
+            <a href="/automate-shorts-api" className="hover:text-ink transition-colors">{uiT("automate shorts")}</a>
+            <a href="/n8n-youtube-shorts-automation" className="hover:text-ink transition-colors">{uiT("n8n workflow")}</a>
           </nav>
           <div className="border-t border-rule pt-6 flex flex-col md:flex-row md:items-center justify-between gap-4">
             <div className="flex items-center gap-3">
-              <img src="/logo-openshorts.png" alt="OpenShorts" className="w-6 h-6" />
-              <span className="text-sm text-muted">OpenShorts — Free Open Source Clip Generator & AI UGC Video Creator</span>
+              <img src="/logo-openshorts.png" alt={uiT("OpenShorts")} className="w-6 h-6" />
+              <span className="text-sm text-muted">{uiT("OpenShorts — Free Open Source Clip Generator & AI UGC Video Creator")}</span>
             </div>
             <div className="flex flex-wrap items-center gap-x-6 gap-y-2 text-sm lowercase text-muted">
-              <a href="https://github.com/mutonby/openshorts" target="_blank" rel="noopener noreferrer" className="hover:text-ink transition-colors">GitHub</a>
-              <a href="#features" className="hover:text-ink transition-colors">Features</a>
-              <a href="#faq" className="hover:text-ink transition-colors">FAQ</a>
-              <a href="/terms" className="hover:text-ink transition-colors whitespace-nowrap">Terms</a>
-              <a href="/privacy" className="hover:text-ink transition-colors whitespace-nowrap">Privacy</a>
-              <a href="/legal-notice" className="hover:text-ink transition-colors whitespace-nowrap">Legal Notice</a>
-              <a href="/refunds" className="hover:text-ink transition-colors whitespace-nowrap">Refunds</a>
-              <a href="/report-content" className="hover:text-ink transition-colors whitespace-nowrap">Report Content</a>
+              <a href="https://github.com/mutonby/openshorts" target="_blank" rel="noopener noreferrer" className="hover:text-ink transition-colors">{uiT("GitHub")}</a>
+              <a href="#features" className="hover:text-ink transition-colors">{uiT("Features")}</a>
+              <a href="#faq" className="hover:text-ink transition-colors">{uiT("FAQ")}</a>
+              <a href="/terms" className="hover:text-ink transition-colors whitespace-nowrap">{uiT("Terms")}</a>
+              <a href="/privacy" className="hover:text-ink transition-colors whitespace-nowrap">{uiT("Privacy")}</a>
+              <a href="/legal-notice" className="hover:text-ink transition-colors whitespace-nowrap">{uiT("Legal Notice")}</a>
+              <a href="/refunds" className="hover:text-ink transition-colors whitespace-nowrap">{uiT("Refunds")}</a>
+              <a href="/report-content" className="hover:text-ink transition-colors whitespace-nowrap">{uiT("Report Content")}</a>
             </div>
           </div>
         </div>

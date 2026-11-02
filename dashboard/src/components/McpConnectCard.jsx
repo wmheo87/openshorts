@@ -1,3 +1,4 @@
+import { t as uiT, useUiLocale } from "../i18n/runtime.js";
 import React, { useState, useCallback } from 'react';
 import { Plug, Copy, Check } from 'lucide-react';
 import { getApiUrl } from '../config';
@@ -79,6 +80,7 @@ function buildClients({ cloud, url }) {
 }
 
 export default function McpConnectCard({ cloud = true, compact = false }) {
+  useUiLocale();
   const url = cloud ? CLOUD_MCP_URL : localMcpUrl();
   const clients = buildClients({ cloud, url });
   const [active, setActive] = useState(clients[0].id);
@@ -95,17 +97,13 @@ export default function McpConnectCard({ cloud = true, compact = false }) {
   return (
     <div className="card p-6" id="connect-agent">
       <h3 className="font-display lowercase text-lg text-ink mb-1 flex items-center gap-2">
-        <Plug size={16} className="text-brass" /> Connect an agent
-      </h3>
-      <p className="text-muted text-sm mb-4">
-        Let Claude, ChatGPT, Cursor or n8n clip and publish for you through the built-in MCP server:
-        8 tools (process a video or upload one, check a job, list clips, add subtitles, recut, publish, quota).
-        {cloud
+        <Plug size={16} className="text-brass" />{uiT(" Connect an agent")}</h3>
+      <p className="text-muted text-sm mb-4">{uiT("Let Claude, ChatGPT, Cursor or n8n clip and publish for you through the built-in MCP server: 8 tools (process a video or upload one, check a job, list clips, add subtitles, recut, publish, quota).")}{uiT(cloud
           ? ' claude.ai and ChatGPT connect with one URL and a sign-in; CLI clients use an API key.'
-          : ' This install runs without accounts, so no key is needed.'}
+          : ' This install runs without accounts, so no key is needed.')}
       </p>
 
-      <div className="flex flex-wrap gap-1.5 mb-4" role="tablist" aria-label="client">
+      <div className="flex flex-wrap gap-1.5 mb-4" role="tablist" aria-label={uiT("client")}>
         {clients.map((c) => (
           <button
             key={c.id}
@@ -115,26 +113,26 @@ export default function McpConnectCard({ cloud = true, compact = false }) {
             className={`px-3 py-1.5 rounded-input text-xs border transition-colors ${
               c.id === active ? 'border-brass text-ink bg-brass/10' : 'border-rule text-muted hover:text-ink'}`}
           >
-            {c.label}
+            {uiT(c.label)}
           </button>
         ))}
       </div>
 
       {current.kind === 'steps' && (
         <ol className="list-decimal pl-5 space-y-1.5 text-sm text-ink2 mb-3">
-          {current.steps.map((s) => <li key={s}>{s}</li>)}
+          {current.steps.map((s) => <li key={s}>{uiT(s)}</li>)}
         </ol>
       )}
 
       <div className="relative">
         <pre className={`font-mono text-ink2 whitespace-pre-wrap break-all rounded-card border border-rule bg-paper p-3 pr-20 text-xs ${compact ? '' : 'leading-relaxed'}`}>
-          {current.snippet}
+          {uiT(current.snippet)}
         </pre>
-        <button onClick={copy} className="btn-ghost absolute top-2 right-2 px-2.5 py-1 text-xs" aria-label="copy">
-          {copied ? <Check size={13} /> : <Copy size={13} />} {copied ? 'Copied' : 'Copy'}
+        <button onClick={copy} className="btn-ghost absolute top-2 right-2 px-2.5 py-1 text-xs" aria-label={uiT("copy")}>
+          {copied ? <Check size={13} /> : <Copy size={13} />} {uiT(copied ? 'Copied' : 'Copy')}
         </button>
       </div>
-      {current.note && <p className="text-muted text-xs mt-2">{current.note}</p>}
+      {current.note && <p className="text-muted text-xs mt-2">{uiT(current.note)}</p>}
     </div>
   );
 }

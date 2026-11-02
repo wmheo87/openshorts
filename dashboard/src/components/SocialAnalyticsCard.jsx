@@ -1,8 +1,9 @@
+import { getUiLocale, t as uiT, useUiLocale } from "../i18n/runtime.js";
 import React, { useEffect, useState } from 'react';
 import { BarChart3, ExternalLink } from 'lucide-react';
 import { apiJson } from '../lib/api';
 
-const fmtNum = (n) => new Intl.NumberFormat('en-US', {
+const fmtNum = (n) => new Intl.NumberFormat(getUiLocale(), {
   notation: (n || 0) >= 10000 ? 'compact' : 'standard',
   maximumFractionDigits: 1,
 }).format(n || 0);
@@ -10,7 +11,7 @@ const fmtNum = (n) => new Intl.NumberFormat('en-US', {
 const fmtDay = (iso) => {
   const d = iso ? new Date(iso) : null;
   return d && !Number.isNaN(d.getTime())
-    ? d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+    ? d.toLocaleDateString(getUiLocale(), { month: 'short', day: 'numeric' })
     : '';
 };
 
@@ -21,6 +22,7 @@ const fmtDay = (iso) => {
 // cache's last snapshot. Paid-only by nature (social posting itself is paid in
 // cloud): a 402 or any other failure simply hides the card.
 export default function SocialAnalyticsCard() {
+  useUiLocale();
   const [data, setData] = useState(null);
 
   useEffect(() => {
@@ -43,25 +45,19 @@ export default function SocialAnalyticsCard() {
     <div className="card p-6">
       <div className="flex items-baseline justify-between gap-4 mb-1">
         <h3 className="font-display lowercase text-lg text-ink flex items-center gap-2">
-          <BarChart3 size={16} className="text-brass" /> Your posts
-        </h3>
-        <span className="text-muted text-xs lowercase">
-          posted in the last 30 days
-          {data.refreshing ? ' · updating, reload in a minute'
-            : data.updated_at ? ` · updated ${fmtDay(data.updated_at)}` : ''}
+          <BarChart3 size={16} className="text-brass" />{uiT(" Your posts")}</h3>
+        <span className="text-muted text-xs lowercase">{uiT("posted in the last 30 days")}{uiT(data.refreshing ? ' · updating, reload in a minute'
+            : data.updated_at ? ` · updated ${fmtDay(data.updated_at)}` : '')}
         </span>
       </div>
 
       {!data.posts_count ? (
-        <p className="text-muted text-sm lowercase">
-          Nothing published yet. Post a clip from your results and its views show up here.
-        </p>
+        <p className="text-muted text-sm lowercase">{uiT("Nothing published yet. Post a clip from your results and its views show up here.")}</p>
       ) : (
         <>
           <div className="flex items-end gap-3 mb-3">
-            <span className="readout text-2xl text-ink">{fmtNum(total)}</span>
-            <span className="text-muted text-sm lowercase mb-0.5">
-              views on {data.posts_count} post{data.posts_count === 1 ? '' : 's'}
+            <span className="readout text-2xl text-ink">{uiT(fmtNum(total))}</span>
+            <span className="text-muted text-sm lowercase mb-0.5">{uiT("views on ")}{uiT(data.posts_count)}{uiT(" post")}{uiT(data.posts_count === 1 ? '' : 's')}
             </span>
           </div>
 
@@ -69,7 +65,7 @@ export default function SocialAnalyticsCard() {
             <div className="flex flex-wrap gap-x-4 gap-y-1 mb-4 text-sm">
               {perPlatform.map(([platform, v]) => (
                 <span key={platform} className="text-ink2 lowercase">
-                  {platform} <span className="text-brass">{fmtNum(Number(v))}</span>
+                  {uiT(platform)} <span className="text-brass">{uiT(fmtNum(Number(v)))}</span>
                 </span>
               ))}
             </div>
@@ -81,7 +77,7 @@ export default function SocialAnalyticsCard() {
                 <div key={p.post_url || i}
                      className="flex items-center justify-between gap-3 text-sm">
                   <span className="text-ink2 truncate lowercase">
-                    {p.platform} · {fmtDay(p.published_at)}
+                    {uiT(p.platform)} · {uiT(fmtDay(p.published_at))}
                     {/^https?:\/\//.test(p.post_url || '') && (
                       <a href={p.post_url} target="_blank" rel="noreferrer"
                          className="inline-flex align-middle ml-1.5 text-muted hover:text-ink">
@@ -89,7 +85,7 @@ export default function SocialAnalyticsCard() {
                       </a>
                     )}
                   </span>
-                  <span className="text-ink shrink-0">{fmtNum(p.views)} views</span>
+                  <span className="text-ink shrink-0">{uiT(fmtNum(p.views))}{uiT(" views")}</span>
                 </div>
               ))}
             </div>

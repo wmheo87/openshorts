@@ -1,3 +1,7 @@
+import { diagnosticSummary } from './i18n/diagnostics.js';
+import LocalizedDiagnostic from './i18n/LocalizedDiagnostic';
+import LanguageSwitcher from './i18n/LanguageSwitcher';
+import { getUiLocale, t as uiT, useUiLocale } from "./i18n/runtime.js";
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { Upload, Sparkles, Youtube, Instagram, Share2, ChevronDown, Check, Activity, LayoutDashboard, Settings, Plus, History, X, Terminal, Shield, LayoutGrid, Image, Globe, RotateCcw, Calendar, AlertTriangle, KeyRound, Bot, Users, Smartphone, ExternalLink, Copy, CheckCircle2, Mail, Loader2, Download, Menu, Lock, Rocket } from 'lucide-react';
 import KeyInput from './components/KeyInput';
@@ -158,6 +162,7 @@ const ProfileNetworkIcons = ({ profile, size = 12 }) => (
 );
 
 const UserProfileSelector = ({ profiles, selectedUserId, onSelect, onConnect }) => {
+  useUiLocale();
   const [isOpen, setIsOpen] = useState(false);
 
   if (!profiles || profiles.length === 0) return null;
@@ -169,19 +174,19 @@ const UserProfileSelector = ({ profiles, selectedUserId, onSelect, onConnect }) 
     <div className="relative z-50">
       <button
         onClick={() => setIsOpen(!isOpen)}
-        aria-label="social profile"
+        aria-label={uiT("social profile")}
         /* Phone: avatar + chevron only. A 180px pill next to the menu button,
            the section title and the minutes meter overflowed a 360px header. */
         className="flex items-center justify-between gap-1 bg-paper2 border border-rule2 rounded-input px-2 sm:px-3 py-2 text-sm text-ink2 hover:bg-paper3 transition-colors sm:min-w-[180px]"
       >
         <span className="flex items-center gap-2">
           <div className="w-5 h-5 rounded-full bg-paper3 border border-rule flex items-center justify-center font-mono text-micro text-brass shrink-0">
-            {autoId ? "S" : (selectedProfile?.username?.substring(0, 1).toUpperCase() || "U")}
+            {uiT(autoId ? "S" : (selectedProfile?.username?.substring(0, 1).toUpperCase() || "U"))}
           </div>
           {autoId ? (
             <span className="hidden sm:flex"><ProfileNetworkIcons profile={selectedProfile} size={13} /></span>
           ) : (
-            <span className="hidden sm:block font-medium text-ink truncate max-w-[100px]">{selectedProfile?.username || "Select User"}</span>
+            <span className="hidden sm:block font-medium text-ink truncate max-w-[100px]">{uiT(selectedProfile?.username || "Select User")}</span>
           )}
         </span>
         <ChevronDown size={14} className={`text-muted transition-transform ${isOpen ? 'rotate-180' : ''}`} />
@@ -201,12 +206,12 @@ const UserProfileSelector = ({ profiles, selectedUserId, onSelect, onConnect }) 
               >
                 <div className="flex items-center gap-3">
                   <div className="w-8 h-8 rounded-full bg-paper3 flex items-center justify-center font-mono text-micro text-ink border border-rule shrink-0">
-                    {isAutoProfileId(profile.username) ? "S" : profile.username.substring(0, 2).toUpperCase()}
+                    {isAutoProfileId(profile.username) ? uiT("S") : profile.username.substring(0, 2).toUpperCase()}
                   </div>
                   <div className="min-w-0">
                     <div className="text-sm font-medium text-ink2 group-hover:text-ink transition-colors truncate">
                       {isAutoProfileId(profile.username)
-                        ? `Social profile ${profiles.indexOf(profile) + 1}`
+                        ? uiT(`Social profile ${profiles.indexOf(profile) + 1}`)
                         : profile.username}
                     </div>
                     <div className="flex gap-2 mt-0.5">
@@ -235,8 +240,7 @@ const UserProfileSelector = ({ profiles, selectedUserId, onSelect, onConnect }) 
               onClick={() => { setIsOpen(false); onConnect(); }}
               className="w-full flex items-center gap-2 px-4 py-3 text-sm text-brass hover:bg-paper3 transition-colors text-left border-t border-rule"
             >
-              <Share2 size={14} /> Connect / manage accounts
-            </button>
+              <Share2 size={14} />{uiT(" Connect / manage accounts")}</button>
           )}
         </div>
       )}
@@ -272,6 +276,7 @@ const pollJob = async (jobId) => {
 };
 
 function App() {
+  useUiLocale();
   // Cloud auth/billing session (inert when billing is disabled).
   const { billingEnabled, isManaged, isSignedIn, me, plan, refreshMe, jobRetentionSeconds, localLlm } = useAuth();
   const [showLogin, setShowLogin] = useState(false);
@@ -669,7 +674,7 @@ function App() {
       a.remove();
       URL.revokeObjectURL(url);
     } catch (e) {
-      alert(`Download failed: ${e.message}`);
+      alert(uiT(`Download failed: ${e.message}`));
     } finally {
       setDownloadingAll(false);
     }
@@ -896,10 +901,10 @@ function App() {
           setUploadUserId(data.profiles[0].username);
         }
       } else if (!silent) {
-        alert("No profiles found for this API Key.");
+        alert(uiT("No profiles found for this API Key."));
       }
     } catch (e) {
-      if (!silent) alert("Error fetching User Profiles. Please check key.");
+      if (!silent) alert(uiT("Error fetching User Profiles. Please check key."));
       console.error(e);
     }
   };
@@ -1043,7 +1048,7 @@ function App() {
       // Same tab so the connect page's redirectUrl brings the user back into the app.
       if (access_url) window.location.href = access_url;
     } catch (e) {
-      alert('Could not open the connection page. Please try again.');
+      alert(uiT('Could not open the connection page. Please try again.'));
     }
   };
 
@@ -1054,7 +1059,7 @@ function App() {
       const { access_url } = await apiJson('/api/social/connect', { method: 'POST' });
       if (access_url) window.open(access_url, '_blank', 'noopener');
     } catch (e) {
-      alert('Could not open the calendar. Please try again.');
+      alert(uiT('Could not open the calendar. Please try again.'));
     }
   };
 
@@ -1334,7 +1339,7 @@ function App() {
         className="flex items-center gap-2 px-3 py-2 text-xs lowercase text-muted hover:text-ink2 transition-colors"
       >
         <Globe size={14} className="shrink-0" />
-        <span className={collapsed ? 'hidden lg:block truncate' : 'truncate'}>landing page</span>
+        <span className={collapsed ? 'hidden lg:block truncate' : 'truncate'}>{uiT("landing page")}</span>
       </a>
       <a
         href="https://github.com/mutonby/openshorts"
@@ -1343,7 +1348,7 @@ function App() {
         className="flex items-center gap-2 px-3 py-2 text-xs lowercase text-muted hover:text-ink2 transition-colors"
       >
         <svg height="14" viewBox="0 0 16 16" version="1.1" width="14" aria-hidden="true" fill="currentColor" className="shrink-0"><path fillRule="evenodd" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"></path></svg>
-        <span className={collapsed ? 'hidden lg:block truncate' : 'truncate'}>open source</span>
+        <span className={collapsed ? 'hidden lg:block truncate' : 'truncate'}>{uiT("open source")}</span>
       </a>
       {billingEnabled && (
         <a
@@ -1351,7 +1356,7 @@ function App() {
           className="flex items-center gap-2 px-3 py-2 text-xs lowercase text-muted hover:text-ink2 transition-colors"
         >
           <Sparkles size={14} className="shrink-0" />
-          <span className={collapsed ? 'hidden lg:block truncate' : 'truncate'}>plans &amp; pricing</span>
+          <span className={collapsed ? 'hidden lg:block truncate' : 'truncate'}>{uiT("plans & pricing")}</span>
         </a>
       )}
       <a
@@ -1368,11 +1373,11 @@ function App() {
   // entirely — an unlabelled 80px rail ate a fifth of a phone screen.
   const Sidebar = () => (
     <div className="hidden md:flex w-20 lg:w-64 bg-paper2 border-r border-rule flex-col h-full shrink-0 transition-all duration-300">
-      <a href="#landing" className="p-6 flex items-center gap-3" title="go to landing page">
+      <a href="#landing" className="p-6 flex items-center gap-3" title={uiT("go to landing page")}>
         <div className="w-8 h-8 bg-paper3 rounded-input flex items-center justify-center shrink-0 overflow-hidden border border-rule">
-          <img src="/logo-openshorts.png" alt="Logo" className="w-full h-full object-cover" />
+          <img src="/logo-openshorts.png" alt={uiT("Logo")} className="w-full h-full object-cover" />
         </div>
-        <span className="font-display lowercase text-lg text-ink hidden lg:block">openshorts</span>
+        <span className="font-display lowercase text-lg text-ink hidden lg:block">{uiT("openshorts")}</span>
       </a>
 
       <nav className="flex-1 px-4 py-4 space-y-1">
@@ -1384,7 +1389,7 @@ function App() {
               key={item.id}
               data-tutorial={item.id === 'dashboard' ? 'nav-clips' : undefined}
               onClick={() => goToTab(item.id)}
-              title={tabLocked(item.id) ? 'Finish your first clips to unlock' : item.label}
+              title={uiT(tabLocked(item.id) ? 'Finish your first clips to unlock' : item.label)}
               disabled={tabLocked(item.id)}
               className={`relative w-full flex items-center gap-3 px-3 py-2.5 rounded-input transition-colors ${isActive ? 'bg-paper3 text-ink' : 'text-muted hover:text-ink2 hover:bg-paper3/50'} ${tabLocked(item.id) ? 'opacity-40 cursor-not-allowed hover:bg-transparent hover:text-muted' : ''}`}
             >
@@ -1392,12 +1397,12 @@ function App() {
                 <span className="absolute left-0 top-1.5 bottom-1.5 w-0.5 bg-brass rounded-full" aria-hidden="true" />
               )}
               <NavIcon size={18} className={`shrink-0 ${isActive ? 'text-brass' : ''}`} />
-              <span className="text-sm lowercase hidden lg:block flex-1 text-left truncate">{item.label}</span>
+              <span className="text-sm lowercase hidden lg:block flex-1 text-left truncate">{uiT(item.label)}</span>
               {tabLocked(item.id)
                 ? <Lock size={12} className="shrink-0 hidden lg:block" />
-                : item.byok ? <span className="readout hidden lg:block">BYOK</span>
-                  : item.isNew ? <span className="badge-brass hidden lg:block">new</span> : null}
-              <span className="readout hidden lg:block">{item.ord}</span>
+                : item.byok ? <span className="readout hidden lg:block">{uiT("BYOK")}</span>
+                  : item.isNew ? <span className="badge-brass hidden lg:block">{uiT("new")}</span> : null}
+              <span className="readout hidden lg:block">{uiT(item.ord)}</span>
             </button>
           );
         })}
@@ -1415,7 +1420,7 @@ function App() {
       className="md:hidden fixed inset-0 z-[90] flex"
       role="dialog"
       aria-modal="true"
-      aria-label="Navigation"
+      aria-label={uiT("Navigation")}
     >
       <div
         className="absolute inset-0 bg-black/60 animate-fade"
@@ -1428,11 +1433,11 @@ function App() {
             <div className="w-7 h-7 bg-paper3 rounded-input overflow-hidden border border-rule shrink-0">
               <img src="/logo-openshorts.png" alt="" className="w-full h-full object-cover" />
             </div>
-            <span className="font-display lowercase text-lg text-ink">openshorts</span>
+            <span className="font-display lowercase text-lg text-ink">{uiT("openshorts")}</span>
           </a>
           <button
             onClick={() => setNavOpen(false)}
-            aria-label="close navigation"
+            aria-label={uiT("close navigation")}
             className="p-2 -mr-2 text-muted hover:text-ink transition-colors"
           >
             <X size={18} />
@@ -1449,18 +1454,18 @@ function App() {
                 onClick={() => goToTab(item.id)}
                 disabled={tabLocked(item.id)}
                 aria-current={isActive ? 'page' : undefined}
-                title={tabLocked(item.id) ? 'Finish your first clips to unlock' : undefined}
+                title={uiT(tabLocked(item.id) ? 'Finish your first clips to unlock' : undefined)}
                 className={`relative w-full flex items-center gap-3 px-3 py-3 rounded-input transition-colors ${isActive ? 'bg-paper3 text-ink' : 'text-muted active:bg-paper3/60'} ${tabLocked(item.id) ? 'opacity-40 cursor-not-allowed' : ''}`}
               >
                 {isActive && (
                   <span className="absolute left-0 top-2 bottom-2 w-0.5 bg-brass rounded-full" aria-hidden="true" />
                 )}
                 <NavIcon size={18} className={`shrink-0 ${isActive ? 'text-brass' : ''}`} />
-                <span className="text-[0.95rem] lowercase flex-1 text-left truncate">{item.label}</span>
+                <span className="text-[0.95rem] lowercase flex-1 text-left truncate">{uiT(item.label)}</span>
                 {tabLocked(item.id)
                   ? <Lock size={12} className="shrink-0" />
-                  : item.byok ? <span className="readout shrink-0">BYOK</span>
-                    : item.isNew ? <span className="badge-brass shrink-0">new</span> : null}
+                  : item.byok ? <span className="readout shrink-0">{uiT("BYOK")}</span>
+                    : item.isNew ? <span className="badge-brass shrink-0">{uiT("new")}</span> : null}
               </button>
             );
           })}
@@ -1477,6 +1482,7 @@ function App() {
   // It is a flex sibling of the scrolling pane rather than `fixed`, so nothing
   // ever hides behind it and no pane needs compensating padding.
   const MobileTabBar = () => {
+  useUiLocale();
     const tabs = navItems.filter((n) => n.primary);
     const moreActive = !tabs.some((t) => t.id === activeTab);
     return (
@@ -1492,22 +1498,22 @@ function App() {
                 onClick={() => goToTab(item.id)}
                 disabled={tabLocked(item.id)}
                 aria-current={isActive ? 'page' : undefined}
-                title={tabLocked(item.id) ? 'Finish your first clips to unlock' : undefined}
+                title={uiT(tabLocked(item.id) ? 'Finish your first clips to unlock' : undefined)}
                 className={`flex-1 min-w-0 flex flex-col items-center justify-center gap-1 py-2 min-h-[56px] transition-colors ${isActive ? 'text-ink' : 'text-muted active:text-ink2'} ${tabLocked(item.id) ? 'opacity-40 cursor-not-allowed' : ''}`}
               >
                 <NavIcon size={19} className={isActive ? 'text-brass' : ''} />
-                <span className="text-[10.5px] lowercase leading-none truncate max-w-full px-0.5">{item.short}</span>
+                <span className="text-[10.5px] lowercase leading-tight text-center max-w-full px-0.5">{uiT(item.short)}</span>
               </button>
             );
           })}
           <button
             onClick={() => setNavOpen(true)}
-            aria-label="more sections"
+            aria-label={uiT("more sections")}
             aria-expanded={navOpen}
             className={`flex-1 min-w-0 flex flex-col items-center justify-center gap-1 py-2 min-h-[56px] transition-colors ${moreActive ? 'text-ink' : 'text-muted active:text-ink2'}`}
           >
             <Menu size={19} className={moreActive ? 'text-brass' : ''} />
-            <span className="text-[10.5px] lowercase leading-none">more</span>
+            <span className="text-[10.5px] lowercase leading-none">{uiT("more")}</span>
           </button>
         </div>
       </nav>
@@ -1530,27 +1536,28 @@ function App() {
                 used to carry. Without it a phone has no "where am I". */}
             <button
               onClick={() => setNavOpen(true)}
-              aria-label="open navigation"
+              aria-label={uiT("open navigation")}
               className="md:hidden -ml-1 p-2 rounded-input text-muted active:bg-paper3 transition-colors shrink-0"
             >
               <Menu size={20} />
             </button>
             <span data-tutorial="nav-clips" className="md:hidden font-display lowercase text-base text-ink truncate">
-              {activeNav?.label || 'openshorts'}
+              {uiT(activeNav?.label || 'openshorts')}
             </span>
             {status !== 'idle' && (
               <button
                 onClick={handleReset}
                 className="btn-quiet px-3 py-1.5 text-xs shrink-0"
-                aria-label="New Project"
+                aria-label={uiT("New Project")}
               >
                 <Plus size={14} />
-                <span className="hidden sm:inline">New Project</span>
+                <span className="hidden sm:inline">{uiT("New Project")}</span>
               </button>
             )}
           </div>
 
           <div className="flex items-center gap-2 sm:gap-4 shrink-0">
+            <LanguageSwitcher />
             {userProfiles.length > 0 && (
               <UserProfileSelector
                 profiles={userProfiles}
@@ -1571,15 +1578,11 @@ function App() {
             )}
             {billingEnabled && isSignedIn && !isManaged && (
               <button onClick={() => setShowPlanChoice(true)}
-                className="btn-primary px-4 py-2 text-xs">
-                Choose a plan
-              </button>
+                className="btn-primary px-4 py-2 text-xs">{uiT("Choose a plan")}</button>
             )}
             {billingEnabled && !isSignedIn && (
               <button onClick={() => setShowLogin(true)}
-                className="btn-ghost px-4 py-2 text-xs">
-                Sign in
-              </button>
+                className="btn-ghost px-4 py-2 text-xs">{uiT("Sign in")}</button>
             )}
             {billingEnabled && isSignedIn && <ProfileMenu onUpgrade={isManaged ? openUpsell : null} />}
 
@@ -1589,17 +1592,17 @@ function App() {
               <button
                 onClick={() => (billingEnabled && !isSignedIn ? setShowLogin(true) : goToTab('settings'))}
                 className="badge-warn hover:brightness-125 transition-all hidden sm:inline-flex"
-                title="Configure API keys or choose a plan"
+                title={uiT("Configure API keys or choose a plan")}
               >
                 <AlertTriangle size={12} />
                 <span className="hidden md:inline">
-                  {!geminiOk && !uploadPostKey
+                  {uiT(!geminiOk && !uploadPostKey
                     ? 'Gemini & Upload-Post keys missing'
                     : !geminiOk
                       ? 'Gemini API Key Missing'
-                      : 'Upload-Post API Key Missing'}
+                      : 'Upload-Post API Key Missing')}
                 </span>
-                <span className="md:hidden">keys missing</span>
+                <span className="md:hidden">{uiT("keys missing")}</span>
               </button>
             )}
           </div>
@@ -1611,22 +1614,20 @@ function App() {
             <div className="flex items-start sm:items-center gap-2.5 sm:gap-3 text-sm text-ink2 min-w-0 flex-1">
               <KeyRound size={16} className="shrink-0 text-warn mt-0.5 sm:mt-0" />
               <div className="min-w-0">
-                <span className="font-medium text-ink">Required API keys missing.</span>{' '}
+                <span className="font-medium text-ink">{uiT("Required API keys missing.")}</span>{uiT(' ')}
                 <span className="text-muted">
-                  {!geminiOk && !uploadPostKey
+                  {uiT(!geminiOk && !uploadPostKey
                     ? 'Set your Gemini and Upload-Post API keys to use OpenShorts.'
                     : !geminiOk
                       ? 'Set your Gemini API key to use OpenShorts.'
-                      : 'Set your Upload-Post API key to use OpenShorts.'}
+                      : 'Set your Upload-Post API key to use OpenShorts.')}
                 </span>
               </div>
             </div>
             <button
               onClick={() => goToTab('settings')}
               className="btn-quiet px-3 py-1.5 text-xs shrink-0 w-full sm:w-auto"
-            >
-              Go to Settings
-            </button>
+            >{uiT("Go to Settings")}</button>
           </div>
         )}
 
@@ -1635,12 +1636,12 @@ function App() {
           <div className="mx-3 sm:mx-6 mt-2 px-3.5 sm:px-4 py-3 bg-paper2 border border-rule rounded-card flex items-start justify-between gap-3 animate-fade shrink-0">
             <div className="flex items-start sm:items-center gap-2 text-sm text-ink2 flex-wrap min-w-0">
               <RotateCcw size={16} className="text-brass shrink-0 mt-0.5 sm:mt-0" />
-              <span className="font-medium">Session recovered</span>
-              <span className="text-muted text-xs">Your previous work has been restored.</span>
+              <span className="font-medium">{uiT("Session recovered")}</span>
+              <span className="text-muted text-xs">{uiT("Your previous work has been restored.")}</span>
             </div>
             <button
               onClick={() => setSessionRecovered(false)}
-              aria-label="dismiss"
+              aria-label={uiT("dismiss")}
               className="text-muted hover:text-ink transition-colors shrink-0 -m-1 p-1"
             >
               <X size={16} />
@@ -1655,17 +1656,17 @@ function App() {
         {advancedThisTab && <AdvancedBanner needsPlan={needsPlan} onKeys={() => goToTab('settings')} providerLabel={activeTab === 'saasshorts' ? 'Gemini (product) / fal.ai + selected TTS (actor)' : undefined} scriptNotice={activeTab === 'saasshorts' ? '제품형 대본·TTS는 사용자 Gemini 키 비용 별도입니다. 배우형은 기존 요금 체계를 유지합니다.' : undefined} />}
 
         {discoveryOrigin && activeTab === 'dashboard' && (
-          <section aria-label="탐색 영상 제작 정보" className="mx-3 sm:mx-6 my-2 rounded-card border border-rule bg-paper2 p-3 text-xs space-y-2 shrink-0">
-            <p className="text-ink break-words">탐색 원본: {discoveryOrigin.title} · {discoveryOrigin.channel_title} · CC BY 표시</p>
+          <section aria-label={uiT("탐색 영상 제작 정보")} className="mx-3 sm:mx-6 my-2 rounded-card border border-rule bg-paper2 p-3 text-xs space-y-2 shrink-0">
+            <p className="text-ink break-words">{uiT("탐색 원본: ")}{discoveryOrigin.title} · {discoveryOrigin.channel_title}{uiT(" · CC BY 표시")}</p>
             <p className="text-muted break-all">{discoveryOrigin.url}</p>
-            <p className="text-muted">{!jobId && status === 'processing' ? '요청 접수 중 · 작업 ID 응답 대기' : jobId ? `작업 ${jobId} · 기존 Clip Generator에서 처리` : '작업이 아직 접수되지 않았습니다.'}</p>
-            {pollWarning && <p role="status" className="text-warn">{pollWarning}</p>}
-            {status === 'error' && <p role="alert" className="text-danger">{jobError}</p>}
-            {discoveryUncertain && <p role="alert" className="text-warn">응답 유실 · 중복 제작 방지를 위해 재전송이 잠겨 있습니다. 페이지를 새로고침해도 자동 제출하지 않습니다.</p>}
+            <p className="text-muted">{uiT(!jobId && status === 'processing' ? '요청 접수 중 · 작업 ID 응답 대기' : jobId ? `작업 ${jobId} · 기존 Clip Generator에서 처리` : '작업이 아직 접수되지 않았습니다.')}</p>
+            {pollWarning && <p role="status" className="text-warn">{uiT(pollWarning)}</p>}
+            {status === 'error' && <p role="alert" className="text-danger">{<LocalizedDiagnostic value={jobError} error />}</p>}
+            {discoveryUncertain && <p role="alert" className="text-warn">{uiT("응답 유실 · 중복 제작 방지를 위해 재전송이 잠겨 있습니다. 페이지를 새로고침해도 자동 제출하지 않습니다.")}</p>}
             <div className="flex flex-wrap gap-2">
-              {status === 'error' && !discoveryUncertain && discoveryRetry.current && <button className="btn-ghost px-3 py-2" onClick={() => handleProcess(discoveryRetry.current)}>명시적으로 다시 시도</button>}
-              {discoveryUncertain && <button className="btn-ghost px-3 py-2" onClick={() => { if (window.confirm('관리자가 서버에서 해당 작업이 생성되지 않았음을 확인했습니까? 확인되지 않았다면 취소하세요.')) { clearPendingProduction(); setDiscoveryUncertain(false); } }}>미생성 확인 후 제출 잠금 해제</button>}
-              <button className="btn-ghost px-3 py-2" onClick={() => { handleReset(); setActiveTab('dashboard'); }}>보유 원본 파일 업로드로 이동</button>
+              {status === 'error' && !discoveryUncertain && discoveryRetry.current && <button className="btn-ghost px-3 py-2" onClick={() => handleProcess(discoveryRetry.current)}>{uiT("명시적으로 다시 시도")}</button>}
+              {discoveryUncertain && <button className="btn-ghost px-3 py-2" onClick={() => { if (window.confirm(uiT('관리자가 서버에서 해당 작업이 생성되지 않았음을 확인했습니까? 확인되지 않았다면 취소하세요.'))) { clearPendingProduction(); setDiscoveryUncertain(false); } }}>{uiT("미생성 확인 후 제출 잠금 해제")}</button>}
+              <button className="btn-ghost px-3 py-2" onClick={() => { handleReset(); setActiveTab('dashboard'); }}>{uiT("보유 원본 파일 업로드로 이동")}</button>
             </div>
           </section>
         )}
@@ -1678,12 +1679,11 @@ function App() {
             <div className="h-full overflow-y-auto p-4 sm:p-8 max-w-2xl mx-auto animate-fade">
               <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 mb-8">
                 <div>
-                  <p className="eyebrow mb-1.5">08 · SETTINGS</p>
-                  <h1 className="font-display lowercase text-2xl text-ink">Settings</h1>
+                  <p className="eyebrow mb-1.5">{uiT("08 · SETTINGS")}</p>
+                  <h1 className="font-display lowercase text-2xl text-ink">{uiT("Settings")}</h1>
                 </div>
                 <div className="flex items-center gap-2 text-xs text-muted mt-1">
-                  <Shield size={12} className="text-ok shrink-0" /> Privacy: keys only live in your browser (sent to backend just to process)
-                </div>
+                  <Shield size={12} className="text-ok shrink-0" />{uiT(" Privacy: keys only live in your browser (sent to backend just to process)")}</div>
               </div>
               {/* Self-hosted installs have no account page, so the agent
                   how-to lives here; cloud users get it (with OAuth) in Account. */}
@@ -1695,22 +1695,16 @@ function App() {
                       <div className="w-9 h-9 rounded-input bg-paper3 flex items-center justify-center shrink-0">
                         <Shield size={16} className="text-brass" />
                       </div>
-                      <h2 className="text-base font-medium text-ink lowercase">Included in your plan</h2>
+                      <h2 className="text-base font-medium text-ink lowercase">{uiT("Included in your plan")}</h2>
                     </div>
-                    <span className="badge-ok">Managed</span>
+                    <span className="badge-ok">{uiT("Managed")}</span>
                   </div>
-                  <p className="text-xs text-muted mb-5 leading-relaxed">
-                    Your plan includes the <strong>Clip Generator</strong> and <strong>YouTube Studio</strong>,
-                    fully managed — no API keys required. AI Shorts &amp; dubbing use your own fal.ai / ElevenLabs
-                    keys (below). Connect your social accounts to publish directly.
-                  </p>
+                  <p className="text-xs text-muted mb-5 leading-relaxed">{uiT("Your plan includes the ")}<strong>{uiT("Clip Generator")}</strong>{uiT(" and ")}<strong>{uiT("YouTube Studio")}</strong>{uiT(", fully managed — no API keys required. AI Shorts & dubbing use your own fal.ai / ElevenLabs keys (below). Connect your social accounts to publish directly.")}</p>
                   <div className="flex flex-wrap gap-2">
                     <button onClick={handleConnectSocials} className="btn-primary py-2 px-4 text-sm">
-                      <Share2 size={16} /> Connect social accounts
-                    </button>
+                      <Share2 size={16} />{uiT(" Connect social accounts")}</button>
                     <button onClick={handleOpenCalendar} className="btn-quiet py-2 px-4 text-sm">
-                      <Calendar size={16} /> Content calendar
-                    </button>
+                      <Calendar size={16} />{uiT(" Content calendar")}</button>
                   </div>
                 </div>
               ) : billingEnabled ? (
@@ -1720,16 +1714,13 @@ function App() {
                       <div className="w-9 h-9 rounded-input bg-paper3 flex items-center justify-center shrink-0">
                         <Sparkles size={16} className="text-brass" />
                       </div>
-                      <h2 className="text-base font-medium text-ink lowercase">Choose your plan</h2>
+                      <h2 className="text-base font-medium text-ink lowercase">{uiT("Choose your plan")}</h2>
                     </div>
-                    <span className="badge-ok">Free plan available</span>
+                    <span className="badge-ok">{uiT("Free plan available")}</span>
                   </div>
-                  <p className="text-xs text-muted mb-5 leading-relaxed">
-                    Generate shorts with zero setup — no API keys needed. Start free with 20 min/month, or go paid from $12/mo. Cancel anytime.
-                  </p>
+                  <p className="text-xs text-muted mb-5 leading-relaxed">{uiT("Generate shorts with zero setup — no API keys needed. Start free with 20 min/month, or go paid from $12/mo. Cancel anytime.")}</p>
                   <button onClick={() => setShowPlanChoice(true)} className="btn-primary py-2 px-4 text-sm">
-                    <Sparkles size={16} /> Choose a plan
-                  </button>
+                    <Sparkles size={16} />{uiT(" Choose a plan")}</button>
                 </div>
               ) : (
                 <>
@@ -1741,48 +1732,39 @@ function App() {
                     <div className="w-9 h-9 rounded-input bg-paper3 flex items-center justify-center shrink-0">
                       <Share2 size={16} className="text-brass" />
                     </div>
-                    <h2 className="text-base font-medium text-ink lowercase">Social Integration</h2>
+                    <h2 className="text-base font-medium text-ink lowercase">{uiT("Social Integration")}</h2>
                   </div>
-                  <span className="badge-warn">Required</span>
+                  <span className="badge-warn">{uiT("Required")}</span>
                 </div>
-                <p className="text-xs text-muted mb-6 leading-relaxed">
-                  Required to publish your clips to TikTok, Instagram Reels, and YouTube Shorts via <strong>Upload-Post</strong>.
-                  Includes a <strong>free tier</strong> (no credit card required).
-                </p>
+                <p className="text-xs text-muted mb-6 leading-relaxed">{uiT("Required to publish your clips to TikTok, Instagram Reels, and YouTube Shorts via ")}<strong>{uiT("Upload-Post")}</strong>{uiT(". Includes a ")}<strong>{uiT("free tier")}</strong>{uiT(" (no credit card required).")}</p>
                 <div className="space-y-4">
-                  <label className="block text-sm text-muted">Upload-Post API Key</label>
+                  <label className="block text-sm text-muted">{uiT("Upload-Post API Key")}</label>
                   <div className="flex flex-col sm:flex-row gap-2">
                     <input
                       type="password"
                       value={uploadPostKey}
                       onChange={(e) => setUploadPostKey(e.target.value)}
                       className="input-field"
-                      placeholder="ey..."
+                      placeholder={uiT("ey...")}
                     />
-                    <button onClick={fetchUserProfiles} className="btn-quiet py-2 px-4 text-sm">
-                      Connect
-                    </button>
+                    <button onClick={fetchUserProfiles} className="btn-quiet py-2 px-4 text-sm">{uiT("Connect")}</button>
                   </div>
-                  <div className="text-xs text-muted leading-relaxed">
-                    Connect your Upload-Post account to enable one-click publishing.
-                    <div className="mt-3 grid grid-cols-1 sm:grid-cols-3 gap-2">
+                  <div className="text-xs text-muted leading-relaxed">{uiT("Connect your Upload-Post account to enable one-click publishing.")}<div className="mt-3 grid grid-cols-1 sm:grid-cols-3 gap-2">
                       <a href="https://app.upload-post.com/login" target="_blank" rel="noopener noreferrer" className="p-2 border border-rule rounded-input hover:bg-paper3 transition-colors flex flex-col gap-1">
-                        <span className="text-ink2 font-medium">1. Login</span>
-                        <span className="text-xs text-muted">Register account</span>
+                        <span className="text-ink2 font-medium">{uiT("1. Login")}</span>
+                        <span className="text-xs text-muted">{uiT("Register account")}</span>
                       </a>
                       <a href="https://app.upload-post.com/manage-users" target="_blank" rel="noopener noreferrer" className="p-2 border border-rule rounded-input hover:bg-paper3 transition-colors flex flex-col gap-1">
-                        <span className="text-ink2 font-medium">2. Profiles</span>
-                        <span className="text-xs text-muted">Create & Connect</span>
+                        <span className="text-ink2 font-medium">{uiT("2. Profiles")}</span>
+                        <span className="text-xs text-muted">{uiT("Create & Connect")}</span>
                       </a>
                       <a href="https://app.upload-post.com/api-keys" target="_blank" rel="noopener noreferrer" className="p-2 border border-rule rounded-input hover:bg-paper3 transition-colors flex flex-col gap-1">
-                        <span className="text-ink2 font-medium">3. API Key</span>
-                        <span className="text-xs text-muted">Generate key</span>
+                        <span className="text-ink2 font-medium">{uiT("3. API Key")}</span>
+                        <span className="text-xs text-muted">{uiT("Generate key")}</span>
                       </a>
                     </div>
                     <br />
-                    <span className="text-muted">
-                      Keys are only stored in your browser. They are sent to the backend only to process your request, never stored server-side.
-                    </span>
+                    <span className="text-muted">{uiT("Keys are only stored in your browser. They are sent to the backend only to process your request, never stored server-side.")}</span>
                   </div>
                 </div>
               </div>
@@ -1796,23 +1778,20 @@ function App() {
                     <div className="w-9 h-9 rounded-input bg-paper3 flex items-center justify-center shrink-0">
                       <Globe size={16} className="text-brass" />
                     </div>
-                    <h2 className="text-base font-medium text-ink lowercase">Video Translation</h2>
+                    <h2 className="text-base font-medium text-ink lowercase">{uiT("Video Translation")}</h2>
                   </div>
-                  <span className="readout">BYOK</span>
+                  <span className="readout">{uiT("BYOK")}</span>
                 </div>
-                <p className="text-xs text-muted mb-6 leading-relaxed">
-                  For <strong>AI Shorts &amp; dubbing</strong> — bring your own key. Translate your clips to different
-                  languages using <strong>ElevenLabs</strong> AI dubbing (billed by ElevenLabs). Not covered by your plan.
-                </p>
+                <p className="text-xs text-muted mb-6 leading-relaxed">{uiT("For ")}<strong>{uiT("AI Shorts & dubbing")}</strong>{uiT(" — bring your own key. Translate your clips to different languages using ")}<strong>{uiT("ElevenLabs")}</strong>{uiT(" AI dubbing (billed by ElevenLabs). Not covered by your plan.")}</p>
                 <div className="space-y-4">
-                  <label className="block text-sm text-muted">ElevenLabs API Key</label>
+                  <label className="block text-sm text-muted">{uiT("ElevenLabs API Key")}</label>
                   <div className="flex flex-col sm:flex-row gap-2">
                     <input
                       type="password"
                       value={elevenLabsKey}
                       onChange={(e) => setElevenLabsKey(e.target.value)}
                       className="input-field"
-                      placeholder="sk_..."
+                      placeholder={uiT("sk_...")}
                     />
                     <button
                       onClick={() => {
@@ -1824,25 +1803,21 @@ function App() {
                       }}
                       className={elevenLabsSaved ? 'badge-ok px-4' : 'btn-quiet py-2 px-4 text-sm'}
                     >
-                      {elevenLabsSaved ? <><Check size={12} /> saved</> : 'Save'}
+                      {elevenLabsSaved ? <><Check size={12} />{uiT(" saved")}</> : uiT('Save')}
                     </button>
                   </div>
-                  <div className="text-xs text-muted leading-relaxed">
-                    Get your API key from ElevenLabs to enable video translation.
-                    <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-2">
+                  <div className="text-xs text-muted leading-relaxed">{uiT("Get your API key from ElevenLabs to enable video translation.")}<div className="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-2">
                       <a href="https://elevenlabs.io/sign-up" target="_blank" rel="noopener noreferrer" className="p-2 border border-rule rounded-input hover:bg-paper3 transition-colors flex flex-col gap-1">
-                        <span className="text-ink2 font-medium">1. Sign Up</span>
-                        <span className="text-xs text-muted">Create account</span>
+                        <span className="text-ink2 font-medium">{uiT("1. Sign Up")}</span>
+                        <span className="text-xs text-muted">{uiT("Create account")}</span>
                       </a>
                       <a href="https://elevenlabs.io/app/settings/api-keys" target="_blank" rel="noopener noreferrer" className="p-2 border border-rule rounded-input hover:bg-paper3 transition-colors flex flex-col gap-1">
-                        <span className="text-ink2 font-medium">2. API Key</span>
-                        <span className="text-xs text-muted">Generate key</span>
+                        <span className="text-ink2 font-medium">{uiT("2. API Key")}</span>
+                        <span className="text-xs text-muted">{uiT("Generate key")}</span>
                       </a>
                     </div>
                     <br />
-                    <span className="text-muted">
-                      Keys are only stored in your browser. They are sent to the backend only to process your request, never stored server-side.
-                    </span>
+                    <span className="text-muted">{uiT("Keys are only stored in your browser. They are sent to the backend only to process your request, never stored server-side.")}</span>
                   </div>
                 </div>
               </div>
@@ -1853,24 +1828,21 @@ function App() {
                     <div className="w-9 h-9 rounded-input bg-paper3 flex items-center justify-center shrink-0">
                       <Sparkles size={16} className="text-brass" />
                     </div>
-                    <h2 className="text-base font-medium text-ink lowercase">AI Shorts (UGC Videos)</h2>
+                    <h2 className="text-base font-medium text-ink lowercase">{uiT("AI Shorts (UGC Videos)")}</h2>
                   </div>
-                  <span className="readout">BYOK</span>
+                  <span className="readout">{uiT("BYOK")}</span>
                 </div>
-                <p className="text-xs text-muted mb-6 leading-relaxed">
-                  Generate UGC-style videos with AI actors for any product or business using <strong>fal.ai</strong>.
-                  <strong> Not covered by your plan</strong> — bring your own fal.ai + ElevenLabs keys (billed by those
-                  providers, ~$0.65-2 per video). Your plan still covers the AI script &amp; orchestration.
-                </p>
+                <p className="text-xs text-muted mb-6 leading-relaxed">{uiT("Generate UGC-style videos with AI actors for any product or business using ")}<strong>{uiT("fal.ai")}</strong>.
+                  <strong>{uiT(" Not covered by your plan")}</strong>{uiT(" — bring your own fal.ai + ElevenLabs keys (billed by those providers, ~$0.65-2 per video). Your plan still covers the AI script & orchestration.")}</p>
                 <div className="space-y-4">
-                  <label className="block text-sm text-muted">fal.ai API Key</label>
+                  <label className="block text-sm text-muted">{uiT("fal.ai API Key")}</label>
                   <div className="flex flex-col sm:flex-row gap-2">
                     <input
                       type="password"
                       value={falKey}
                       onChange={(e) => setFalKey(e.target.value)}
                       className="input-field"
-                      placeholder="fal_..."
+                      placeholder={uiT("fal_...")}
                     />
                     <button
                       onClick={() => {
@@ -1882,25 +1854,21 @@ function App() {
                       }}
                       className={falSaved ? 'badge-ok px-4' : 'btn-quiet py-2 px-4 text-sm'}
                     >
-                      {falSaved ? <><Check size={12} /> saved</> : 'Save'}
+                      {falSaved ? <><Check size={12} />{uiT(" saved")}</> : uiT('Save')}
                     </button>
                   </div>
-                  <div className="text-xs text-muted leading-relaxed">
-                    Get your API key from fal.ai to enable AI actor video generation.
-                    <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-2">
+                  <div className="text-xs text-muted leading-relaxed">{uiT("Get your API key from fal.ai to enable AI actor video generation.")}<div className="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-2">
                       <a href="https://fal.ai/dashboard/keys" target="_blank" rel="noopener noreferrer" className="p-2 border border-rule rounded-input hover:bg-paper3 transition-colors flex flex-col gap-1">
-                        <span className="text-ink2 font-medium">1. Sign Up</span>
-                        <span className="text-xs text-muted">Create fal.ai account</span>
+                        <span className="text-ink2 font-medium">{uiT("1. Sign Up")}</span>
+                        <span className="text-xs text-muted">{uiT("Create fal.ai account")}</span>
                       </a>
                       <a href="https://fal.ai/dashboard/keys" target="_blank" rel="noopener noreferrer" className="p-2 border border-rule rounded-input hover:bg-paper3 transition-colors flex flex-col gap-1">
-                        <span className="text-ink2 font-medium">2. API Key</span>
-                        <span className="text-xs text-muted">Generate key</span>
+                        <span className="text-ink2 font-medium">{uiT("2. API Key")}</span>
+                        <span className="text-xs text-muted">{uiT("Generate key")}</span>
                       </a>
                     </div>
                     <br />
-                    <span className="text-muted">
-                      Keys are only stored in your browser. Sent to backend only to process requests.
-                    </span>
+                    <span className="text-muted">{uiT("Keys are only stored in your browser. Sent to backend only to process requests.")}</span>
                   </div>
                 </div>
               </div>
@@ -1920,24 +1888,17 @@ function App() {
                 {/* Header */}
                 <div className="space-y-3">
                   <p className="eyebrow flex items-center gap-2">
-                    <Bot size={12} /> 03 · AI AGENT · AUTONOMOUS SKILL
-                  </p>
-                  <h1 className="font-display lowercase text-3xl md:text-4xl text-ink">
-                    Your Personal Clipping Team
-                  </h1>
-                  <p className="text-muted text-base md:text-lg leading-relaxed max-w-2xl">
-                    Drop your videos in a folder and a team of AI clippers picks the viral moments, edits them, and queues them for your approval — like having a 24/7 short-form editing crew on autopilot.
-                  </p>
+                    <Bot size={12} />{uiT(" 03 · AI AGENT · AUTONOMOUS SKILL")}</p>
+                  <h1 className="font-display lowercase text-3xl md:text-4xl text-ink">{uiT("Your Personal Clipping Team")}</h1>
+                  <p className="text-muted text-base md:text-lg leading-relaxed max-w-2xl">{uiT("Drop your videos in a folder and a team of AI clippers picks the viral moments, edits them, and queues them for your approval — like having a 24/7 short-form editing crew on autopilot.")}</p>
                 </div>
 
                 {/* Mobile-format warning */}
                 <div className="px-4 py-3 rounded-card border border-rule bg-paper2 flex items-start gap-3">
                   <Smartphone size={18} className="text-warn shrink-0 mt-0.5" />
                   <div className="text-sm text-ink2">
-                    <p className="font-medium text-ink mb-1">Upload videos already in vertical (9:16) mobile format.</p>
-                    <p className="text-muted leading-relaxed">
-                      The agent does not reframe horizontal footage. Make sure every source video is shot or pre-cropped to mobile/portrait format before dropping it into the input folder.
-                    </p>
+                    <p className="font-medium text-ink mb-1">{uiT("Upload videos already in vertical (9:16) mobile format.")}</p>
+                    <p className="text-muted leading-relaxed">{uiT("The agent does not reframe horizontal footage. Make sure every source video is shot or pre-cropped to mobile/portrait format before dropping it into the input folder.")}</p>
                   </div>
                 </div>
 
@@ -1947,30 +1908,24 @@ function App() {
                     <div className="w-10 h-10 rounded-input bg-paper3 flex items-center justify-center">
                       <Upload size={18} className="text-brass" />
                     </div>
-                    <h3 className="font-medium text-ink lowercase">1. Drop your videos</h3>
-                    <p className="text-xs text-muted leading-relaxed">
-                      Put your long-form vertical footage in the watched folder. The skill picks one video per run.
-                    </p>
+                    <h3 className="font-medium text-ink lowercase">{uiT("1. Drop your videos")}</h3>
+                    <p className="text-xs text-muted leading-relaxed">{uiT("Put your long-form vertical footage in the watched folder. The skill picks one video per run.")}</p>
                   </div>
 
                   <div className="card p-5 space-y-2">
                     <div className="w-10 h-10 rounded-input bg-paper3 flex items-center justify-center">
                       <Users size={18} className="text-brass" />
                     </div>
-                    <h3 className="font-medium text-ink lowercase">2. AI clippers work</h3>
-                    <p className="text-xs text-muted leading-relaxed">
-                      Whisper transcribes, Gemini 3 Flash spots viral beats, FFmpeg cuts each clip and adds a hook overlay.
-                    </p>
+                    <h3 className="font-medium text-ink lowercase">{uiT("2. AI clippers work")}</h3>
+                    <p className="text-xs text-muted leading-relaxed">{uiT("Whisper transcribes, Gemini 3 Flash spots viral beats, FFmpeg cuts each clip and adds a hook overlay.")}</p>
                   </div>
 
                   <div className="card p-5 space-y-2">
                     <div className="w-10 h-10 rounded-input bg-paper3 flex items-center justify-center">
                       <CheckCircle2 size={18} className="text-brass" />
                     </div>
-                    <h3 className="font-medium text-ink lowercase">3. You validate, it ships</h3>
-                    <p className="text-xs text-muted leading-relaxed">
-                      Approve the candidates you like and the skill auto-publishes them to TikTok, Reels and YouTube Shorts via Upload-Post.
-                    </p>
+                    <h3 className="font-medium text-ink lowercase">{uiT("3. You validate, it ships")}</h3>
+                    <p className="text-xs text-muted leading-relaxed">{uiT("Approve the candidates you like and the skill auto-publishes them to TikTok, Reels and YouTube Shorts via Upload-Post.")}</p>
                   </div>
                 </div>
 
@@ -1978,27 +1933,24 @@ function App() {
                 <div className="card p-6 md:p-8 space-y-5">
                   <div className="flex items-start justify-between gap-4 flex-wrap">
                     <div>
-                      <h2 className="font-display lowercase text-xl text-ink mb-1">skill-autoshorts</h2>
-                      <p className="text-sm text-muted">
-                        The Claude Code skill that powers this workflow. Install it once and trigger it whenever you want a fresh batch of clips.
-                      </p>
+                      <h2 className="font-display lowercase text-xl text-ink mb-1">{uiT("skill-autoshorts")}</h2>
+                      <p className="text-sm text-muted">{uiT("The Claude Code skill that powers this workflow. Install it once and trigger it whenever you want a fresh batch of clips.")}</p>
                     </div>
                     <a
                       href="https://github.com/mutonby/skill-autoshorts"
                       target="_blank"
                       rel="noopener noreferrer"
                       className="btn-primary py-2 px-4 text-sm shrink-0"
-                    >
-                      View on GitHub <ExternalLink size={14} />
+                    >{uiT("View on GitHub ")}<ExternalLink size={14} />
                     </a>
                   </div>
 
                   <div className="bg-paper border border-rule rounded-card p-4 font-mono text-xs text-ink2 flex items-center justify-between gap-3">
-                    <span className="truncate">git clone https://github.com/mutonby/skill-autoshorts</span>
+                    <span className="truncate">{uiT("git clone https://github.com/mutonby/skill-autoshorts")}</span>
                     <button
                       onClick={() => navigator.clipboard.writeText('git clone https://github.com/mutonby/skill-autoshorts')}
                       className="text-muted hover:text-ink transition-colors shrink-0"
-                      title="Copy"
+                      title={uiT("Copy")}
                     >
                       <Copy size={14} />
                     </button>
@@ -2007,19 +1959,19 @@ function App() {
                   <div className="grid sm:grid-cols-2 gap-3 text-sm">
                     <div className="flex items-start gap-2 text-ink2">
                       <Check size={16} className="text-brass shrink-0 mt-0.5" />
-                      <span>Daily batch — picks one long video per run</span>
+                      <span>{uiT("Daily batch — picks one long video per run")}</span>
                     </div>
                     <div className="flex items-start gap-2 text-ink2">
                       <Check size={16} className="text-brass shrink-0 mt-0.5" />
-                      <span>Whisper transcription with word-level timing</span>
+                      <span>{uiT("Whisper transcription with word-level timing")}</span>
                     </div>
                     <div className="flex items-start gap-2 text-ink2">
                       <Check size={16} className="text-brass shrink-0 mt-0.5" />
-                      <span>Gemini 3 Flash multimodal moment detection</span>
+                      <span>{uiT("Gemini 3 Flash multimodal moment detection")}</span>
                     </div>
                     <div className="flex items-start gap-2 text-ink2">
                       <Check size={16} className="text-brass shrink-0 mt-0.5" />
-                      <span>Auto-publish to TikTok, Reels & YouTube Shorts</span>
+                      <span>{uiT("Auto-publish to TikTok, Reels & YouTube Shorts")}</span>
                     </div>
                   </div>
                 </div>
@@ -2050,12 +2002,9 @@ function App() {
                 ) : (
                   <div className="max-w-2xl mx-auto card p-8 text-center">
                     <Rocket size={28} className="mx-auto mb-4 text-brass" />
-                    <h1 className="font-display lowercase text-2xl text-ink mb-2">your channel, clipped on its own</h1>
-                    <p className="text-muted text-sm mb-6">
-                      Connect your YouTube channel and every new video turns into shorts automatically.
-                      Sign in to set it up.
-                    </p>
-                    <button onClick={() => setShowLogin(true)} className="btn-primary">sign in</button>
+                    <h1 className="font-display lowercase text-2xl text-ink mb-2">{uiT("your channel, clipped on its own")}</h1>
+                    <p className="text-muted text-sm mb-6">{uiT("Connect your YouTube channel and every new video turns into shorts automatically. Sign in to set it up.")}</p>
+                    <button onClick={() => setShowLogin(true)} className="btn-primary">{uiT("sign in")}</button>
                   </div>
                 )}
               </div>
@@ -2102,25 +2051,18 @@ function App() {
                   eyebrow, the display size and the gaps all shrink first. */}
               <div className="max-w-xl w-full text-center space-y-5 sm:space-y-8">
                 <div className="space-y-2.5 sm:space-y-4">
-                  <p className="eyebrow hidden sm:block">01 · CLIP GENERATOR</p>
-                  <h1 className="font-display lowercase text-3xl sm:text-4xl md:text-5xl text-ink">
-                    Create Viral Shorts
-                  </h1>
-                  <p className="text-muted text-[15px] sm:text-lg leading-snug sm:leading-normal max-w-sm sm:max-w-none mx-auto">
-                    Drop your long-form video below to instantly generate viral clips with AI.
-                  </p>
+                  <p className="eyebrow hidden sm:block">{uiT("01 · CLIP GENERATOR")}</p>
+                  <h1 className="font-display lowercase text-3xl sm:text-4xl md:text-5xl text-ink">{uiT("Create Viral Shorts")}</h1>
+                  <p className="text-muted text-[15px] sm:text-lg leading-snug sm:leading-normal max-w-sm sm:max-w-none mx-auto">{uiT("Drop your long-form video below to instantly generate viral clips with AI.")}</p>
                   {/* The same pipeline is an MCP server: point people at the
                       one place that explains how to drive it from an agent. */}
                   {!tutorialLock && (
-                  <p className="text-xs text-muted">
-                    Or let an agent do it:{' '}
+                  <p className="text-xs text-muted">{uiT("Or let an agent do it:")}{uiT(' ')}
                     <a
                       href={billingEnabled ? '#/account' : '#app'}
                       onClick={(e) => { if (!billingEnabled) { e.preventDefault(); goToTab('settings'); } }}
                       className="text-ink2 underline underline-offset-2 hover:text-brass transition-colors"
-                    >
-                      connect Claude, ChatGPT or n8n →
-                    </a>
+                    >{uiT("connect Claude, ChatGPT or n8n →")}</a>
                   </p>
                   )}
                 </div>
@@ -2128,9 +2070,9 @@ function App() {
                 <MediaInput onProcess={handleProcess} isProcessing={status === 'processing'} />
 
                 <div className="flex flex-wrap items-center justify-center gap-4 sm:gap-8 text-muted text-xs sm:text-sm">
-                  <span className="flex items-center gap-2"><Youtube size={16} /> YouTube</span>
-                  <span className="flex items-center gap-2"><Instagram size={16} /> Instagram</span>
-                  <span className="flex items-center gap-2"><TikTokIcon size={16} /> TikTok</span>
+                  <span className="flex items-center gap-2"><Youtube size={16} />{uiT(" YouTube")}</span>
+                  <span className="flex items-center gap-2"><Instagram size={16} />{uiT(" Instagram")}</span>
+                  <span className="flex items-center gap-2"><TikTokIcon size={16} />{uiT(" TikTok")}</span>
                 </div>
               </div>
               </div>
@@ -2145,14 +2087,12 @@ function App() {
               <div className={`${status === 'complete' ? 'w-full md:w-[30%] lg:w-[25%]' : 'w-full md:w-[55%] lg:w-[60%]'} md:h-full flex flex-col shrink-0 md:shrink card p-3.5 sm:p-6 md:overflow-y-auto custom-scrollbar transition-all duration-700 ease-in-out`}>
                 <div className="mb-4 sm:mb-6 flex items-center justify-between gap-2">
                   <h2 className="text-sm font-medium text-ink lowercase flex items-center gap-2">
-                    <Activity className={`text-brass ${status === 'processing' ? 'animate-pulse' : ''}`} size={18} />
-                    Live Analysis
-                  </h2>
+                    <Activity className={`text-brass ${status === 'processing' ? 'animate-pulse' : ''}`} size={18} />{uiT("Live Analysis")}</h2>
                   <span className={status === 'processing' ? 'badge-brass' :
                     status === 'complete' ? 'badge-ok' :
                       'badge-danger'
                     }>
-                    {status.toUpperCase()}
+                    {uiT(status.toUpperCase())}
                   </span>
                 </div>
 
@@ -2163,8 +2103,8 @@ function App() {
                     onClick={() => openUpsell({ source: 'partial_processing', partialJob })}
                     className="mb-4 w-full text-left rounded-card border border-brass/40 bg-brass/5 px-4 py-3 text-sm hover:border-brass transition-colors"
                   >
-                    <span className="text-ink">Clipping the first {partialJob.processed_minutes} of {partialJob.total_minutes} minutes with your free minutes.</span>{' '}
-                    <span className="text-brass font-medium">Clip the whole video →</span>
+                    <span className="text-ink">{uiT("Clipping the first ")}{uiT(partialJob.processed_minutes)}{uiT(" of ")}{uiT(partialJob.total_minutes)}{uiT(" minutes with your free minutes.")}</span>{uiT(' ')}
+                    <span className="text-brass font-medium">{uiT("Clip the whole video →")}</span>
                   </button>
                 )}
 
@@ -2174,16 +2114,14 @@ function App() {
                   <div className="mb-4 rounded-card border border-brass/40 bg-brass/5 px-4 py-3 text-sm">
                     <p className="text-ink">
                       {queueInfo.ahead === 0
-                        ? 'You are next in line. Starting in a moment…'
-                        : <>You are <b>#{queueInfo.position}</b> in line · about <b>{Math.max(1, Math.round(queueInfo.eta_seconds / 60))} min</b></>}
+                        ? uiT('You are next in line. Starting in a moment…')
+                        : <>{uiT("You are ")}<b>#{uiT(queueInfo.position)}</b>{uiT(" in line · about ")}<b>{uiT(Math.max(1, Math.round(queueInfo.eta_seconds / 60)))}{uiT(" min")}</b></>}
                     </p>
                     {billingEnabled && !['starter', 'creator', 'pro'].includes(plan) && queueInfo.ahead > 0 && (
                       <button
                         onClick={() => { track('QueueUpsellClick', { props: { position: String(queueInfo.position) } }); if (isManaged) openUpsell({ source: 'queue' }); else setShowPlanChoice(true); }}
                         className="mt-2 text-xs lowercase text-brass hover:underline"
-                      >
-                        paid plans skip the line →
-                      </button>
+                      >{uiT("paid plans skip the line →")}</button>
                     )}
                   </div>
                 )}
@@ -2207,7 +2145,7 @@ function App() {
                   <div className="sm:hidden mb-3 flex items-start gap-2 text-xs text-ink2 min-w-0">
                     <Loader2 size={14} className="animate-spin text-brass shrink-0 mt-px" />
                     <span className="min-w-0 leading-snug break-words">
-                      {logs.length ? logs[logs.length - 1] : 'starting up…'}
+                      {diagnosticSummary(logs.length ? logs[logs.length - 1] : uiT('starting up…'))}
                     </span>
                   </div>
                 )}
@@ -2229,11 +2167,10 @@ function App() {
                     className="w-full px-3.5 sm:px-4 py-2.5 border-b border-rule flex items-center justify-between gap-2 bg-paper2 shrink-0 text-left"
                   >
                     <span className="readout flex items-center gap-2">
-                      <Terminal size={12} /> System Logs
-                    </span>
+                      <Terminal size={12} />{uiT(" System Logs")}</span>
                     <span className="flex items-center gap-2 text-muted">
                       {!logsVisible && logs.length > 0 && (
-                        <span className="readout normal-case">{logs.length}</span>
+                        <span className="readout normal-case">{uiT(logs.length)}</span>
                       )}
                       <ChevronDown size={16} className={logsVisible ? '' : 'rotate-180'} />
                     </span>
@@ -2243,9 +2180,9 @@ function App() {
                       {logs.map((log, i) => (
                         <div key={i} className={`flex gap-2 ${log.toLowerCase().includes('error') ? 'text-danger' : 'text-muted'}`}>
                           <span className="text-muted opacity-50 shrink-0 hidden sm:inline tabular-nums">
-                            {logTimes[i] ? new Date(logTimes[i] * 1000).toLocaleTimeString() : ''}
+                            {uiT(logTimes[i] ? new Date(logTimes[i] * 1000).toLocaleTimeString(getUiLocale()) : '')}
                           </span>
-                          <span className="min-w-0 break-words">{log}</span>
+                          <span className="min-w-0 break-words">{<LocalizedDiagnostic value={log} />}</span>
                         </div>
                       ))}
                       {status === 'processing' && (
@@ -2263,15 +2200,13 @@ function App() {
                     "schedule week" pill under the title on a phone. */}
                 <div className="mb-4 sm:mb-6 shrink-0 space-y-3">
                   <h2 className="font-display lowercase text-lg sm:text-xl text-ink flex flex-wrap items-center gap-2">
-                    <span className="mr-auto">Generated Shorts</span>
+                    <span className="mr-auto">{uiT("Generated Shorts")}</span>
                     {rankedClips.length > 0 && (
                       <span className="readout bg-paper3 px-2.5 py-1 rounded-full">
-                        {rankedClips.length} Clips
-                      </span>
+                        {uiT(rankedClips.length)}{uiT(" Clips")}</span>
                     )}
                     {results?.cost_analysis && !isManaged && (
-                      <span className="readout bg-paper3 px-2.5 py-1 rounded-full" title={`Input: ${results.cost_analysis.input_tokens} | Output: ${results.cost_analysis.output_tokens}`}>
-                        GEMINI · ${results.cost_analysis.total_cost.toFixed(5)}
+                      <span className="readout bg-paper3 px-2.5 py-1 rounded-full" title={uiT(`Input: ${results.cost_analysis.input_tokens} | Output: ${results.cost_analysis.output_tokens}`)}>{uiT("GEMINI · $")}{uiT(results.cost_analysis.total_cost.toFixed(5))}
                       </span>
                     )}
                   </h2>
@@ -2281,20 +2216,18 @@ function App() {
                         onClick={handleDownloadAll}
                         disabled={downloadingAll}
                         className="btn-ghost px-3 py-2 text-xs"
-                        title="Download all clips as a ZIP"
+                        title={uiT("Download all clips as a ZIP")}
                       >
                         {downloadingAll
-                          ? <><Loader2 size={14} className="animate-spin" />zipping…</>
-                          : <><Download size={14} />download all</>}
+                          ? <><Loader2 size={14} className="animate-spin" />{uiT("zipping…")}</>
+                          : <><Download size={14} />{uiT("download all")}</>}
                       </button>
                       {rankedClips.length > 1 && (
                         <button
                           onClick={() => setShowScheduleWeek(true)}
                           className="btn-primary px-4 py-2 text-xs"
                         >
-                          <Calendar size={14} />
-                          schedule week
-                        </button>
+                          <Calendar size={14} />{uiT("schedule week")}</button>
                       )}
                     </div>
                   )}
@@ -2309,8 +2242,8 @@ function App() {
                         onClick={() => openUpsell({ source: 'partial_banner', partialJob })}
                         className="w-full text-left px-3 py-2.5 rounded-input bg-paper3 border border-brass/40 hover:border-brass text-sm transition-colors"
                       >
-                        <span className="text-ink">These clips come from the first {partialJob.processed_minutes} of {partialJob.total_minutes} minutes.</span>{' '}
-                        <span className="text-brass font-medium">Clip the whole video →</span>
+                        <span className="text-ink">{uiT("These clips come from the first ")}{uiT(partialJob.processed_minutes)}{uiT(" of ")}{uiT(partialJob.total_minutes)}{uiT(" minutes.")}</span>{uiT(' ')}
+                        <span className="text-brass font-medium">{uiT("Clip the whole video →")}</span>
                       </button>
                     )}
                     {/* Peak-moment upsell: they just SAW their clips — sell while
@@ -2320,9 +2253,9 @@ function App() {
                         onClick={() => openUpsell({ source: 'first_video_banner' })}
                         className="w-full text-left px-3 py-2.5 rounded-input bg-paper3 border border-brass/40 hover:border-brass text-sm transition-colors"
                       >
-                        <span className="text-ink">Your first video is on us: we clipped all of it.</span>{' '}
-                        <span className="text-muted">That used this month's free minutes.</span>{' '}
-                        <span className="text-brass font-medium">Keep clipping →</span>
+                        <span className="text-ink">{uiT("Your first video is on us: we clipped all of it.")}</span>{uiT(' ')}
+                        <span className="text-muted">{uiT("That used this month's free minutes.")}</span>{uiT(' ')}
+                        <span className="text-brass font-medium">{uiT("Keep clipping →")}</span>
                       </button>
                     )}
                     {plan === 'free' && !partialJob && !firstVideoJob && (
@@ -2330,9 +2263,9 @@ function App() {
                         onClick={() => openUpsell({ source: 'results_banner' })}
                         className="w-full text-left px-3 py-2.5 rounded-input bg-paper3 border border-brass/40 hover:border-brass text-sm transition-colors"
                       >
-                        <span className="text-ink">Like these clips?</span>{' '}
-                        <span className="text-muted">Upgrade and these exact clips lose the watermark on the spot, and stay for good.</span>{' '}
-                        <span className="text-brass font-medium">Remove the watermark →</span>
+                        <span className="text-ink">{uiT("Like these clips?")}</span>{uiT(' ')}
+                        <span className="text-muted">{uiT("Upgrade and these exact clips lose the watermark on the spot, and stay for good.")}</span>{uiT(' ')}
+                        <span className="text-brass font-medium">{uiT("Remove the watermark →")}</span>
                       </button>
                     )}
                     {/* Distribution nudge at the same peak: clips on screen,
@@ -2342,8 +2275,8 @@ function App() {
                       <div className="w-full flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 px-3 py-2.5 rounded-input bg-paper3 border border-rule text-sm">
                         <div className="flex items-start gap-3 flex-1 min-w-0">
                           <div className="min-w-0 leading-relaxed">
-                            <span className="text-ink">Publish these clips straight from here.</span>{' '}
-                            <span className="text-muted">Connect your YouTube, TikTok or Instagram once — after that every clip is one click from posted.</span>
+                            <span className="text-ink">{uiT("Publish these clips straight from here.")}</span>{uiT(' ')}
+                            <span className="text-muted">{uiT("Connect your YouTube, TikTok or Instagram once — after that every clip is one click from posted.")}</span>
                           </div>
                           {/* On a phone the dismiss X rides the copy, so the CTA
                               below can run the full width of the card. */}
@@ -2353,7 +2286,7 @@ function App() {
                               setSocialNudgeDismissed(true);
                               try { localStorage.setItem('os_social_nudge_dismissed', '1'); } catch (_) { /* ignore */ }
                             }}
-                            aria-label="dismiss"
+                            aria-label={uiT("dismiss")}
                             className="sm:hidden shrink-0 -m-1 p-1 text-muted hover:text-ink"
                           >
                             <X size={16} />
@@ -2362,16 +2295,14 @@ function App() {
                         <button
                           onClick={() => { track('SocialNudgeConnect'); handleConnectSocials(); }}
                           className="btn-quiet shrink-0 text-xs py-1.5 px-3 lowercase w-full sm:w-auto"
-                        >
-                          connect socials →
-                        </button>
+                        >{uiT("connect socials →")}</button>
                         <button
                           onClick={() => {
                             track('SocialNudgeDismissed');
                             setSocialNudgeDismissed(true);
                             try { localStorage.setItem('os_social_nudge_dismissed', '1'); } catch (_) { /* ignore */ }
                           }}
-                          aria-label="dismiss"
+                          aria-label={uiT("dismiss")}
                           className="hidden sm:block shrink-0 p-1 text-muted hover:text-ink"
                         >
                           <X size={14} />
@@ -2382,8 +2313,8 @@ function App() {
                         here they really are gone once the retention sweep runs. */}
                     {!billingEnabled && jobRetentionSeconds > 0 && (
                       <div className="px-3 py-2.5 rounded-input bg-paper3 border border-paper3 text-sm">
-                        <span className="text-ink">Clips are kept for {formatRetention(jobRetentionSeconds)}, then deleted.</span>{' '}
-                        <span className="text-muted">Download what you want to keep, or raise JOB_RETENTION_SECONDS in your env.</span>
+                        <span className="text-ink">{uiT("Clips are kept for ")}{uiT(formatRetention(jobRetentionSeconds))}{uiT(", then deleted.")}</span>{uiT(' ')}
+                        <span className="text-muted">{uiT("Download what you want to keep, or raise JOB_RETENTION_SECONDS in your env.")}</span>
                       </div>
                     )}
                   </div>
@@ -2423,14 +2354,12 @@ function App() {
                     status === 'processing' ? (
                       <div className="h-full min-h-[140px] flex flex-col items-center justify-center text-muted space-y-3 text-center px-4">
                         <Loader2 size={28} className="animate-spin text-brass" />
-                        <p className="text-sm lowercase">Waiting for clips...</p>
-                        <p className="text-xs text-muted/80 max-w-[26ch] leading-snug">
-                          They appear here one by one as each finishes rendering.
-                        </p>
+                        <p className="text-sm lowercase">{uiT("Waiting for clips...")}</p>
+                        <p className="text-xs text-muted/80 max-w-[26ch] leading-snug">{uiT("They appear here one by one as each finishes rendering.")}</p>
                       </div>
                     ) : status === 'error' ? (
                       <div className="h-full min-h-[120px] flex flex-col items-center justify-center text-danger space-y-2">
-                        <p>Generation failed.</p>
+                        <p>{uiT("Generation failed.")}</p>
                       </div>
                     ) : null
                   )}
@@ -2453,50 +2382,43 @@ function App() {
         isOpen={showKeyModal}
         onClose={() => setShowKeyModal(false)}
         eyebrow="SETUP"
-        title={!geminiOk && !uploadPostKey
+        title={uiT(!geminiOk && !uploadPostKey
           ? 'Required API Keys Missing'
           : !geminiOk
             ? 'Gemini API Key Required'
-            : 'Upload-Post API Key Required'}
+            : 'Upload-Post API Key Required')}
         footer={
           <div className="flex gap-3">
             <button
               onClick={() => setShowKeyModal(false)}
               className="btn-ghost flex-1 px-4 py-2 text-sm"
-            >
-              Cancel
-            </button>
+            >{uiT("Cancel")}</button>
             <button
               onClick={() => { setShowKeyModal(false); goToTab('settings'); }}
               className="btn-primary flex-1 px-4 py-2 text-sm"
-            >
-              Go to Settings
-            </button>
+            >{uiT("Go to Settings")}</button>
           </div>
         }
       >
         <div className="space-y-4">
-          <p className="text-sm text-muted">
-            OpenShorts needs both a <strong className="text-ink2">Gemini</strong> API key and an <strong className="text-ink2">Upload-Post</strong> API key. Both have free tiers.
-          </p>
+          <p className="text-sm text-muted">{uiT("OpenShorts needs both a ")}<strong className="text-ink2">{uiT("Gemini")}</strong>{uiT(" API key and an ")}<strong className="text-ink2">{uiT("Upload-Post")}</strong>{uiT(" API key. Both have free tiers.")}</p>
 
           {/* Gemini block */}
           <div className={`rounded-input p-4 space-y-2 border ${!apiKey ? 'border-rule2' : 'border-rule opacity-70'}`}>
             <p className="text-xs font-medium text-ink flex items-center gap-2">
-              {apiKey ? <Check size={12} className="text-ok" /> : <AlertTriangle size={12} className="text-warn" />}
-              Gemini API Key {apiKey && <span className="text-ok">— set</span>}
+              {apiKey ? <Check size={12} className="text-ok" /> : <AlertTriangle size={12} className="text-warn" />}{uiT("Gemini API Key ")}{apiKey && <span className="text-ok">{uiT("— set")}</span>}
             </p>
             {!apiKey && (
               <>
                 <ol className="text-xs text-muted space-y-1 list-decimal list-inside">
-                  <li>Go to <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener noreferrer" className="text-brass underline">aistudio.google.com/app/apikey</a></li>
-                  <li>Sign in with your Google account</li>
-                  <li>Click "Create API Key"</li>
-                  <li>Copy the key and paste it below</li>
+                  <li>{uiT("Go to ")}<a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener noreferrer" className="text-brass underline">{uiT("aistudio.google.com/app/apikey")}</a></li>
+                  <li>{uiT("Sign in with your Google account")}</li>
+                  <li>{uiT("Click \"Create API Key\"")}</li>
+                  <li>{uiT("Copy the key and paste it below")}</li>
                 </ol>
                 <input
                   type="text"
-                  placeholder="Paste your Gemini API key here..."
+                  placeholder={uiT("Paste your Gemini API key here...")}
                   className="input-field"
                   onKeyDown={(e) => {
                     if (e.key === 'Enter' && e.target.value.trim()) {
@@ -2511,23 +2433,20 @@ function App() {
           {/* Upload-Post block */}
           <div className={`rounded-input p-4 space-y-2 border ${!uploadPostKey ? 'border-rule2' : 'border-rule opacity-70'}`}>
             <p className="text-xs font-medium text-ink flex items-center gap-2">
-              {uploadPostKey ? <Check size={12} className="text-ok" /> : <AlertTriangle size={12} className="text-warn" />}
-              Upload-Post API Key {uploadPostKey && <span className="text-ok">— set</span>}
+              {uploadPostKey ? <Check size={12} className="text-ok" /> : <AlertTriangle size={12} className="text-warn" />}{uiT("Upload-Post API Key ")}{uploadPostKey && <span className="text-ok">{uiT("— set")}</span>}
             </p>
             {!uploadPostKey && (
               <>
-                <p className="text-xs text-muted">
-                  Required to publish your clips to TikTok, Instagram Reels, and YouTube Shorts. Free tier available, no credit card needed.
-                </p>
+                <p className="text-xs text-muted">{uiT("Required to publish your clips to TikTok, Instagram Reels, and YouTube Shorts. Free tier available, no credit card needed.")}</p>
                 <ol className="text-xs text-muted space-y-1 list-decimal list-inside">
-                  <li>Register at <a href="https://app.upload-post.com/login" target="_blank" rel="noopener noreferrer" className="text-brass underline">app.upload-post.com</a></li>
-                  <li>Connect your TikTok, Instagram, or YouTube accounts</li>
-                  <li>Go to <a href="https://app.upload-post.com/api-keys" target="_blank" rel="noopener noreferrer" className="text-brass underline">API Keys</a> and generate one</li>
-                  <li>Paste it below</li>
+                  <li>{uiT("Register at ")}<a href="https://app.upload-post.com/login" target="_blank" rel="noopener noreferrer" className="text-brass underline">{uiT("app.upload-post.com")}</a></li>
+                  <li>{uiT("Connect your TikTok, Instagram, or YouTube accounts")}</li>
+                  <li>{uiT("Go to ")}<a href="https://app.upload-post.com/api-keys" target="_blank" rel="noopener noreferrer" className="text-brass underline">{uiT("API Keys")}</a>{uiT(" and generate one")}</li>
+                  <li>{uiT("Paste it below")}</li>
                 </ol>
                 <input
                   type="text"
-                  placeholder="Paste your Upload-Post API key here..."
+                  placeholder={uiT("Paste your Upload-Post API key here...")}
                   className="input-field"
                   onKeyDown={(e) => {
                     if (e.key === 'Enter' && e.target.value.trim()) {
@@ -2553,25 +2472,18 @@ function App() {
 
       {/* Pre-flight quality gate */}
       {qualityGate && (
-        <Modal isOpen={true} onClose={() => setQualityGate(null)} size="md" eyebrow="HEADS UP" title="low source quality">
+        <Modal isOpen={true} onClose={() => setQualityGate(null)} size="md" eyebrow="HEADS UP" title={uiT("low source quality")}>
           <div className="space-y-4">
-            <p className="text-sm text-ink2">
-              YouTube only offers <span className="text-brass font-semibold">{qualityGate.info.max_height}p</span> for this video
-              (below the {qualityGate.info.min_height}p we recommend). Processing anyway will produce lower-quality clips.
-            </p>
+            <p className="text-sm text-ink2">{uiT("YouTube only offers ")}<span className="text-brass font-semibold">{uiT(qualityGate.info.max_height)}{uiT("p")}</span>{uiT(" for this video (below the ")}{uiT(qualityGate.info.min_height)}{uiT("p we recommend). Processing anyway will produce lower-quality clips.")}</p>
             {qualityGate.info.cookies_invalid && (
-              <p className="text-xs text-muted">
-                Your YouTube cookies look expired — refreshing them (export again from an incognito window) often unlocks HD.
-              </p>
+              <p className="text-xs text-muted">{uiT("Your YouTube cookies look expired — refreshing them (export again from an incognito window) often unlocks HD.")}</p>
             )}
             <div className="flex gap-2 justify-end pt-2">
-              <button onClick={() => setQualityGate(null)} className="btn-ghost">cancel</button>
+              <button onClick={() => setQualityGate(null)} className="btn-ghost">{uiT("cancel")}</button>
               <button
                 onClick={() => { const d = qualityGate.data; setQualityGate(null); handleProcess(d, true); }}
                 className="btn-primary"
-              >
-                process anyway
-              </button>
+              >{uiT("process anyway")}</button>
             </div>
           </div>
         </Modal>

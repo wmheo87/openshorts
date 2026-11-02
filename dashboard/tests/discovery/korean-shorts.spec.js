@@ -31,29 +31,29 @@ async function setup(page, { voices = true, source = 'elevenlabs', elevenKey = t
   });
   page.on('dialog', dialog => dialog.accept());
   await page.goto('/#app');
-  if (page.viewportSize().width < 768) await page.getByRole('button', { name: 'open navigation' }).click();
-  await page.getByRole('button', { name: /^AI Shorts/ }).click();
+  if (page.viewportSize().width < 768) await page.getByRole('button', { name: '메뉴 열기' }).click();
+  await page.getByRole('button', { name: /^AI 쇼츠 제작/ }).first().click();
   await page.getByRole('button', { name: 'AI 배우형 (fal.ai)', exact: true }).click();
   return requests;
 }
 
 async function configure(page, language = 'ko', provider = 'elevenlabs') {
-  if (language !== 'ko') await page.getByRole('radio', { name: language === 'en' ? /English/ : /Español/ }).click();
-  await page.getByPlaceholder('e.g. artisan pizzeria in Madrid, productivity coach, sportswear store, meditation app...').fill('텀블러, 확인된 판매 가격 12000원');
-  await page.getByRole('button', { name: 'generate scripts', exact: true }).click();
-  await page.getByRole('button', { name: /Configure video/ }).click();
+  if (language !== 'ko') await page.getByRole('radio', { name: language === 'en' ? /영어/ : /스페인어/ }).click();
+  await page.getByPlaceholder('예: 수제 피자 가게, 생산성 코칭, 운동복 매장, 명상 앱…').fill('텀블러, 확인된 판매 가격 12000원');
+  await page.getByRole('button', { name: '대본 생성', exact: true }).click();
+  await page.getByRole('button', { name: /영상 설정/ }).click();
   if (language === 'ko') await page.getByRole('combobox', { name: '음성 공급자', exact: true }).selectOption(provider);
-  await page.getByRole('button').filter({ has: page.getByAltText('Actor 1', { exact: true }) }).click();
+  await page.getByRole('button').filter({ has: page.getByAltText('배우 1', { exact: true }) }).click();
 }
 
 for (const language of ['ko', 'en', 'es']) test(`AI Shorts ${language} preserves language and voice in API requests`, async ({ page }) => {
   const requests = await setup(page);
   await expect(page.getByRole('radio', { name: /한국어/ })).toHaveAttribute('aria-checked', 'true');
-  await expect(page.getByRole('button', { name: /Low Cost/ })).toBeVisible();
-  await expect(page.getByRole('button', { name: /Premium/ })).toBeVisible();
-  await expect(page.getByRole('radio', { name: /Before\/After/ })).toBeVisible();
+  await expect(page.getByRole('button', { name: /저비용/ })).toBeVisible();
+  await expect(page.getByRole('button', { name: /프리미엄/ })).toBeVisible();
+  await expect(page.getByRole('radio', { name: /전후 비교/ })).toBeVisible();
   await configure(page, language);
-  const generate = page.getByRole('button', { name: /Generate video \(/ });
+  const generate = page.getByRole('button', { name: /영상 생성 \(/ });
   if (language === 'ko') {
     await expect(generate).toBeDisabled();
     await page.getByRole('combobox', { name: '한국어 음성', exact: true }).selectOption('ko-account-voice');
@@ -76,7 +76,7 @@ for (const source of ['elevenlabs', 'defaults']) test(`unconfirmed Korean voice 
   const requests = await setup(page, { voices: source === 'defaults', source });
   await configure(page);
   await expect(page.getByText(/현재 ElevenLabs 계정에서 한국어 음성을 확인하지 못했습니다/)).toBeVisible();
-  await expect(page.getByRole('button', { name: /Generate video \(/ })).toBeDisabled();
+  await expect(page.getByRole('button', { name: /영상 생성 \(/ })).toBeDisabled();
   expect(requests).toHaveLength(1);
 });
 
@@ -86,9 +86,9 @@ test('default Korean Gemini TTS generates without an ElevenLabs key', async ({ p
   await configure(page, 'ko', 'gemini');
   await expect(page.getByRole('combobox', { name: '음성 공급자', exact: true })).toHaveValue('gemini');
   await expect(page.getByRole('combobox', { name: 'Gemini 음성', exact: true })).toHaveValue('Kore');
-  await expect(page.getByText('ElevenLabs API key missing.', { exact: false })).toHaveCount(0);
+  await expect(page.getByText('ElevenLabs API 키가 없습니다.', { exact: false })).toHaveCount(0);
   await expect(page.getByText(/Gemini TTS 예상 비용: 요금 미확인/)).toBeVisible();
-  const generate = page.getByRole('button', { name: /Generate video \(/ });
+  const generate = page.getByRole('button', { name: /영상 생성 \(/ });
   await expect(generate).toBeEnabled();
   await generate.click();
   await expect.poll(() => requests.length).toBe(2);
@@ -102,7 +102,7 @@ test('unavailable Gemini model blocks paid generation and never switches provide
   const requests = await setup(page, { elevenKey: false, modelError: true });
   await configure(page, 'ko', 'gemini');
   await expect(page.getByText(/요청 모델의 계정 이용 가능 여부를 확인하지 못했습니다/)).toBeVisible();
-  await expect(page.getByRole('button', { name: /Generate video \(/ })).toBeDisabled();
+  await expect(page.getByRole('button', { name: /영상 생성 \(/ })).toBeDisabled();
   await expect(page.getByRole('combobox', { name: '음성 공급자', exact: true })).toHaveValue('gemini');
   expect(requests).toHaveLength(1);
 });

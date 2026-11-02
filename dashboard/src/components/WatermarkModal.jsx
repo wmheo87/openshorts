@@ -1,3 +1,4 @@
+import { getUiLocale, t as uiT, useUiLocale } from "../i18n/runtime.js";
 import React, { useEffect, useState } from 'react';
 import Modal from './ui/Modal';
 import { apiJson } from '../lib/api';
@@ -35,6 +36,7 @@ export function markWatermarkNoticed(jobId) {
 // download, the clip is downloaded first either way: the user asked for it.
 export default function WatermarkModal({ onClose, onContinue, onUpgrade, previewSrc = null,
                                          source = 'download', jobId = null }) {
+  useUiLocale();
   const [dontShow, setDontShow] = useState(false);
   const [previewFailed, setPreviewFailed] = useState(false);
   const [starter, setStarter] = useState(null);
@@ -66,19 +68,15 @@ export default function WatermarkModal({ onClose, onContinue, onUpgrade, preview
     else window.location.hash = '#/pricing';
   };
 
-  const price = starter && new Intl.NumberFormat('en-US', {
+  const price = starter && new Intl.NumberFormat(getUiLocale(), {
     style: 'currency', currency: (starter.currency || 'usd').toUpperCase(), maximumFractionDigits: 0,
   }).format((starter.amount || 0) / 100);
 
   const src = previewSrc && !previewFailed ? previewSrc : '/demo/clip-vertical.mp4';
 
   return (
-    <Modal isOpen onClose={() => close(false)} eyebrow="FREE PLAN" title="Want the watermark off?" size="md">
-      <p className="text-muted text-sm mb-4">
-        Clips on the free plan carry the OpenShorts mark and are deleted after 7 days.
-        Upgrade and <b className="text-ink font-medium">these exact clips lose the mark on the spot</b>,
-        no re-render, and stay in your library for good.
-      </p>
+    <Modal isOpen onClose={() => close(false)} eyebrow="FREE PLAN" title={uiT("Want the watermark off?")} size="md">
+      <p className="text-muted text-sm mb-4">{uiT("Clips on the free plan carry the OpenShorts mark and are deleted after 7 days. Upgrade and ")}<b className="text-ink font-medium">{uiT("these exact clips lose the mark on the spot")}</b>{uiT(", no re-render, and stay in your library for good.")}</p>
 
       <div className="rounded-card border border-rule overflow-hidden bg-paper mb-5">
         <video
@@ -100,15 +98,13 @@ export default function WatermarkModal({ onClose, onContinue, onUpgrade, preview
             checked={dontShow}
             onChange={(e) => setDontShow(e.target.checked)}
             className="accent-brass"
-          />
-          Don't show this again
-        </label>
+          />{uiT("Don't show this again")}</label>
         <div className="flex items-center gap-2">
           <button onClick={() => close(true)} className="btn-ghost px-4 py-2 text-sm">
-            {source === 'download' ? 'Download anyway' : 'Keep the watermark'}
+            {uiT(source === 'download' ? 'Download anyway' : 'Keep the watermark')}
           </button>
           <button onClick={upgrade} className="btn-primary px-4 py-2 text-sm">
-            {price ? `Remove the watermark · from ${price}/mo` : 'Remove the watermark'}
+            {uiT(price ? `Remove the watermark · from ${price}/mo` : 'Remove the watermark')}
           </button>
         </div>
       </div>

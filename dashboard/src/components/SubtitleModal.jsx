@@ -1,3 +1,4 @@
+import { t as uiT, useUiLocale } from "../i18n/runtime.js";
 import React, { useState, useEffect } from 'react';
 import { Loader2 } from 'lucide-react';
 import { apiFetch } from '../lib/api';
@@ -115,6 +116,7 @@ const swatchClass = (selected) =>
         : 'ring-1 ring-[color:var(--color-rule-2)] hover:ring-[color:var(--color-accent)]'}`;
 
 export default function SubtitleModal({ isOpen, onClose, onGenerate, onApplyAll, onRemove, isProcessing, videoUrl, jobId, clipIndex, existingHook, bulkCount = 0, bulkProgress }) {
+  useUiLocale();
     // Opens on the look the clip already has (the Default preset), so
     // "apply" without touching anything changes nothing.
     const [position, setPosition] = useState('bottom');
@@ -276,14 +278,14 @@ export default function SubtitleModal({ isOpen, onClose, onGenerate, onApplyAll,
     };
 
     return (
-        <Modal isOpen={isOpen} onClose={onClose} size="xl" eyebrow="EDITOR · SUBTITLES" title="subtitles">
+        <Modal isOpen={isOpen} onClose={onClose} size="xl" eyebrow="EDITOR · SUBTITLES" title={uiT("subtitles")}>
             <div className="flex flex-col md:flex-row gap-6">
                 {/* Left: Preview */}
                 <div className="flex-1 flex flex-col items-center justify-center bg-black rounded-card border border-rule overflow-hidden relative aspect-[9/16] max-h-[600px]">
                     {captionsLoading ? (
                         <div className="flex items-center gap-2 text-muted">
                             <Loader2 size={16} className="animate-spin" />
-                            <span className="text-sm lowercase">Loading preview...</span>
+                            <span className="text-sm lowercase">{uiT("Loading preview...")}</span>
                         </div>
                     ) : useRemotionPreview ? (
                         <RemotionPreview
@@ -300,9 +302,7 @@ export default function SubtitleModal({ isOpen, onClose, onGenerate, onApplyAll,
                                 ${position === 'middle' ? 'top-0 bottom-0' : ''}
                                 ${position === 'bottom' ? 'bottom-20' : ''}
                             `}>
-                                <span style={fallbackPreviewStyle}>
-                                    This is how your subtitles<br/>will appear on the video
-                                </span>
+                                <span style={fallbackPreviewStyle}>{uiT("This is how your subtitles")}<br/>{uiT("will appear on the video")}</span>
                             </div>
                         </>
                     )}
@@ -313,7 +313,7 @@ export default function SubtitleModal({ isOpen, onClose, onGenerate, onApplyAll,
                     <div className="space-y-5 flex-1 overflow-y-auto custom-scrollbar pr-1">
                         {/* Caption presets (server-side karaoke burn) */}
                         <div>
-                            <p className="eyebrow mb-2">Preset</p>
+                            <p className="eyebrow mb-2">{uiT("Preset")}</p>
                             <div className="grid grid-cols-3 gap-1.5">
                                 {CAPTION_PRESETS.map((p) => (
                                     <button
@@ -323,17 +323,17 @@ export default function SubtitleModal({ isOpen, onClose, onGenerate, onApplyAll,
                                             ${activePreset === p.id
                                                 ? 'border-[color:var(--color-accent)] text-ink'
                                                 : 'border-rule2 text-muted hover:border-[color:var(--color-accent)]'}`}
-                                        title={p.label}
+                                        title={uiT(p.label)}
                                     >
                                         <span className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: p.highlightColor }} />
-                                        {p.label}
+                                        {uiT(p.label)}
                                     </button>
                                 ))}
                             </div>
                             {style === 'karaoke' && (
                                 <div className="mt-3 space-y-3 animate-fade">
                                     <div className="flex items-center justify-between">
-                                        <span className="readout">UPPERCASE</span>
+                                        <span className="readout">{uiT("UPPERCASE")}</span>
                                         <label className="relative inline-flex items-center cursor-pointer">
                                             <input type="checkbox" checked={uppercase} onChange={(e) => setUppercase(e.target.checked)} className="sr-only peer" />
                                             <div className="w-8 h-4 rounded-full bg-paper3 peer-checked:bg-brass transition-colors after:content-[''] after:absolute after:top-0 after:left-0 after:h-4 after:w-4 after:rounded-full after:bg-ink after:transition-all peer-checked:after:translate-x-full"></div>
@@ -341,8 +341,8 @@ export default function SubtitleModal({ isOpen, onClose, onGenerate, onApplyAll,
                                     </div>
                                     <div>
                                         <div className="flex justify-between mb-1">
-                                            <span className="readout">Dim inactive words</span>
-                                            <span className="readout">{Math.round(baseOpacity * 100)}%</span>
+                                            <span className="readout">{uiT("Dim inactive words")}</span>
+                                            <span className="readout">{uiT(Math.round(baseOpacity * 100))}%</span>
                                         </div>
                                         <input
                                             type="range"
@@ -359,7 +359,7 @@ export default function SubtitleModal({ isOpen, onClose, onGenerate, onApplyAll,
 
                         {/* Position Selector */}
                         <div>
-                            <p className="eyebrow mb-2">Position</p>
+                            <p className="eyebrow mb-2">{uiT("Position")}</p>
                             <SegmentedControl
                                 options={POSITION_OPTIONS}
                                 value={position}
@@ -370,7 +370,7 @@ export default function SubtitleModal({ isOpen, onClose, onGenerate, onApplyAll,
 
                         {/* Size */}
                         <div>
-                            <p className="eyebrow mb-2">Size</p>
+                            <p className="eyebrow mb-2">{uiT("Size")}</p>
                             <SegmentedControl
                                 options={SIZE_OPTIONS}
                                 value={fontSize}
@@ -382,7 +382,7 @@ export default function SubtitleModal({ isOpen, onClose, onGenerate, onApplyAll,
                         {style === 'karaoke' && (
                             <div className="space-y-3">
                                 <div className="flex items-center justify-between">
-                                    <span className="readout">One word at a time</span>
+                                    <span className="readout">{uiT("One word at a time")}</span>
                                     <label className="relative inline-flex items-center cursor-pointer">
                                         <input type="checkbox" checked={oneWord} onChange={(e) => setOneWord(e.target.checked)} className="sr-only peer" />
                                         <div className="w-8 h-4 rounded-full bg-paper3 peer-checked:bg-brass transition-colors after:content-[''] after:absolute after:top-0 after:left-0 after:h-4 after:w-4 after:rounded-full after:bg-ink after:transition-all peer-checked:after:translate-x-full"></div>
@@ -390,7 +390,7 @@ export default function SubtitleModal({ isOpen, onClose, onGenerate, onApplyAll,
                                 </div>
                                 {!oneWord && (
                                     <div className="flex items-center justify-between">
-                                        <span className="readout">Reveal word by word</span>
+                                        <span className="readout">{uiT("Reveal word by word")}</span>
                                         <label className="relative inline-flex items-center cursor-pointer">
                                             <input type="checkbox" checked={reveal} onChange={(e) => setReveal(e.target.checked)} className="sr-only peer" />
                                             <div className="w-8 h-4 rounded-full bg-paper3 peer-checked:bg-brass transition-colors after:content-[''] after:absolute after:top-0 after:left-0 after:h-4 after:w-4 after:rounded-full after:bg-ink after:transition-all peer-checked:after:translate-x-full"></div>
@@ -402,7 +402,7 @@ export default function SubtitleModal({ isOpen, onClose, onGenerate, onApplyAll,
 
                         {/* Animation Style (new) */}
                         <div>
-                            <p className="eyebrow mb-2">Animation</p>
+                            <p className="eyebrow mb-2">{uiT("Animation")}</p>
                             <SegmentedControl
                                 options={ANIMATION_OPTIONS}
                                 value={animation}
@@ -420,7 +420,7 @@ export default function SubtitleModal({ isOpen, onClose, onGenerate, onApplyAll,
                                     onClick={() => setShowTextEditor(!showTextEditor)}
                                     className="w-full flex items-center justify-between mb-2"
                                 >
-                                    <span className="eyebrow">Edit text ({captions.length} words)</span>
+                                    <span className="eyebrow">{uiT("Edit text (")}{uiT(captions.length)}{uiT(" words)")}</span>
                                     <span className={`text-muted transition-transform ${showTextEditor ? 'rotate-180' : ''}`}>▾</span>
                                 </button>
                                 {showTextEditor && (
@@ -430,7 +430,7 @@ export default function SubtitleModal({ isOpen, onClose, onGenerate, onApplyAll,
                                         rows={5}
                                         dir="auto"
                                         className="input-field resize-none leading-relaxed animate-fade"
-                                        placeholder="Edit subtitle text..."
+                                        placeholder={uiT("Edit subtitle text...")}
                                     />
                                 )}
                             </div>
@@ -438,21 +438,21 @@ export default function SubtitleModal({ isOpen, onClose, onGenerate, onApplyAll,
 
                         {/* Font Family */}
                         <div>
-                            <p className="eyebrow mb-2">Font</p>
+                            <p className="eyebrow mb-2">{uiT("Font")}</p>
                             <select
                                 value={fontName}
                                 onChange={(e) => setFontName(e.target.value)}
                                 className="input-field"
                             >
                                 {FONT_OPTIONS.map((f) => (
-                                    <option key={f.value} value={f.value} style={{ fontFamily: f.value }}>{f.label}</option>
+                                    <option key={f.value} value={f.value} style={{ fontFamily: f.value }}>{uiT(f.label)}</option>
                                 ))}
                             </select>
                         </div>
 
                         {/* Text Color */}
                         <div>
-                            <p className="eyebrow mb-2">Text color</p>
+                            <p className="eyebrow mb-2">{uiT("Text color")}</p>
                             <div className="flex flex-wrap items-center gap-2.5">
                                 {COLOR_PRESETS.map((c) => (
                                     <button
@@ -460,10 +460,10 @@ export default function SubtitleModal({ isOpen, onClose, onGenerate, onApplyAll,
                                         onClick={() => setFontColor(c.color)}
                                         className={swatchClass(fontColor === c.color)}
                                         style={{ backgroundColor: c.color }}
-                                        title={c.label}
+                                        title={uiT(c.label)}
                                     />
                                 ))}
-                                <label className="w-6 h-6 rounded-full border border-dashed border-rule2 cursor-pointer flex items-center justify-center hover:border-brass transition-colors overflow-hidden relative" title="Custom color">
+                                <label className="w-6 h-6 rounded-full border border-dashed border-rule2 cursor-pointer flex items-center justify-center hover:border-brass transition-colors overflow-hidden relative" title={uiT("Custom color")}>
                                     <span className="text-xs text-muted leading-none">+</span>
                                     <input type="color" value={fontColor} onChange={(e) => setFontColor(e.target.value)} className="absolute inset-0 opacity-0 cursor-pointer" />
                                 </label>
@@ -472,7 +472,7 @@ export default function SubtitleModal({ isOpen, onClose, onGenerate, onApplyAll,
 
                         {/* Highlight Color (new) */}
                         <div>
-                            <p className="eyebrow mb-2">Highlight</p>
+                            <p className="eyebrow mb-2">{uiT("Highlight")}</p>
                             <div className="flex flex-wrap items-center gap-2.5">
                                 {HIGHLIGHT_PRESETS.map((c) => (
                                     <button
@@ -480,7 +480,7 @@ export default function SubtitleModal({ isOpen, onClose, onGenerate, onApplyAll,
                                         onClick={() => setHighlightColor(c.color)}
                                         className={swatchClass(highlightColor === c.color)}
                                         style={{ backgroundColor: c.color }}
-                                        title={c.label}
+                                        title={uiT(c.label)}
                                     />
                                 ))}
                             </div>
@@ -488,9 +488,9 @@ export default function SubtitleModal({ isOpen, onClose, onGenerate, onApplyAll,
 
                         {/* Border / Outline */}
                         <div>
-                            <p className="eyebrow mb-2">Border</p>
+                            <p className="eyebrow mb-2">{uiT("Border")}</p>
                             <div className="flex items-center gap-3">
-                                <label className="relative w-8 h-8 rounded-input border border-rule2 cursor-pointer overflow-hidden shrink-0" title="Border color">
+                                <label className="relative w-8 h-8 rounded-input border border-rule2 cursor-pointer overflow-hidden shrink-0" title={uiT("Border color")}>
                                     <div className="w-full h-full" style={{ backgroundColor: borderColor }} />
                                     <input type="color" value={borderColor} onChange={(e) => setBorderColor(e.target.value)} className="absolute inset-0 opacity-0 cursor-pointer" />
                                 </label>
@@ -504,8 +504,8 @@ export default function SubtitleModal({ isOpen, onClose, onGenerate, onApplyAll,
                                         className="w-full accent-[var(--color-accent)]"
                                     />
                                     <div className="flex justify-between">
-                                        <span className="readout">None</span>
-                                        <span className="readout">Thick</span>
+                                        <span className="readout">{uiT("None")}</span>
+                                        <span className="readout">{uiT("Thick")}</span>
                                     </div>
                                 </div>
                             </div>
@@ -514,7 +514,7 @@ export default function SubtitleModal({ isOpen, onClose, onGenerate, onApplyAll,
                         {/* Background Box */}
                         <div>
                             <div className="flex items-center justify-between mb-2">
-                                <p className="eyebrow">Background</p>
+                                <p className="eyebrow">{uiT("Background")}</p>
                                 <label className="relative inline-flex items-center cursor-pointer">
                                     <input type="checkbox" checked={bgOpacity > 0} onChange={(e) => setBgOpacity(e.target.checked ? 0.5 : 0)} className="sr-only peer" />
                                     <div className="w-8 h-4 rounded-full bg-paper3 peer-checked:bg-brass transition-colors after:content-[''] after:absolute after:top-0 after:left-0 after:h-4 after:w-4 after:rounded-full after:bg-ink after:transition-all peer-checked:after:translate-x-full"></div>
@@ -523,7 +523,7 @@ export default function SubtitleModal({ isOpen, onClose, onGenerate, onApplyAll,
                             {bgOpacity > 0 && (
                                 <div className="space-y-3 animate-fade">
                                     <div className="flex items-center gap-3">
-                                        <label className="relative w-8 h-8 rounded-input border border-rule2 cursor-pointer overflow-hidden shrink-0" title="Background color">
+                                        <label className="relative w-8 h-8 rounded-input border border-rule2 cursor-pointer overflow-hidden shrink-0" title={uiT("Background color")}>
                                             <div className="w-full h-full" style={{ backgroundColor: bgColor }} />
                                             <input type="color" value={bgColor} onChange={(e) => setBgColor(e.target.value)} className="absolute inset-0 opacity-0 cursor-pointer" />
                                         </label>
@@ -537,8 +537,8 @@ export default function SubtitleModal({ isOpen, onClose, onGenerate, onApplyAll,
                                                 className="w-full accent-[var(--color-accent)]"
                                             />
                                             <div className="flex justify-between">
-                                                <span className="readout">Transparent</span>
-                                                <span className="readout">{Math.round(bgOpacity * 100)}%</span>
+                                                <span className="readout">{uiT("Transparent")}</span>
+                                                <span className="readout">{uiT(Math.round(bgOpacity * 100))}%</span>
                                             </div>
                                         </div>
                                     </div>
@@ -567,16 +567,14 @@ export default function SubtitleModal({ isOpen, onClose, onGenerate, onApplyAll,
                             return (
                                 <>
                                     <div className="flex gap-2">
-                                        <button onClick={onClose} className="btn-ghost">
-                                            cancel
-                                        </button>
+                                        <button onClick={onClose} className="btn-ghost">{uiT("cancel")}</button>
                                         <button
                                             onClick={() => onGenerate(styleOptions)}
                                             disabled={isProcessing}
                                             className="btn-primary flex-1"
                                         >
                                             {(isProcessing && !bulkRunning) && <Loader2 size={16} className="animate-spin text-brassink" />}
-                                            {(isProcessing && !bulkRunning) ? 'generating...' : 'apply to this clip'}
+                                            {uiT((isProcessing && !bulkRunning) ? 'generating...' : 'apply to this clip')}
                                         </button>
                                     </div>
                                     {onApplyAll && bulkCount > 1 && (
@@ -586,8 +584,8 @@ export default function SubtitleModal({ isOpen, onClose, onGenerate, onApplyAll,
                                             className="btn-ghost w-full flex items-center justify-center gap-2"
                                         >
                                             {bulkRunning
-                                                ? <><Loader2 size={16} className="animate-spin" />applying to all… {bulkProgress.current}/{bulkProgress.total}</>
-                                                : `apply this style to all ${bulkCount} clips`}
+                                                ? <><Loader2 size={16} className="animate-spin" />{uiT("applying to all… ")}{uiT(bulkProgress.current)}/{uiT(bulkProgress.total)}</>
+                                                : uiT(`apply this style to all ${bulkCount} clips`)}
                                         </button>
                                     )}
                                     {/* Clips ship captioned by default, so the way
@@ -598,9 +596,7 @@ export default function SubtitleModal({ isOpen, onClose, onGenerate, onApplyAll,
                                             onClick={onRemove}
                                             disabled={isProcessing}
                                             className="text-xs text-muted underline underline-offset-2 lowercase hover:text-ink2 disabled:opacity-50"
-                                        >
-                                            remove captions from this clip
-                                        </button>
+                                        >{uiT("remove captions from this clip")}</button>
                                     )}
                                 </>
                             );

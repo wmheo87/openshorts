@@ -1,3 +1,4 @@
+import { getUiLocale } from "../../i18n/runtime.js";
 export const defaultFilters = {
   keyword: '', relevance_language: 'ko', min_views: '0',
   min_duration_seconds: '1', max_duration_seconds: '86400',
@@ -38,7 +39,7 @@ export function buildSearchRequest(filters) {
   ]) {
     const raw = String(filters[name]);
     const value = Number(raw);
-    if (!/^\d+$/.test(raw) || !Number.isSafeInteger(value) || value < low || value > high) errors[name] = `${low.toLocaleString('ko-KR')}~${high.toLocaleString('ko-KR')} 범위의 정수를 입력하세요.`;
+    if (!/^\d+$/.test(raw) || !Number.isSafeInteger(value) || value < low || value > high) errors[name] = `${low.toLocaleString(getUiLocale())}~${high.toLocaleString(getUiLocale())} 범위의 정수를 입력하세요.`;
     request[name] = value;
   }
   if (request.min_duration_seconds > request.max_duration_seconds) errors.max_duration_seconds = '최대 길이는 최소 길이 이상이어야 합니다.';
@@ -69,7 +70,7 @@ export function sortVideos(items, order) {
   });
 }
 
-export const formatNumber = (value) => Number.isFinite(value) ? value.toLocaleString('ko-KR') : '정보 없음';
+export const formatNumber = (value) => Number.isFinite(value) ? value.toLocaleString(getUiLocale()) : '정보 없음';
 export function formatDuration(value) {
   if (!Number.isFinite(value)) return '정보 없음';
   const hours = Math.floor(value / 3600), minutes = Math.floor((value % 3600) / 60), seconds = Math.floor(value % 60);
@@ -78,7 +79,7 @@ export function formatDuration(value) {
 export function formatDate(value, withTime = false) {
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return '정보 없음';
-  return date.toLocaleString('ko-KR', { year: 'numeric', month: '2-digit', day: '2-digit', ...(withTime ? { hour: '2-digit', minute: '2-digit' } : {}) });
+  return date.toLocaleString(getUiLocale(), { year: 'numeric', month: '2-digit', day: '2-digit', ...(withTime ? { hour: '2-digit', minute: '2-digit' } : {}) });
 }
 
 export function safeVideoUrl(value) {

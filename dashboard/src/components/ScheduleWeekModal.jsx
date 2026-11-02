@@ -1,3 +1,4 @@
+import { t as uiT, useUiLocale } from "../i18n/runtime.js";
 import React, { useState, useMemo } from 'react';
 import { Loader2, Calendar, CheckCircle, AlertCircle, Video, Instagram, Youtube, ChevronLeft, ChevronRight, Circle, ExternalLink } from 'lucide-react';
 import { apiFetch } from '../lib/api';
@@ -35,6 +36,7 @@ const TIMEZONES = [
     { value: 'Asia/Kolkata', label: '(GMT+05:30) India' },
     { value: 'Asia/Bangkok', label: '(GMT+07:00) Bangkok' },
     { value: 'Asia/Shanghai', label: '(GMT+08:00) Shanghai' },
+    { value: 'Asia/Seoul', label: '(GMT+09:00) Seoul' },
     { value: 'Asia/Tokyo', label: '(GMT+09:00) Tokyo' },
     { value: 'Australia/Sydney', label: '(GMT+10:00) Sydney' },
     { value: 'Pacific/Auckland', label: '(GMT+12:00) Auckland' },
@@ -74,6 +76,7 @@ function detectTimezone() {
 }
 
 export default function ScheduleWeekModal({ isOpen, onClose, clips, jobId, uploadPostKey, uploadUserId, isManaged }) {
+  useUiLocale();
     const [time, setTime] = useState('12:00');
     const [timezone, setTimezone] = useState(detectTimezone);
     const [platforms, setPlatforms] = useState({
@@ -179,7 +182,7 @@ export default function ScheduleWeekModal({ isOpen, onClose, clips, jobId, uploa
                 disabled={scheduling}
                 className="btn-ghost flex-1"
             >
-                {done ? 'close' : 'cancel'}
+                {uiT(done ? 'close' : 'cancel')}
             </button>
             {!done ? (
                 <button
@@ -189,14 +192,10 @@ export default function ScheduleWeekModal({ isOpen, onClose, clips, jobId, uploa
                 >
                     {scheduling ? (
                         <>
-                            <Loader2 size={16} className="animate-spin" />
-                            scheduling...
-                        </>
+                            <Loader2 size={16} className="animate-spin" />{uiT("scheduling...")}</>
                     ) : (
                         <>
-                            <Calendar size={16} />
-                            schedule {clips?.length || 0} clips
-                        </>
+                            <Calendar size={16} />{uiT("schedule ")}{uiT(clips?.length || 0)}{uiT(" clips")}</>
                     )}
                 </button>
             ) : (
@@ -206,9 +205,7 @@ export default function ScheduleWeekModal({ isOpen, onClose, clips, jobId, uploa
                     rel="noopener noreferrer"
                     className="btn-primary flex-1 no-underline"
                 >
-                    <ExternalLink size={16} />
-                    view calendar
-                </a>
+                    <ExternalLink size={16} />{uiT("view calendar")}</a>
             )}
         </div>
     );
@@ -218,23 +215,23 @@ export default function ScheduleWeekModal({ isOpen, onClose, clips, jobId, uploa
             isOpen={isOpen}
             onClose={scheduling ? undefined : onClose}
             eyebrow="PUBLISH · WEEK"
-            title="schedule week"
+            title={uiT("schedule week")}
             size="md"
             footer={footer}
         >
-            <p className="readout mb-4">{clips?.length || 0} CLIPS · 1/DAY</p>
+            <p className="readout mb-4">{uiT(clips?.length || 0)}{uiT(" CLIPS · 1/DAY")}</p>
 
             {!canPost && (
                 <div className="mb-4 p-3 bg-warn/10 text-warn text-xs rounded-input flex items-start gap-2">
                     <AlertCircle size={14} className="mt-0.5 shrink-0" />
-                    <div>Set your Upload-Post API key in Settings first.</div>
+                    <div>{uiT("Set your Upload-Post API key in Settings first.")}</div>
                 </div>
             )}
 
             {/* Time + Timezone */}
             <div className="mb-5 grid grid-cols-2 gap-3">
                 <div>
-                    <label className="eyebrow block mb-2">time</label>
+                    <label className="eyebrow block mb-2">{uiT("time")}</label>
                     <input
                         type="time"
                         value={time}
@@ -244,7 +241,7 @@ export default function ScheduleWeekModal({ isOpen, onClose, clips, jobId, uploa
                     />
                 </div>
                 <div>
-                    <label className="eyebrow block mb-2">timezone</label>
+                    <label className="eyebrow block mb-2">{uiT("timezone")}</label>
                     <select
                         value={timezone}
                         onChange={(e) => setTimezone(e.target.value)}
@@ -252,7 +249,7 @@ export default function ScheduleWeekModal({ isOpen, onClose, clips, jobId, uploa
                         className="input-field appearance-none cursor-pointer"
                     >
                         {TIMEZONES.map(tz => (
-                            <option key={tz.value} value={tz.value}>{tz.label}</option>
+                            <option key={tz.value} value={tz.value}>{uiT(tz.label)}</option>
                         ))}
                     </select>
                 </div>
@@ -260,7 +257,7 @@ export default function ScheduleWeekModal({ isOpen, onClose, clips, jobId, uploa
 
             {/* Start day offset */}
             <div className="mb-5 flex flex-wrap items-center justify-between gap-2">
-                <span className="eyebrow">start from</span>
+                <span className="eyebrow">{uiT("start from")}</span>
                 <div className="flex items-center gap-2">
                     <button
                         onClick={() => setStartOffset(Math.max(1, startOffset - 1))}
@@ -270,11 +267,11 @@ export default function ScheduleWeekModal({ isOpen, onClose, clips, jobId, uploa
                         <ChevronLeft size={16} />
                     </button>
                     <span className="readout text-ink2 min-w-[110px] text-center">
-                        {(() => {
+                        {uiT((() => {
                             const d = new Date();
                             d.setDate(d.getDate() + startOffset);
                             return `${getDayLabel(d)} · ${formatDate(d)}`;
-                        })()}
+                        })())}
                     </span>
                     <button
                         onClick={() => setStartOffset(startOffset + 1)}
@@ -291,15 +288,15 @@ export default function ScheduleWeekModal({ isOpen, onClose, clips, jobId, uploa
                 {schedule.map(({ clip, index, date }) => (
                     <div key={index} className="flex items-center gap-3 py-2.5">
                         <div className="w-24 shrink-0">
-                            <span className="readout">{getDayLabel(date)} · {formatDate(date)}</span>
+                            <span className="readout">{uiT(getDayLabel(date))} · {uiT(formatDate(date))}</span>
                         </div>
 
                         <div className="flex-1 min-w-0">
                             <div className="text-xs text-ink truncate">
-                                {clip.video_title_for_youtube_short || 'Viral Short'}
+                                {clip.video_title_for_youtube_short || uiT('Viral Short')}
                             </div>
                             <div className="readout mt-0.5 truncate">
-                                {time} · {TIMEZONES.find(t => t.value === timezone)?.label || timezone}
+                                {uiT(time)} · {uiT(TIMEZONES.find(t => t.value === timezone)?.label || timezone)}
                             </div>
                         </div>
 
@@ -323,7 +320,7 @@ export default function ScheduleWeekModal({ isOpen, onClose, clips, jobId, uploa
 
             {/* Platforms */}
             <div className="mb-5">
-                <label className="eyebrow block mb-2">platforms</label>
+                <label className="eyebrow block mb-2">{uiT("platforms")}</label>
                 <SegmentedControl
                     multi
                     options={PLATFORM_OPTIONS.map(opt => ({ ...opt, disabled: scheduling }))}
@@ -346,8 +343,8 @@ export default function ScheduleWeekModal({ isOpen, onClose, clips, jobId, uploa
             {(scheduling || done) && (
                 <div className="mb-1">
                     <div className="flex items-center justify-between mb-2">
-                        <span className="text-xs text-muted lowercase">{scheduling ? 'scheduling...' : 'complete'}</span>
-                        <span className="readout">{progress.current}/{progress.total}</span>
+                        <span className="text-xs text-muted lowercase">{uiT(scheduling ? 'scheduling...' : 'complete')}</span>
+                        <span className="readout">{uiT(progress.current)}/{uiT(progress.total)}</span>
                     </div>
                     <div className="w-full h-1.5 bg-paper3 rounded-full overflow-hidden">
                         <div
@@ -358,9 +355,9 @@ export default function ScheduleWeekModal({ isOpen, onClose, clips, jobId, uploa
                     {done && (
                         <div className="mt-3 text-xs text-center lowercase">
                             {failCount === 0 ? (
-                                <span className="text-ok">all clips scheduled</span>
+                                <span className="text-ok">{uiT("all clips scheduled")}</span>
                             ) : (
-                                <span className="text-danger">{successCount} scheduled, {failCount} failed</span>
+                                <span className="text-danger">{uiT(successCount)}{uiT(" scheduled, ")}{uiT(failCount)}{uiT(" failed")}</span>
                             )}
                         </div>
                     )}

@@ -38,8 +38,8 @@ async function setup(page, lost = false) {
     return route.fulfill({ status: 404, json: { detail: 'unknown route' } });
   });
   await page.goto('/#app');
-  if (page.viewportSize().width < 768) await page.getByRole('button', { name: 'open navigation' }).click();
-  await page.getByRole('button', { name: /^AI Shorts/ }).click();
+  if (page.viewportSize().width < 768) await page.getByRole('button', { name: '메뉴 열기' }).click();
+  await page.getByRole('button', { name: /^AI 쇼츠 제작/ }).first().click();
   return { posts, finish: () => { finish = true; } };
 }
 async function select(page) {
@@ -55,7 +55,7 @@ const paid = page => page.getByRole('checkbox', { name: /이번 Gemini 유료 �
 test('default product mode needs no fal key and produces a preview/download from approved selections', async ({ page }) => {
   const { posts } = await setup(page);
   await expect(page.getByRole('button', { name: '제품 영상형 (기본·fal.ai 불필요)', exact: true })).toHaveAttribute('aria-pressed', 'true');
-  await expect(page.getByText('Required API keys missing.')).toHaveCount(0);
+  await expect(page.getByText('필수 API 키가 없습니다.')).toHaveCount(0);
   await select(page);
   await page.getByLabel('장면 1 움직임', { exact: true }).selectOption('pan');
   await page.getByLabel('장면 1 크롭', { exact: true }).selectOption('right');
@@ -93,8 +93,8 @@ test('lost paid response survives reload with status GET only and no duplicate P
   await expect.poll(() => state.posts.length).toBe(1);
   await expect(page.getByRole('status')).toContainText(state.posts[0].body.request_id);
   await page.reload();
-  if (page.viewportSize().width < 768) await page.getByRole('button', { name: 'open navigation' }).click();
-  await page.getByRole('button', { name: /^AI Shorts/ }).click();
+  if (page.viewportSize().width < 768) await page.getByRole('button', { name: '메뉴 열기' }).click();
+  await page.getByRole('button', { name: /^AI 쇼츠 제작/ }).first().click();
   state.finish();
   await expect(page.getByLabel('한국어 내레이션', { exact: true })).toBeVisible();
   await expect(page.getByRole('alert')).toHaveCount(0);

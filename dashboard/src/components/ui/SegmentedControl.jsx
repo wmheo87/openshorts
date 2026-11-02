@@ -1,3 +1,4 @@
+import { t as uiT, useUiLocale } from "../../i18n/runtime.js";
 /**
  * The single option-toggle group (design.md). Replaces every ad-hoc
  * grid of toggle buttons (position/size/animation pickers, platform
@@ -12,6 +13,7 @@
  *  - size: 'sm' | 'md'
  */
 export default function SegmentedControl({ options, value, onChange, multi = false, columns, size = 'md' }) {
+  useUiLocale();
   const cols = columns || Math.min(options.length, 4);
   const isActive = (v) => (multi ? Array.isArray(value) && value.includes(v) : value === v);
 
@@ -46,9 +48,9 @@ export default function SegmentedControl({ options, value, onChange, multi = fal
                 : 'border-rule bg-paper text-muted hover:text-ink2 hover:border-rule2'}
               disabled:opacity-40 disabled:cursor-not-allowed`}
           >
-            {opt.icon && <span className={active ? 'text-brass' : 'text-muted'}>{opt.icon}</span>}
-            <span className="font-medium">{opt.label}</span>
-            {opt.hint && <span className="readout normal-case">{opt.hint}</span>}
+            {opt.icon && <span className={active ? 'text-brass' : 'text-muted'}>{uiT(opt.icon)}</span>}
+            <span className="font-medium">{uiT(opt.label)}</span>
+            {opt.hint && <span className="readout normal-case">{uiT(opt.hint)}</span>}
           </button>
         );
       })}

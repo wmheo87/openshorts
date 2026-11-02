@@ -1,3 +1,5 @@
+import LocalizedDiagnostic from '../i18n/LocalizedDiagnostic';
+import { t as uiT, useUiLocale } from "../i18n/runtime.js";
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { X, Loader2, Crosshair, RotateCcw, AlertCircle, Play, Pause, Columns2 } from 'lucide-react';
 import { getApiUrl } from '../config';
@@ -24,6 +26,7 @@ const fmt = (s) => {
 };
 
 export default function ReframeEditor({ jobId, clipIndex, clipTitle, onClose, onReframed }) {
+  useUiLocale();
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const [data, setData] = useState(null);
@@ -145,7 +148,7 @@ export default function ReframeEditor({ jobId, clipIndex, clipTitle, onClose, on
                     <div className="flex items-center gap-2.5 min-w-0">
                         <Crosshair size={18} className="text-brass shrink-0" />
                         <div className="min-w-0">
-                            <h2 className="text-base font-medium text-ink lowercase truncate">reframing</h2>
+                            <h2 className="text-base font-medium text-ink lowercase truncate">{uiT("reframing")}</h2>
                             {clipTitle && <p className="text-xs text-muted truncate">{clipTitle}</p>}
                         </div>
                     </div>
@@ -155,23 +158,17 @@ export default function ReframeEditor({ jobId, clipIndex, clipTitle, onClose, on
                 </div>
 
                 <div className="flex-1 overflow-y-auto overscroll-contain custom-scrollbar p-4 space-y-5">
-                    <p className="text-xs text-muted leading-relaxed">
-                        Play a scene to hear who is talking, then drag the rectangle over
-                        the person you want. Each scene is one camera. Scenes you leave
-                        alone keep the automatic camera.
-                    </p>
+                    <p className="text-xs text-muted leading-relaxed">{uiT("Play a scene to hear who is talking, then drag the rectangle over the person you want. Each scene is one camera. Scenes you leave alone keep the automatic camera.")}</p>
 
                     {loading && (
                         <div className="flex items-center gap-2 text-sm text-muted py-8 justify-center">
-                            <Loader2 size={18} className="animate-spin text-brass" />
-                            reading the scenes…
-                        </div>
+                            <Loader2 size={18} className="animate-spin text-brass" />{uiT("reading the scenes…")}</div>
                     )}
 
                     {error && (
                         <div className="flex items-start gap-2 text-xs text-warn border border-warn/40 rounded-input p-3">
                             <AlertCircle size={14} className="shrink-0 mt-0.5" />
-                            <span>{error}</span>
+                            <span>{<LocalizedDiagnostic value={error} error />}</span>
                         </div>
                     )}
 
@@ -195,19 +192,19 @@ export default function ReframeEditor({ jobId, clipIndex, clipTitle, onClose, on
 
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 border-t border-rule">
                     <span className="text-xs text-muted">
-                        {adjusted === 0
+                        {uiT(adjusted === 0
                             ? 'nothing adjusted yet'
-                            : `${adjusted} scene${adjusted > 1 ? 's' : ''} reframed by hand`}
+                            : `${adjusted} scene${adjusted > 1 ? 's' : ''} reframed by hand`)}
                     </span>
                     <div className="flex items-center gap-2 [&>button]:flex-1 sm:[&>button]:flex-none">
-                        <button onClick={onClose} className="btn-quiet py-2 px-4 text-sm">cancel</button>
+                        <button onClick={onClose} className="btn-quiet py-2 px-4 text-sm">{uiT("cancel")}</button>
                         <button
                             onClick={handleSave}
                             disabled={!adjusted || saving}
                             className="btn-primary py-2 px-4 text-sm disabled:opacity-40"
                         >
                             {saving ? <Loader2 size={16} className="animate-spin" /> : null}
-                            {saving ? 're-rendering…' : 'apply reframing'}
+                            {uiT(saving ? 're-rendering…' : 'apply reframing')}
                         </button>
                     </div>
                 </div>
@@ -223,6 +220,7 @@ export default function ReframeEditor({ jobId, clipIndex, clipTitle, onClose, on
 // and sound rather than a single still.
 function SceneRow({ scene, value, widthFraction, previewUrl, touched, playing,
                     onPlayToggle, onMoveSingle, onMoveHalf, onToggleSplit, onReset }) {
+  useUiLocale();
     const boxRef = useRef(null);
     const videoRef = useRef(null);
     const [dragging, setDragging] = useState(null);   // null | 'single' | 'top' | 'bottom'
@@ -289,7 +287,7 @@ function SceneRow({ scene, value, widthFraction, previewUrl, touched, playing,
             >
                 {label && (
                     <span className="absolute top-1 left-1 text-[10px] px-1 rounded bg-brass text-paper lowercase">
-                        {label}
+                        {uiT(label)}
                     </span>
                 )}
             </div>
@@ -303,12 +301,11 @@ function SceneRow({ scene, value, widthFraction, previewUrl, touched, playing,
                     <button
                         onClick={onPlayToggle}
                         className="flex items-center gap-1 text-ink2 hover:text-brass transition-colors"
-                        title="play this scene with sound"
+                        title={uiT("play this scene with sound")}
                     >
                         {playing ? <Pause size={13} /> : <Play size={13} />}
                     </button>
-                    <span className="readout text-muted truncate">
-                        scene {scene.index + 1} · {fmt(scene.start)}–{fmt(scene.end)}
+                    <span className="readout text-muted truncate">{uiT("scene ")}{uiT(scene.index + 1)} · {uiT(fmt(scene.start))}–{uiT(fmt(scene.end))}
                     </span>
                 </div>
                 <div className="flex items-center gap-3 shrink-0">
@@ -316,16 +313,14 @@ function SceneRow({ scene, value, widthFraction, previewUrl, touched, playing,
                         onClick={onToggleSplit}
                         className={`flex items-center gap-1 transition-colors ${
                             isSplit ? 'text-brass' : 'text-muted hover:text-ink2'}`}
-                        title="stack two regions instead of one window"
+                        title={uiT("stack two regions instead of one window")}
                     >
-                        <Columns2 size={12} /> split
-                    </button>
+                        <Columns2 size={12} />{uiT(" split")}</button>
                     {touched ? (
                         <button onClick={onReset} className="flex items-center gap-1 text-brass hover:underline">
-                            <RotateCcw size={12} /> automatic
-                        </button>
+                            <RotateCcw size={12} />{uiT(" automatic")}</button>
                     ) : (
-                        <span className="text-muted">automatic</span>
+                        <span className="text-muted">{uiT("automatic")}</span>
                     )}
                 </div>
             </div>
@@ -364,16 +359,13 @@ function SceneRow({ scene, value, widthFraction, previewUrl, touched, playing,
                     </>
                 )}
 
-                {isSplit
+                {uiT(isSplit
                     ? [win(value.top.x, 'top', 'top'), win(value.bottom.x, 'bottom', 'bottom')]
-                    : win(value, null, 'single')}
+                    : win(value, null, 'single'))}
             </div>
 
             {isSplit && (
-                <p className="text-[11px] text-muted leading-snug">
-                    Two regions stacked in the vertical frame: <strong>top</strong> above,
-                    <strong> bottom</strong> below. Drag each one onto the person it should hold.
-                </p>
+                <p className="text-[11px] text-muted leading-snug">{uiT("Two regions stacked in the vertical frame: ")}<strong>{uiT("top")}</strong>{uiT(" above,")}<strong>{uiT(" bottom")}</strong>{uiT(" below. Drag each one onto the person it should hold.")}</p>
             )}
         </div>
     );

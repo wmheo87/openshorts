@@ -1,3 +1,5 @@
+import LocalizedDiagnostic from '../i18n/LocalizedDiagnostic';
+import { t as uiT, useUiLocale } from "../i18n/runtime.js";
 import React, { useState, useRef, useCallback } from 'react';
 import { Trash2, AlertTriangle, Loader2 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
@@ -23,6 +25,7 @@ const REASONS = [
 // as the confirmation step (there is no password to re-enter; sign-in is a
 // magic link).
 export default function DeleteAccountCard() {
+  useUiLocale();
   const { me, logout } = useAuth();
   const [open, setOpen] = useState(false);
   const [confirm, setConfirm] = useState('');
@@ -71,57 +74,45 @@ export default function DeleteAccountCard() {
   return (
     <div className="card p-6">
       <h3 className="font-display lowercase text-lg text-ink mb-1 flex items-center gap-2">
-        <Trash2 size={16} className="text-danger" /> Delete account
-      </h3>
-      <p className="text-muted text-sm">
-        Close your OpenShorts account and erase everything we hold about you. This
-        cannot be undone.
-      </p>
+        <Trash2 size={16} className="text-danger" />{uiT(" Delete account")}</h3>
+      <p className="text-muted text-sm">{uiT("Close your OpenShorts account and erase everything we hold about you. This cannot be undone.")}</p>
 
       {!open ? (
         <button onClick={() => setOpen(true)} className="btn-danger px-4 py-2 mt-4">
-          <Trash2 size={16} /> Delete my account
-        </button>
+          <Trash2 size={16} />{uiT(" Delete my account")}</button>
       ) : (
         <div className="mt-4 space-y-4">
           <div className="rounded-card border border-danger/40 bg-danger/5 p-3 text-sm text-ink2">
             <p className="flex items-start gap-2 text-ink">
               <AlertTriangle size={16} className="text-danger shrink-0 mt-0.5" />
-              <b>This is permanent. There is no recovery.</b>
+              <b>{uiT("This is permanent. There is no recovery.")}</b>
             </p>
-            <p className="mt-2">Deleted immediately:</p>
+            <p className="mt-2">{uiT("Deleted immediately:")}</p>
             <ul className="list-disc pl-5 mt-1 space-y-0.5">
-              <li>your account and sign-in</li>
-              <li>every project, clip and transcript, here and in our storage</li>
-              <li>your API keys, so anything using them stops working</li>
-              <li>the link to any social accounts you connected</li>
+              <li>{uiT("your account and sign-in")}</li>
+              <li>{uiT("every project, clip and transcript, here and in our storage")}</li>
+              <li>{uiT("your API keys, so anything using them stops working")}</li>
+              <li>{uiT("the link to any social accounts you connected")}</li>
             </ul>
-            <p className="mt-2">
-              Any active subscription is cancelled as part of this. We keep your
-              invoices for six years because Spanish law requires it, plus a
-              one-way hash of your email address, instead of the address, as
-              proof the deletion happened.
-            </p>
+            <p className="mt-2">{uiT("Any active subscription is cancelled as part of this. We keep your invoices for six years because Spanish law requires it, plus a one-way hash of your email address, instead of the address, as proof the deletion happened.")}</p>
           </div>
 
           <label className="block">
-            <span className="text-sm text-muted lowercase">Why are you leaving? (optional)</span>
+            <span className="text-sm text-muted lowercase">{uiT("Why are you leaving? (optional)")}</span>
             <select
               value={reason}
               onChange={(e) => setReason(e.target.value)}
               className="input-field w-full text-sm mt-1"
             >
-              <option value="">Prefer not to say</option>
+              <option value="">{uiT("Prefer not to say")}</option>
               {REASONS.map(([value, label]) => (
-                <option key={value} value={value}>{label}</option>
+                <option key={value} value={value}>{uiT(label)}</option>
               ))}
             </select>
           </label>
 
           <label className="block">
-            <span className="text-sm text-muted">
-              Type <b className="text-ink">{email}</b> to confirm
-            </span>
+            <span className="text-sm text-muted">{uiT("Type ")}<b className="text-ink">{uiT(email)}</b>{uiT(" to confirm")}</span>
             <input
               value={confirm}
               onChange={(e) => { setConfirm(e.target.value); setError(''); }}
@@ -131,17 +122,15 @@ export default function DeleteAccountCard() {
             />
           </label>
 
-          {error && <p className="text-sm text-danger">{error}</p>}
+          {error && <p className="text-sm text-danger">{<LocalizedDiagnostic value={error} error />}</p>}
 
           <div className="flex items-center gap-2">
             <button onClick={remove} disabled={!matches || busy} className="btn-danger px-4 py-2">
               {busy ? <Loader2 size={16} className="animate-spin" /> : <Trash2 size={16} />}
-              {busy ? 'Deleting…' : 'Permanently delete my account'}
+              {uiT(busy ? 'Deleting…' : 'Permanently delete my account')}
             </button>
             <button onClick={() => { setOpen(false); setConfirm(''); setError(''); }}
-                    disabled={busy} className="btn-quiet">
-              Cancel
-            </button>
+                    disabled={busy} className="btn-quiet">{uiT("Cancel")}</button>
           </div>
         </div>
       )}

@@ -1,3 +1,4 @@
+import { t as uiT, useUiLocale } from "../i18n/runtime.js";
 import React from 'react';
 import { AlertCircle } from 'lucide-react';
 
@@ -20,16 +21,11 @@ import { AlertCircle } from 'lucide-react';
  * rewards, so this is a better default, not a limitation we are apologising for.
  */
 export default function TikTokDraftNotice() {
+  useUiLocale();
     return (
         <div className="mb-4 px-3 py-2 rounded-input text-xs text-ink2 bg-paper3 flex items-start gap-2">
             <AlertCircle size={14} className="mt-0.5 shrink-0 text-brass" />
-            <div className="lowercase">
-                tiktok arrives as a <b className="text-ink">draft</b>, not a live post — you'll
-                get a notification in the app. its api won't carry the title or description
-                onto a draft, so you write those there too, along with trending sounds,
-                effects and hashtags — which reaches more people than posting straight
-                from an api.
-            </div>
+            <div className="lowercase">{uiT("tiktok arrives as a ")}<b className="text-ink">{uiT("draft")}</b>{uiT(", not a live post — you'll get a notification in the app. its api won't carry the title or description onto a draft, so you write those there too, along with trending sounds, effects and hashtags — which reaches more people than posting straight from an api.")}</div>
         </div>
     );
 }

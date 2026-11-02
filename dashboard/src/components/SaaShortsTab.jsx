@@ -1,3 +1,5 @@
+import LocalizedDiagnostic from '../i18n/LocalizedDiagnostic';
+import { t as uiT, useUiLocale } from "../i18n/runtime.js";
 import { useState, useEffect, useRef } from 'react';
 import { Globe, Sparkles, Download, Copy, Check, ChevronRight, ChevronLeft, Loader2, AlertCircle, Volume2, User, Film, Terminal, ChevronDown, RefreshCw, Share2, Calendar, Upload } from 'lucide-react';
 import { getApiUrl } from '../config';
@@ -42,6 +44,7 @@ function saveCache(url, analysis, webResearch, scripts) {
 }
 
 function ActorShortsTab({ geminiApiKey, elevenLabsKey, falKey, uploadPostKey, uploadUserId, managed = false }) {
+  useUiLocale();
   // Managed (hosted plan): Gemini (script) + Upload-Post run server-side via the
   // bearer token — no BYOK Gemini key needed. fal.ai + ElevenLabs stay BYOK.
   const geminiHeader = geminiApiKey ? { 'X-Gemini-Key': geminiApiKey } : {};
@@ -222,7 +225,7 @@ function ActorShortsTab({ geminiApiKey, elevenLabsKey, falKey, uploadPostKey, up
   const clearPaid = () => { paidLock.current = false; setPaidPending(null); try { sessionStorage.removeItem('actor_paid_pending_v1'); } catch { /* best effort */ } };
 
   const handleAnalyze = async () => {
-    if (paidLock.current || !window.confirm('Gemini 대본 분석 요청은 과금될 수 있습니다. 요금과 상품 사실 확인 책임을 확인하고 실행하시겠습니까?')) return;
+    if (paidLock.current || !window.confirm(uiT('Gemini 대본 분석 요청은 과금될 수 있습니다. 요금과 상품 사실 확인 책임을 확인하고 실행하시겠습니까?'))) return;
     if (!url.trim() && !description.trim()) return;
     if (needsGeminiKey) {
       setAnalyzeError('Gemini API key required. Set it in Settings.');
@@ -294,14 +297,14 @@ function ActorShortsTab({ geminiApiKey, elevenLabsKey, falKey, uploadPostKey, up
   const koreanVoiceReady = ttsProvider === 'gemini' ? !!ttsCheck?.catalog_confirmed : language !== 'ko' || voices.some(v => v.voice_id === selectedVoice && v.supports_korean);
 
   const handleGenerate = async () => {
-    if (paidLock.current || !window.confirm('AI 배우형은 fal.ai와 선택한 TTS 비용이 발생할 수 있습니다. 확인 후 실행하시겠습니까?')) return;
-    if (!koreanVoiceReady) { alert('한국어 음성을 확인하고 선택해 주세요. 영어 기본 음성으로 대체하지 않습니다.'); return; }
+    if (paidLock.current || !window.confirm(uiT('AI 배우형은 fal.ai와 선택한 TTS 비용이 발생할 수 있습니다. 확인 후 실행하시겠습니까?'))) return;
+    if (!koreanVoiceReady) { alert(uiT('한국어 음성을 확인하고 선택해 주세요. 영어 기본 음성으로 대체하지 않습니다.')); return; }
     if (!falKey) {
-      alert('fal.ai API key required. Set it in Settings.');
+      alert(uiT('fal.ai API key required. Set it in Settings.'));
       return;
     }
     if (ttsProvider === 'elevenlabs' && !elevenLabsKey) {
-      alert('ElevenLabs API key required. Set it in Settings.');
+      alert(uiT('ElevenLabs API key required. Set it in Settings.'));
       return;
     }
 
@@ -360,8 +363,8 @@ function ActorShortsTab({ geminiApiKey, elevenLabsKey, falKey, uploadPostKey, up
 
   const handleRetry = async () => {
     if (paidLock.current) return;
-    if (!window.confirm('명시적인 재시도는 추가 과금될 수 있습니다. 이전 작업이 중단됐는지 확인했습니까?')) return;
-    if (!koreanVoiceReady) { alert('한국어 음성을 확인하고 선택해 주세요.'); return; }
+    if (!window.confirm(uiT('명시적인 재시도는 추가 과금될 수 있습니다. 이전 작업이 중단됐는지 확인했습니까?'))) return;
+    if (!koreanVoiceReady) { alert(uiT('한국어 음성을 확인하고 선택해 주세요.')); return; }
     if (!jobId) return;
     const paidRequestId = beginPaid();
     setGenerating(true);
@@ -447,33 +450,29 @@ function ActorShortsTab({ geminiApiKey, elevenLabsKey, falKey, uploadPostKey, up
         {/* Header */}
         <div className="flex items-end justify-between mb-2">
           <div>
-            <p className="eyebrow mb-2">03 · AI SHORTS</p>
-            <h1 className="font-display lowercase text-2xl text-ink">AI Shorts</h1>
+            <p className="eyebrow mb-2">{uiT("03 · AI SHORTS")}</p>
+            <h1 className="font-display lowercase text-2xl text-ink">{uiT("AI Shorts")}</h1>
           </div>
           {step > 0 && (
             <button onClick={handleReset} className="text-xs lowercase text-muted hover:text-ink flex items-center gap-1 transition-colors">
-              <RefreshCw size={12} /> Start over
-            </button>
+              <RefreshCw size={12} />{uiT(" Start over")}</button>
           )}
         </div>
-        <p className="text-sm lowercase text-muted mb-6">
-          Generate viral UGC videos for any product or business
-        </p>
+        <p className="text-sm lowercase text-muted mb-6">{uiT("Generate viral UGC videos for any product or business")}</p>
 
         {/* Progress Steps */}
         <div className="mb-8">
           <StepIndicator steps={STEPS} current={step} />
         </div>
 
-        {paidPending && <div role="alert" className="card p-3 text-warn">유료 요청 {paidPending} 접수 여부 확인 중입니다. 자동 재전송하지 않습니다.
-          <button className="btn-ghost p-2" onClick={async () => {
+        {paidPending && <div role="alert" className="card p-3 text-warn">{uiT("유료 요청 ")}{uiT(paidPending)}{uiT(" 접수 여부 확인 중입니다. 자동 재전송하지 않습니다.")}<button className="btn-ghost p-2" onClick={async () => {
             const res = await apiFetch(`/api/saasshorts/paid-request/${paidPending}`); if (!res.ok) return;
             const saved = await res.json();
             if (saved.job_id) { setJobId(saved.job_id); setGenStatus('processing'); setGenerating(true); setStep(3); clearPaid(); }
             else if (saved.actor_result) { setActorOptions(saved.actor_result.images || []); clearPaid(); }
             else if (saved.analysis_result) { setAnalysis(saved.analysis_result.analysis); setScripts(saved.analysis_result.scripts); setStep(1); clearPaid(); }
-          }}>접수 상태만 조회</button>
-          <button className="btn-ghost p-2" onClick={() => { if (window.confirm('관리자가 이 유료 요청이 실행 중이 아님을 확인했습니까? 추가 과금 위험을 확인한 뒤에만 해제하세요.')) clearPaid(); }}>서버 확인 후 잠금 해제</button>
+          }}>{uiT("접수 상태만 조회")}</button>
+          <button className="btn-ghost p-2" onClick={() => { if (window.confirm(uiT('관리자가 이 유료 요청이 실행 중이 아님을 확인했습니까? 추가 과금 위험을 확인한 뒤에만 해제하세요.'))) clearPaid(); }}>{uiT("서버 확인 후 잠금 해제")}</button>
         </div>}
 
         {/* ── Step 0: URL Input ────────────────────────────────── */}
@@ -482,7 +481,7 @@ function ActorShortsTab({ geminiApiKey, elevenLabsKey, falKey, uploadPostKey, up
             <div className="card p-4 sm:p-8 space-y-6">
               {/* Video Mode Selector */}
               <div>
-                <label className="eyebrow block mb-3">Video Mode</label>
+                <label className="eyebrow block mb-3">{uiT("Video Mode")}</label>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <button
                     onClick={() => setVideoMode('lowcost')}
@@ -491,11 +490,11 @@ function ActorShortsTab({ geminiApiKey, elevenLabsKey, falKey, uploadPostKey, up
                     }`}
                   >
                     <div className="flex items-center justify-between mb-1.5 gap-2">
-                      <span className={`text-sm font-medium lowercase ${videoMode === 'lowcost' ? 'text-ink' : 'text-ink2'}`}>Low Cost</span>
-                      <span className="badge-ok">recommended</span>
+                      <span className={`text-sm font-medium lowercase ${videoMode === 'lowcost' ? 'text-ink' : 'text-ink2'}`}>{uiT("Low Cost")}</span>
+                      <span className="badge-ok">{uiT("recommended")}</span>
                     </div>
-                    <p className="readout mb-1.5">~$0.80 / VIDEO</p>
-                    <p className="text-xs text-muted leading-relaxed">Hailuo 2.3 img2video + VEED Lipsync. Good movement + lip-sync.</p>
+                    <p className="readout mb-1.5">{uiT("~$0.80 / VIDEO")}</p>
+                    <p className="text-xs text-muted leading-relaxed">{uiT("Hailuo 2.3 img2video + VEED Lipsync. Good movement + lip-sync.")}</p>
                   </button>
                   <button
                     onClick={() => setVideoMode('premium')}
@@ -504,17 +503,17 @@ function ActorShortsTab({ geminiApiKey, elevenLabsKey, falKey, uploadPostKey, up
                     }`}
                   >
                     <div className="flex items-center justify-between mb-1.5 gap-2">
-                      <span className={`text-sm font-medium lowercase ${videoMode === 'premium' ? 'text-ink' : 'text-ink2'}`}>Premium</span>
-                      <span className="badge-brass">best quality</span>
+                      <span className={`text-sm font-medium lowercase ${videoMode === 'premium' ? 'text-ink' : 'text-ink2'}`}>{uiT("Premium")}</span>
+                      <span className="badge-brass">{uiT("best quality")}</span>
                     </div>
-                    <p className="readout mb-1.5">~$2.00 / VIDEO</p>
-                    <p className="text-xs text-muted leading-relaxed">Kling Avatar v2 Standard. Full integrated movement.</p>
+                    <p className="readout mb-1.5">{uiT("~$2.00 / VIDEO")}</p>
+                    <p className="text-xs text-muted leading-relaxed">{uiT("Kling Avatar v2 Standard. Full integrated movement.")}</p>
                   </button>
                 </div>
               </div>
 
               <div>
-                <label className="eyebrow block mb-2">Website URL <span className="opacity-60">(optional)</span></label>
+                <label className="eyebrow block mb-2">{uiT("Website URL ")}<span className="opacity-60">{uiT("(optional)")}</span></label>
                 <div className="flex gap-3">
                   <div className="relative flex-1">
                     <Globe size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted" />
@@ -528,24 +527,24 @@ function ActorShortsTab({ geminiApiKey, elevenLabsKey, falKey, uploadPostKey, up
                     />
                   </div>
                 </div>
-                <p className="text-xs lowercase text-muted mt-1.5">If provided, we&apos;ll scrape and research your site automatically</p>
+                <p className="text-xs lowercase text-muted mt-1.5">{uiT("If provided, we'll scrape and research your site automatically")}</p>
               </div>
 
               <div>
                 <label className="eyebrow block mb-2">
-                  {url.trim() ? 'Extra context' : 'Describe your product/business'} <span className="opacity-60">{url.trim() ? '(optional)' : '(required if no URL)'}</span>
+                  {uiT(url.trim() ? 'Extra context' : 'Describe your product/business')} <span className="opacity-60">{uiT(url.trim() ? '(optional)' : '(required if no URL)')}</span>
                 </label>
                 <textarea
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
                   rows={2}
                   className="input-field resize-none text-sm"
-                  placeholder="e.g. artisan pizzeria in Madrid, productivity coach, sportswear store, meditation app..."
+                  placeholder={uiT("e.g. artisan pizzeria in Madrid, productivity coach, sportswear store, meditation app...")}
                 />
               </div>
 
               <div>
-                <label className="eyebrow block mb-3">Language</label>
+                <label className="eyebrow block mb-3">{uiT("Language")}</label>
                 <div className="mb-6">
                   <SegmentedControl
                     options={[
@@ -558,7 +557,7 @@ function ActorShortsTab({ geminiApiKey, elevenLabsKey, falKey, uploadPostKey, up
                   />
                 </div>
 
-                <label className="eyebrow block mb-3">Actor</label>
+                <label className="eyebrow block mb-3">{uiT("Actor")}</label>
                 <div className="mb-6">
                   <SegmentedControl
                     options={[
@@ -570,7 +569,7 @@ function ActorShortsTab({ geminiApiKey, elevenLabsKey, falKey, uploadPostKey, up
                   />
                 </div>
 
-                <label className="eyebrow block mb-3">Video Style</label>
+                <label className="eyebrow block mb-3">{uiT("Video Style")}</label>
                 <SegmentedControl
                   options={STYLE_OPTIONS.map((s) => ({ value: s.id, label: s.label, hint: s.desc }))}
                   value={style}
@@ -580,7 +579,7 @@ function ActorShortsTab({ geminiApiKey, elevenLabsKey, falKey, uploadPostKey, up
               </div>
 
               <div>
-                <label className="eyebrow block mb-3">Number of Scripts</label>
+                <label className="eyebrow block mb-3">{uiT("Number of Scripts")}</label>
                 <SegmentedControl
                   options={[1, 2, 3, 5].map((n) => ({ value: n, label: String(n) }))}
                   value={numScripts}
@@ -592,7 +591,7 @@ function ActorShortsTab({ geminiApiKey, elevenLabsKey, falKey, uploadPostKey, up
               {analyzeError && (
                 <div className="flex items-center gap-2 text-sm text-danger bg-danger/10 rounded-input p-3">
                   <AlertCircle size={14} />
-                  {analyzeError}
+                  {<LocalizedDiagnostic value={analyzeError} error />}
                 </div>
               )}
 
@@ -604,12 +603,12 @@ function ActorShortsTab({ geminiApiKey, elevenLabsKey, falKey, uploadPostKey, up
                 {analyzing ? (
                   <>
                     <Loader2 size={16} className="animate-spin" />
-                    {url.trim() ? 'Scraping + researching web + generating scripts... (45-90s)' : 'Generating scripts... (20-40s)'}
+                    {uiT(url.trim() ? 'Scraping + researching web + generating scripts... (45-90s)' : 'Generating scripts... (20-40s)')}
                   </>
                 ) : (
                   <>
                     <Sparkles size={16} className="hidden sm:block" />
-                    {url.trim() ? 'research & generate scripts' : 'generate scripts'}
+                    {uiT(url.trim() ? 'research & generate scripts' : 'generate scripts')}
                   </>
                 )}
               </button>
@@ -618,16 +617,16 @@ function ActorShortsTab({ geminiApiKey, elevenLabsKey, falKey, uploadPostKey, up
             {/* Info cards */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div className="card p-4">
-                <h3 className="eyebrow">Deep Research</h3>
-                <p className="text-xs text-muted mt-2">AI analyzes your product via URL scraping + web research, or generates directly from your description.</p>
+                <h3 className="eyebrow">{uiT("Deep Research")}</h3>
+                <p className="text-xs text-muted mt-2">{uiT("AI analyzes your product via URL scraping + web research, or generates directly from your description.")}</p>
               </div>
               <div className="card p-4">
-                <h3 className="eyebrow">Pain Point Scripts</h3>
-                <p className="text-xs text-muted mt-2">Generates hook-problem-solution scripts targeting your audience&apos;s real pain points.</p>
+                <h3 className="eyebrow">{uiT("Pain Point Scripts")}</h3>
+                <p className="text-xs text-muted mt-2">{uiT("Generates hook-problem-solution scripts targeting your audience's real pain points.")}</p>
               </div>
               <div className="card p-4">
-                <h3 className="eyebrow">AI Actor Videos</h3>
-                <p className="text-xs text-muted mt-2">AI-generated actors, lip-sync, b-roll and subtitles. 한국어 립싱크·타이밍은 실제 결과 확인이 필요합니다. From ~$0.50/video.</p>
+                <h3 className="eyebrow">{uiT("AI Actor Videos")}</h3>
+                <p className="text-xs text-muted mt-2">{uiT("AI-generated actors, lip-sync, b-roll and subtitles. 한국어 립싱크·타이밍은 실제 결과 확인이 필요합니다. From ~$0.50/video.")}</p>
               </div>
             </div>
           </div>
@@ -644,9 +643,7 @@ function ActorShortsTab({ geminiApiKey, elevenLabsKey, falKey, uploadPostKey, up
                 </h2>
                 <div className="flex items-center gap-2 shrink-0">
                   {fromCache && (
-                    <span className="badge-warn">
-                      cached
-                      <button onClick={() => { setStep(0); setFromCache(false); }} className="hover:text-ink transition-colors" title="Re-analyze">
+                    <span className="badge-warn">{uiT("cached")}<button onClick={() => { setStep(0); setFromCache(false); }} className="hover:text-ink transition-colors" title={uiT("Re-analyze")}>
                         <RefreshCw size={9} />
                       </button>
                     </span>
@@ -658,11 +655,11 @@ function ActorShortsTab({ geminiApiKey, elevenLabsKey, falKey, uploadPostKey, up
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
-                  <h3 className="eyebrow mb-3">Pain Points</h3>
+                  <h3 className="eyebrow mb-3">{uiT("Pain Points")}</h3>
                   <div className="space-y-2">
                     {(analysis.pain_points || []).map((pp, i) => (
                       <div key={i} className="flex items-start gap-2.5 text-sm">
-                        <span className="mt-2 flex gap-0.5 shrink-0" title={pp.intensity}>
+                        <span className="mt-2 flex gap-0.5 shrink-0" title={uiT(pp.intensity)}>
                           {[0, 1, 2].map((d) => (
                             <span
                               key={d}
@@ -685,7 +682,7 @@ function ActorShortsTab({ geminiApiKey, elevenLabsKey, falKey, uploadPostKey, up
                   </div>
                 </div>
                 <div>
-                  <h3 className="eyebrow mb-3">Emotional Hooks</h3>
+                  <h3 className="eyebrow mb-3">{uiT("Emotional Hooks")}</h3>
                   <div className="divide-y divide-rule border-y border-rule">
                     {(analysis.emotional_hooks || []).map((h, i) => (
                       <div key={i} className="text-sm text-ink2 py-2">
@@ -701,18 +698,17 @@ function ActorShortsTab({ geminiApiKey, elevenLabsKey, falKey, uploadPostKey, up
             {webResearch && (
               <div className="card p-6">
                 <div className="flex items-center justify-between mb-4">
-                  <h3 className="eyebrow">Web Research</h3>
+                  <h3 className="eyebrow">{uiT("Web Research")}</h3>
                   {webResearch.grounding_sources && (
                     <span className="readout">
-                      {webResearch.grounding_sources.length} sources
-                    </span>
+                      {uiT(webResearch.grounding_sources.length)}{uiT(" sources")}</span>
                   )}
                 </div>
 
                 {/* Real user reviews */}
                 {webResearch.real_reviews && webResearch.real_reviews.length > 0 && (
                   <div className="mb-4">
-                    <h4 className="eyebrow mb-2">Real User Reviews</h4>
+                    <h4 className="eyebrow mb-2">{uiT("Real User Reviews")}</h4>
                     <div className="space-y-2">
                       {webResearch.real_reviews.slice(0, 5).map((review, i) => (
                         <div key={i} className="text-xs bg-paper rounded-input p-2.5 border border-rule">
@@ -723,7 +719,7 @@ function ActorShortsTab({ geminiApiKey, elevenLabsKey, falKey, uploadPostKey, up
                               review.sentiment === 'positive' ? 'text-ok' :
                               review.sentiment === 'negative' ? 'text-danger' :
                               ''
-                            }`}>{review.sentiment}</span>
+                            }`}>{uiT(review.sentiment)}</span>
                           </div>
                         </div>
                       ))}
@@ -734,10 +730,10 @@ function ActorShortsTab({ geminiApiKey, elevenLabsKey, falKey, uploadPostKey, up
                 {/* Competitors */}
                 {webResearch.competitors && webResearch.competitors.length > 0 && (
                   <div className="mb-4">
-                    <h4 className="eyebrow mb-2">Competitors</h4>
+                    <h4 className="eyebrow mb-2">{uiT("Competitors")}</h4>
                     <div className="flex flex-wrap gap-2">
                       {webResearch.competitors.map((c, i) => (
-                        <span key={i} className="text-xs bg-paper3 px-2 py-1 rounded-full text-ink2" title={c.comparison}>
+                        <span key={i} className="text-xs bg-paper3 px-2 py-1 rounded-full text-ink2" title={uiT(c.comparison)}>
                           {c.name}
                         </span>
                       ))}
@@ -748,7 +744,7 @@ function ActorShortsTab({ geminiApiKey, elevenLabsKey, falKey, uploadPostKey, up
                 {/* Sources */}
                 {webResearch.grounding_sources && webResearch.grounding_sources.length > 0 && (
                   <div>
-                    <h4 className="eyebrow mb-2">Sources</h4>
+                    <h4 className="eyebrow mb-2">{uiT("Sources")}</h4>
                     <div className="flex flex-wrap gap-x-3 gap-y-1.5">
                       {webResearch.grounding_sources.slice(0, 8).map((src, i) => (
                         <a
@@ -771,8 +767,8 @@ function ActorShortsTab({ geminiApiKey, elevenLabsKey, falKey, uploadPostKey, up
             {/* Scripts */}
             <div>
               <div className="flex items-center justify-between mb-4">
-                <h2 className="font-display lowercase text-xl text-ink">Generated Scripts</h2>
-                <span className="readout">{scripts.length} scripts</span>
+                <h2 className="font-display lowercase text-xl text-ink">{uiT("Generated Scripts")}</h2>
+                <span className="readout">{uiT(scripts.length)}{uiT(" scripts")}</span>
               </div>
 
               <div className="grid grid-cols-1 gap-4">
@@ -789,15 +785,15 @@ function ActorShortsTab({ geminiApiKey, elevenLabsKey, falKey, uploadPostKey, up
                         <span className={`w-7 h-7 rounded-full border flex items-center justify-center font-mono text-micro ${
                           selectedScript === i ? 'border-brass text-brass' : 'border-rule text-muted'
                         }`}>
-                          {String(i + 1).padStart(2, '0')}
+                          {uiT(String(i + 1).padStart(2, '0'))}
                         </span>
                         <div>
                           <h3 className="text-sm font-medium text-ink">{script.title}</h3>
-                          <span className="readout">{script.duration_seconds}s &middot; {script.style} &middot; {script.target_platform}</span>
+                          <span className="readout">{uiT(script.duration_seconds)}{uiT("s · ")}{uiT(script.style)} &middot; {uiT(script.target_platform)}</span>
                         </div>
                       </div>
                       {selectedScript === i && (
-                        <span className="badge-brass">selected</span>
+                        <span className="badge-brass">{uiT("selected")}</span>
                       )}
                     </div>
 
@@ -813,17 +809,17 @@ function ActorShortsTab({ geminiApiKey, elevenLabsKey, falKey, uploadPostKey, up
                             'bg-brass/20'
                           }`}
                           style={{ flex: (seg.end - seg.start) }}
-                          title={`${seg.type}: ${seg.start}s-${seg.end}s`}
+                          title={uiT(`${seg.type}: ${seg.start}s-${seg.end}s`)}
                         />
                       ))}
                     </div>
-                    <p className="readout mb-3">hook &middot; problem &middot; solution</p>
+                    <p className="readout mb-3">{uiT("hook · problem · solution")}</p>
 
                     <div className="space-y-2">
                       {(script.segments || []).map((seg, j) => (
                         <div key={j} className="flex gap-3 text-xs">
                           <span className="readout shrink-0 w-16 pt-px">
-                            {seg.type}
+                            {uiT(seg.type)}
                           </span>
                           <span className="text-ink2 leading-relaxed">{seg.narration}</span>
                         </div>
@@ -832,7 +828,7 @@ function ActorShortsTab({ geminiApiKey, elevenLabsKey, falKey, uploadPostKey, up
 
                     {/* Hook text & hashtags */}
                     <div className="mt-3 pt-3 border-t border-rule flex items-center gap-3 flex-wrap">
-                      <span className="readout">hook</span>
+                      <span className="readout">{uiT("hook")}</span>
                       <span className="text-xs text-ink2">&quot;{script.hook_text}&quot;</span>
                       {(script.hashtags || []).slice(0, 4).map((tag, j) => (
                         <span key={j} className="readout">{tag}</span>
@@ -845,10 +841,8 @@ function ActorShortsTab({ geminiApiKey, elevenLabsKey, falKey, uploadPostKey, up
 
             <div className="flex justify-between">
               <button onClick={() => setStep(0)} className="btn-ghost px-4 py-2 text-sm">
-                <ChevronLeft size={14} /> Back
-              </button>
-              <button onClick={() => setStep(2)} className="btn-primary px-6 py-2 text-sm">
-                Configure video <ChevronRight size={14} />
+                <ChevronLeft size={14} />{uiT(" Back")}</button>
+              <button onClick={() => setStep(2)} className="btn-primary px-6 py-2 text-sm">{uiT("Configure video ")}<ChevronRight size={14} />
               </button>
             </div>
           </div>
@@ -858,42 +852,39 @@ function ActorShortsTab({ geminiApiKey, elevenLabsKey, falKey, uploadPostKey, up
         {step === 2 && scripts[selectedScript] && (
           <div className="animate-fade space-y-6">
             <div className="card p-6 space-y-5">
-              <h2 className="font-display lowercase text-xl text-ink">Configure Video</h2>
-              <p className="text-sm lowercase text-muted">
-                script: <strong className="text-ink2 normal-case font-medium">{scripts[selectedScript].title}</strong>
+              <h2 className="font-display lowercase text-xl text-ink">{uiT("Configure Video")}</h2>
+              <p className="text-sm lowercase text-muted">{uiT("script: ")}<strong className="text-ink2 normal-case font-medium">{scripts[selectedScript].title}</strong>
               </p>
 
               {/* Voice Selection */}
               <div>
-                {language === 'ko' && <label className="eyebrow block mb-3">음성 공급자
-                  <select aria-label="음성 공급자" className="input-field mt-2" value={ttsProvider} onChange={e => setTtsProvider(e.target.value)}>
-                    <option value="gemini">Gemini TTS (기본)</option><option value="elevenlabs">ElevenLabs (선택)</option>
+                {language === 'ko' && <label className="eyebrow block mb-3">{uiT("음성 공급자")}<select aria-label={uiT("음성 공급자")} className="input-field mt-2" value={ttsProvider} onChange={e => setTtsProvider(e.target.value)}>
+                    <option value="gemini">{uiT("Gemini TTS (기본)")}</option><option value="elevenlabs">{uiT("ElevenLabs (선택)")}</option>
                   </select>
                 </label>}
                 {ttsProvider === 'gemini' && <div className="space-y-2 mb-3">
-                  <p className="text-xs text-muted">모델: {ttsCheck?.model || 'gemini-3.8-flash-lite-tts'} · {ttsCheck?.catalog_confirmed ? '계정 모델 조회 확인 · 실제 음성 생성 미검증' : '모델 이용 가능 여부 확인 중'}</p>
-                  {ttsCheck?.error && <p role="alert" className="text-xs text-warn">{ttsCheck.error}</p>}
-                  <label className="text-xs">Gemini 음성<select aria-label="Gemini 음성" className="input-field" value={geminiVoice} onChange={e => setGeminiVoice(e.target.value)}>{['Kore', 'Puck'].map(voice => <option key={voice}>{voice}</option>)}</select></label>
-                  <p className="text-xs text-warn">Gemini TTS 예상 비용: 요금 미확인(0원 보장 아님). fal.ai 비용은 별도입니다. 모델 조회 성공은 한국어 합성·립싱크 품질 보장이 아닙니다. 실패해도 다른 유료 API로 자동 전환하지 않습니다. 미리듣기용 유료 합성을 자동 실행하지 않습니다.</p>
+                  <p className="text-xs text-muted">{uiT("모델: ")}{uiT(ttsCheck?.model || 'gemini-3.8-flash-lite-tts')} · {uiT(ttsCheck?.catalog_confirmed ? '계정 모델 조회 확인 · 실제 음성 생성 미검증' : '모델 이용 가능 여부 확인 중')}</p>
+                  {ttsCheck?.error && <p role="alert" className="text-xs text-warn">{uiT(ttsCheck.error)}</p>}
+                  <label className="text-xs">{uiT("Gemini 음성")}<select aria-label={uiT("Gemini 음성")} className="input-field" value={geminiVoice} onChange={e => setGeminiVoice(e.target.value)}>{['Kore', 'Puck'].map(voice => <option key={voice}>{uiT(voice)}</option>)}</select></label>
+                  <p className="text-xs text-warn">{uiT("Gemini TTS 예상 비용: 요금 미확인(0원 보장 아님). fal.ai 비용은 별도입니다. 모델 조회 성공은 한국어 합성·립싱크 품질 보장이 아닙니다. 실패해도 다른 유료 API로 자동 전환하지 않습니다. 미리듣기용 유료 합성을 자동 실행하지 않습니다.")}</p>
                 </div>}
                 {ttsProvider === 'elevenlabs' && <>
 
-                <label className="eyebrow block mb-2">
-                  Voice {language === 'ko' ? '(한국어 · ko-KR)' : language === 'es' ? '(Spanish)' : '(English)'}
+                <label className="eyebrow block mb-2">{uiT("Voice ")}{uiT(language === 'ko' ? '(한국어 · ko-KR)' : language === 'es' ? '(Spanish)' : '(English)')}
                 </label>
                 {(() => {
                   if (language === 'ko') {
                     const available = voices.filter(v => v.supports_korean && (!v.labels?.gender || v.labels.gender.toLowerCase() === actorGender));
                     const chosen = available.find(v => v.voice_id === selectedVoice);
                     return <div className="space-y-2">
-                      <select aria-label="한국어 음성" className="input-field" value={chosen?.voice_id || ''} onChange={e => { setSelectedVoice(e.target.value); setVoicePreviewError(''); }}>
-                        <option value="">한국어 음성을 직접 선택해 주세요</option>
+                      <select aria-label={uiT("한국어 음성")} className="input-field" value={chosen?.voice_id || ''} onChange={e => { setSelectedVoice(e.target.value); setVoicePreviewError(''); }}>
+                        <option value="">{uiT("한국어 음성을 직접 선택해 주세요")}</option>
                         {available.map(v => <option key={v.voice_id} value={v.voice_id}>{v.name}</option>)}
                       </select>
-                      {!available.length && <p role="alert" className="text-xs text-warn">현재 ElevenLabs 계정에서 한국어 음성을 확인하지 못했습니다. 키와 음성 라이브러리를 확인해 주세요. 영어 기본 음성으로 대체하지 않습니다.</p>}
-                      {chosen?.korean_preview_url ? <audio key={chosen.korean_preview_url} aria-label="한국어 음성 미리듣기" controls preload="none" src={chosen.korean_preview_url} onError={() => setVoicePreviewError('미리듣기를 불러오지 못했습니다. 생성 전에 ElevenLabs에서 한국어 샘플을 확인해 주세요.')} /> : chosen && <p className="text-xs text-warn">한국어 미리듣기 URL이 제공되지 않았습니다. 생성 전에 ElevenLabs에서 한국어 샘플을 확인해 주세요.</p>}
-                      {voicePreviewError && <p role="alert" className="text-xs text-warn">{voicePreviewError}</p>}
-                      <p className="text-xs text-muted">계정 API의 한국어 언어 메타데이터를 기준으로 표시합니다. 실제 발음·립싱크 품질은 생성 영상으로 확인해야 합니다.</p>
+                      {!available.length && <p role="alert" className="text-xs text-warn">{uiT("현재 ElevenLabs 계정에서 한국어 음성을 확인하지 못했습니다. 키와 음성 라이브러리를 확인해 주세요. 영어 기본 음성으로 대체하지 않습니다.")}</p>}
+                      {chosen?.korean_preview_url ? <audio key={chosen.korean_preview_url} aria-label={uiT("한국어 음성 미리듣기")} controls preload="none" src={chosen.korean_preview_url} onError={() => setVoicePreviewError('미리듣기를 불러오지 못했습니다. 생성 전에 ElevenLabs에서 한국어 샘플을 확인해 주세요.')} /> : chosen && <p className="text-xs text-warn">{uiT("한국어 미리듣기 URL이 제공되지 않았습니다. 생성 전에 ElevenLabs에서 한국어 샘플을 확인해 주세요.")}</p>}
+                      {voicePreviewError && <p role="alert" className="text-xs text-warn">{uiT(voicePreviewError)}</p>}
+                      <p className="text-xs text-muted">{uiT("계정 API의 한국어 언어 메타데이터를 기준으로 표시합니다. 실제 발음·립싱크 품질은 생성 영상으로 확인해야 합니다.")}</p>
                     </div>;
                   }
                   // Filter voices by language/accent
@@ -935,14 +926,14 @@ function ActorShortsTab({ geminiApiKey, elevenLabsKey, falKey, uploadPostKey, up
                             <div className="flex-1 min-w-0">
                               <div className={`text-sm truncate ${selectedVoice === v.voice_id ? 'text-ink' : 'text-ink2'}`}>{v.name}</div>
                               <div className="readout mt-0.5">
-                                {v.labels?.accent || ''} {v.labels?.gender || ''} {v.category ? `· ${v.category}` : ''}
+                                {uiT(v.labels?.accent || '')} {uiT(v.labels?.gender || '')} {uiT(v.category ? `· ${v.category}` : '')}
                               </div>
                             </div>
                             {v.preview_url && (
                               <button
                                 onClick={(e) => { e.stopPropagation(); new Audio(v.preview_url).play(); }}
                                 className="shrink-0 w-7 h-7 rounded-full bg-paper3 text-muted hover:text-brass flex items-center justify-center transition-colors"
-                                title="Preview voice"
+                                title={uiT("Preview voice")}
                               >
                                 <Volume2 size={12} />
                               </button>
@@ -983,21 +974,18 @@ function ActorShortsTab({ geminiApiKey, elevenLabsKey, falKey, uploadPostKey, up
                   );
                 })()}
                 <p className="text-xs lowercase text-muted mt-1.5">
-                  {actorGender === 'female' ? 'female' : 'male'} voices &middot; multilingual model speaks your selected language &middot; click speaker to preview
-                </p>
+                  {uiT(actorGender === 'female' ? 'female' : 'male')}{uiT(" voices · multilingual model speaks your selected language · click speaker to preview")}</p>
                 </>}
               </div>
 
               {/* Actor Selection: Gallery + Generate New */}
               <div>
-                <label className="eyebrow block mb-2">
-                  AI Actor — Choose Your Actor
-                </label>
+                <label className="eyebrow block mb-2">{uiT("AI Actor — Choose Your Actor")}</label>
 
                 {/* Existing Gallery from S3 */}
                 {actorGallery.length > 0 && (
                   <div className="mb-4">
-                    <p className="text-xs lowercase text-muted mb-2">Previously generated actors (click to select)</p>
+                    <p className="text-xs lowercase text-muted mb-2">{uiT("Previously generated actors (click to select)")}</p>
                     <div className="grid grid-cols-4 sm:grid-cols-6 gap-2 max-h-48 overflow-y-auto pr-1">
                       {actorGallery.map((img, i) => (
                         <button
@@ -1007,7 +995,7 @@ function ActorShortsTab({ geminiApiKey, elevenLabsKey, falKey, uploadPostKey, up
                             selectedActor === img.url ? 'border-brass' : 'border-rule hover:border-rule2'
                           }`}
                         >
-                          <img src={img.url} alt={`Actor ${i+1}`} className="w-full h-full object-cover" />
+                          <img src={img.url} alt={uiT(`Actor ${i+1}`)} className="w-full h-full object-cover" />
                           {selectedActor === img.url && (
                             <div className="absolute top-1 right-1 w-5 h-5 bg-brass rounded-full flex items-center justify-center">
                               <Check size={10} className="text-brassink" />
@@ -1019,7 +1007,7 @@ function ActorShortsTab({ geminiApiKey, elevenLabsKey, falKey, uploadPostKey, up
                   </div>
                 )}
                 {loadingGallery && (
-                  <p className="text-xs lowercase text-muted mb-3 flex items-center gap-1"><Loader2 size={12} className="animate-spin" /> Loading actor gallery...</p>
+                  <p className="text-xs lowercase text-muted mb-3 flex items-center gap-1"><Loader2 size={12} className="animate-spin" />{uiT(" Loading actor gallery...")}</p>
                 )}
 
                 {/* Upload Custom Actor */}
@@ -1027,7 +1015,7 @@ function ActorShortsTab({ geminiApiKey, elevenLabsKey, falKey, uploadPostKey, up
                   <div className="flex items-center gap-3">
                     <label className="flex-1 flex items-center justify-center gap-2 text-sm lowercase text-muted px-4 py-3 rounded-input border border-dashed border-rule2 hover:border-brass hover:text-ink2 transition-colors duration-200 cursor-pointer">
                       <Upload size={14} />
-                      <span>Upload your own photo</span>
+                      <span>{uiT("Upload your own photo")}</span>
                       <input
                         type="file"
                         accept="image/*"
@@ -1072,7 +1060,7 @@ function ActorShortsTab({ geminiApiKey, elevenLabsKey, falKey, uploadPostKey, up
                             : 'border-rule hover:border-rule2'
                         }`}
                       >
-                        <img src={uploadedActorPreview.localPreview} alt="Uploaded" className="w-full h-full object-cover" />
+                        <img src={uploadedActorPreview.localPreview} alt={uiT("Uploaded")} className="w-full h-full object-cover" />
                         {selectedActor === uploadedActorPreview.serverUrl && (
                           <div className="absolute top-1 right-1 w-4 h-4 bg-brass rounded-full flex items-center justify-center">
                             <Check size={8} className="text-brassink" />
@@ -1089,20 +1077,20 @@ function ActorShortsTab({ geminiApiKey, elevenLabsKey, falKey, uploadPostKey, up
                 </div>
 
                 {/* Generate New Actors */}
-                <p className="text-xs lowercase text-muted mb-2">{actorGallery.length > 0 ? 'Or generate new actors' : 'Or describe your actor'}</p>
+                <p className="text-xs lowercase text-muted mb-2">{uiT(actorGallery.length > 0 ? 'Or generate new actors' : 'Or describe your actor')}</p>
                 <textarea
                   value={actorDescription}
                   onChange={(e) => { setActorDescription(e.target.value); setActorOptions([]); }}
                   rows={2}
                   className="input-field resize-none text-sm"
-                  placeholder="e.g. A young woman in her late 20s, dark hair, casual outfit..."
+                  placeholder={uiT("e.g. A young woman in her late 20s, dark hair, casual outfit...")}
                 />
 
 
                 <button
                   onClick={async () => {
                     if (!falKey || !actorDescription || paidLock.current) return;
-                    if (!window.confirm('배우 이미지 생성은 fal.ai 유료 요청입니다. 실행하시겠습니까?')) return;
+                    if (!window.confirm(uiT('배우 이미지 생성은 fal.ai 유료 요청입니다. 실행하시겠습니까?'))) return;
                     const paidRequestId = beginPaid();
                     setGeneratingActors(true);
                     setActorOptions([]);
@@ -1129,13 +1117,13 @@ function ActorShortsTab({ geminiApiKey, elevenLabsKey, falKey, uploadPostKey, up
                   disabled={generatingActors || !falKey || !actorDescription}
                   className="btn-ghost mt-2 w-full py-2.5 text-sm"
                 >
-                  {generatingActors ? <><Loader2 size={14} className="animate-spin" /> Generating 3 actors...</> : <><User size={14} /> {actorOptions.length > 0 ? 'Regenerate actors' : 'Generate 3 new actors'} <span className="readout">~$0.06</span></>}
+                  {generatingActors ? <><Loader2 size={14} className="animate-spin" />{uiT(" Generating 3 actors...")}</> : <><User size={14} /> {uiT(actorOptions.length > 0 ? 'Regenerate actors' : 'Generate 3 new actors')} <span className="readout">~$0.06</span></>}
                 </button>
 
                 {/* Newly Generated Actor Options */}
                 {actorOptions.length > 0 && (
                   <div className="mt-3">
-                    <p className="text-xs lowercase text-muted mb-2">New actors (select one)</p>
+                    <p className="text-xs lowercase text-muted mb-2">{uiT("New actors (select one)")}</p>
                     <div className="grid grid-cols-3 gap-3">
                       {actorOptions.map((imgUrl, i) => (
                         <button
@@ -1145,14 +1133,13 @@ function ActorShortsTab({ geminiApiKey, elevenLabsKey, falKey, uploadPostKey, up
                             selectedActor === imgUrl ? 'border-brass' : 'border-rule hover:border-rule2'
                           }`}
                         >
-                          <img src={imgUrl} alt={`New ${i+1}`} className="w-full h-full object-cover" />
+                          <img src={imgUrl} alt={uiT(`New ${i+1}`)} className="w-full h-full object-cover" />
                           {selectedActor === imgUrl && (
                             <div className="absolute top-2 right-2 w-6 h-6 bg-brass rounded-full flex items-center justify-center">
                               <Check size={12} className="text-brassink" />
                             </div>
                           )}
-                          <span className="absolute bottom-1.5 left-1.5 readout bg-black/70 text-ink2 px-1.5 py-0.5 rounded-full">
-                            New {i+1}
+                          <span className="absolute bottom-1.5 left-1.5 readout bg-black/70 text-ink2 px-1.5 py-0.5 rounded-full">{uiT("New ")}{uiT(i+1)}
                           </span>
                         </button>
                       ))}
@@ -1161,49 +1148,47 @@ function ActorShortsTab({ geminiApiKey, elevenLabsKey, falKey, uploadPostKey, up
                 )}
 
                 {!selectedActor && (actorOptions.length > 0 || actorGallery.length > 0) && (
-                  <p className="text-xs lowercase text-warn mt-2 flex items-center gap-1"><AlertCircle size={12} /> Select an actor to continue</p>
+                  <p className="text-xs lowercase text-warn mt-2 flex items-center gap-1"><AlertCircle size={12} />{uiT(" Select an actor to continue")}</p>
                 )}
               </div>
 
               {/* Narration Edit */}
               <div>
-                <label className="eyebrow block mb-2">
-                  Narration Script
-                </label>
+                <label className="eyebrow block mb-2">{uiT("Narration Script")}</label>
                 <textarea
                   value={editedNarration}
                   onChange={(e) => setEditedNarration(e.target.value)}
                   rows={5}
                   className="input-field resize-none font-mono text-xs"
                 />
-                <p className="readout mt-1.5">{editedNarration.length} chars &middot; ~{Math.round(editedNarration.split(' ').length / 2.5)}s speech</p>
+                <p className="readout mt-1.5">{uiT(editedNarration.length)}{uiT(" chars · ~")}{uiT(Math.round(editedNarration.split(' ').length / 2.5))}{uiT("s speech")}</p>
               </div>
 
               {/* Cost Estimate */}
               <div className="card p-4">
                 <div className="flex items-center justify-between mb-3">
-                  <span className="eyebrow">Estimated Cost</span>
-                  <span className="readout text-ink">{ttsProvider === 'gemini' ? 'Gemini 요금 미확인 + fal.ai 별도' : `~$${videoMode === 'lowcost' ? '0.65' : '2.50'}`}</span>
+                  <span className="eyebrow">{uiT("Estimated Cost")}</span>
+                  <span className="readout text-ink">{uiT(ttsProvider === 'gemini' ? 'Gemini 요금 미확인 + fal.ai 별도' : `~$${videoMode === 'lowcost' ? '0.65' : '2.50'}`)}</span>
                 </div>
                 <div className="space-y-1">
                   {(videoMode === 'lowcost'
                     ? [
                         ['Flux image', '$0.05'],
-                        [ttsProvider === 'gemini' ? 'Gemini TTS' : 'ElevenLabs voice', ttsProvider === 'gemini' ? '요금 미확인' : '$0.10'],
+                        [ttsProvider === 'gemini' ? uiT('Gemini TTS') : uiT('ElevenLabs voice'), ttsProvider === 'gemini' ? uiT('요금 미확인') : '$0.10'],
                         ['Hailuo 2.3 img2video', '$0.19'],
                         ['VEED Lipsync', '$0.20'],
                         ['Flux b-roll', '$0.10'],
                       ]
                     : [
                         ['Flux image', '$0.05'],
-                        [ttsProvider === 'gemini' ? 'Gemini TTS' : 'ElevenLabs voice', ttsProvider === 'gemini' ? '요금 미확인' : '$0.10'],
+                        [ttsProvider === 'gemini' ? uiT('Gemini TTS') : uiT('ElevenLabs voice'), ttsProvider === 'gemini' ? uiT('요금 미확인') : '$0.10'],
                         ['Kling avatar', '$1.69'],
                         ['Kling b-roll', '$0.70'],
                       ]
                   ).map(([item, cost]) => (
                     <div key={item} className="flex items-center justify-between readout">
-                      <span>{item}</span>
-                      <span>{cost}</span>
+                      <span>{uiT(item)}</span>
+                      <span>{uiT(cost)}</span>
                     </div>
                   ))}
                 </div>
@@ -1213,9 +1198,7 @@ function ActorShortsTab({ geminiApiKey, elevenLabsKey, falKey, uploadPostKey, up
               {(!falKey || (ttsProvider === 'elevenlabs' && !elevenLabsKey)) && (
                 <div className="p-3 bg-warn/10 rounded-input flex items-center gap-2 text-sm text-warn">
                   <AlertCircle size={14} />
-                  {!falKey && 'fal.ai API key missing. '}{ttsProvider === 'elevenlabs' && !elevenLabsKey && 'ElevenLabs API key missing. '}
-                  Set them in Settings.
-                </div>
+                  {uiT(!falKey && 'fal.ai API key missing. ')}{uiT(ttsProvider === 'elevenlabs' && !elevenLabsKey && 'ElevenLabs API key missing. ')}{uiT("Set them in Settings.")}</div>
               )}
 
               <label className="flex items-start gap-2 text-sm text-ink cursor-pointer">
@@ -1225,30 +1208,25 @@ function ActorShortsTab({ geminiApiKey, elevenLabsKey, falKey, uploadPostKey, up
                   onChange={(e) => setShareToGallery(e.target.checked)}
                   className="mt-0.5 accent-brass"
                 />
-                <span>
-                  Share this video in the public gallery
-                  <span className="block text-xs text-muted">
-                    Your video, product name and script will be visible at openshorts.app/gallery
-                  </span>
+                <span>{uiT("Share this video in the public gallery")}<span className="block text-xs text-muted">{uiT("Your video, product name and script will be visible at openshorts.app/gallery")}</span>
                 </span>
               </label>
             </div>
 
             <div className="flex justify-between">
               <button onClick={() => setStep(1)} className="btn-ghost px-4 py-2 text-sm">
-                <ChevronLeft size={14} /> Back
-              </button>
+                <ChevronLeft size={14} />{uiT(" Back")}</button>
               <button
                 onClick={handleGenerate}
                 disabled={!falKey || (ttsProvider === 'elevenlabs' && !elevenLabsKey) || !selectedActor || generating || !koreanVoiceReady}
                 className="btn-primary px-6 py-2 text-sm"
               >
                 {generating ? (
-                  <><Loader2 size={14} className="animate-spin" /> Generating...</>
+                  <><Loader2 size={14} className="animate-spin" />{uiT(" Generating...")}</>
                 ) : !selectedActor ? (
-                  <><User size={14} /> Select an actor first</>
+                  <><User size={14} />{uiT(" Select an actor first")}</>
                 ) : (
-                  <><Film size={14} /> {ttsProvider === 'gemini' ? 'Generate video (Gemini 요금 미확인 + fal.ai)' : `Generate video (~$${videoMode === 'lowcost' ? '0.65' : '2.00'})`}</>
+                  <><Film size={14} /> {uiT(ttsProvider === 'gemini' ? 'Generate video (Gemini 요금 미확인 + fal.ai)' : `Generate video (~$${videoMode === 'lowcost' ? '0.65' : '2.00'})`)}</>
                 )}
               </button>
             </div>
@@ -1260,13 +1238,13 @@ function ActorShortsTab({ geminiApiKey, elevenLabsKey, falKey, uploadPostKey, up
           <div className="animate-fade space-y-6">
             <div className="card p-6">
               <div className="flex items-center justify-between mb-5">
-                <h2 className="font-display lowercase text-xl text-ink">Video Generation</h2>
+                <h2 className="font-display lowercase text-xl text-ink">{uiT("Video Generation")}</h2>
                 <span className={
                   genStatus === 'processing' ? 'badge-brass' :
                   genStatus === 'completed' ? 'badge-ok' :
                   'badge-danger'
                 }>
-                  {genStatus.toUpperCase()}
+                  {uiT(genStatus.toUpperCase())}
                 </span>
               </div>
 
@@ -1292,7 +1270,7 @@ function ActorShortsTab({ geminiApiKey, elevenLabsKey, falKey, uploadPostKey, up
 
                   return (
                     <div key={i} className="flex items-center gap-3 py-2.5 text-sm">
-                      <span className="font-mono text-micro text-muted w-5 shrink-0">{String(i + 1).padStart(2, '0')}</span>
+                      <span className="font-mono text-micro text-muted w-5 shrink-0">{uiT(String(i + 1).padStart(2, '0'))}</span>
                       {stepDone ? (
                         <Check size={14} className="text-ok shrink-0" />
                       ) : stepActive ? (
@@ -1301,7 +1279,7 @@ function ActorShortsTab({ geminiApiKey, elevenLabsKey, falKey, uploadPostKey, up
                         <span className="w-3.5 h-3.5 rounded-full border border-rule shrink-0" />
                       )}
                       <span className={`lowercase ${stepDone ? 'text-muted' : stepActive ? 'text-ink' : 'text-muted/60'}`}>
-                        {label}
+                        {uiT(label)}
                       </span>
                     </div>
                   );
@@ -1312,8 +1290,7 @@ function ActorShortsTab({ geminiApiKey, elevenLabsKey, falKey, uploadPostKey, up
               <div className="bg-paper rounded-card border border-rule overflow-hidden">
                 <div className="px-4 py-2 border-b border-rule flex items-center justify-between">
                   <span className="readout flex items-center gap-2">
-                    <Terminal size={12} /> Generation Logs
-                  </span>
+                    <Terminal size={12} />{uiT(" Generation Logs")}</span>
                   <button onClick={() => setLogsExpanded(!logsExpanded)} className="text-muted hover:text-ink transition-colors">
                     <ChevronDown size={14} className={logsExpanded ? '' : 'rotate-180'} />
                   </button>
@@ -1322,7 +1299,7 @@ function ActorShortsTab({ geminiApiKey, elevenLabsKey, falKey, uploadPostKey, up
                   <div className="p-4 max-h-64 overflow-y-auto font-mono text-xs space-y-1 custom-scrollbar">
                     {genLogs.map((log, i) => (
                       <div key={i} className={`${log.toLowerCase().includes('error') ? 'text-danger' : log.includes('✅') ? 'text-ok' : 'text-muted'}`}>
-                        {log}
+                        {<LocalizedDiagnostic value={log} />}
                       </div>
                     ))}
                     {genStatus === 'processing' && (
@@ -1337,22 +1314,20 @@ function ActorShortsTab({ geminiApiKey, elevenLabsKey, falKey, uploadPostKey, up
                 <div className="mt-4 p-4 bg-danger/10 rounded-card space-y-3">
                   <div className="flex items-center gap-2">
                     <AlertCircle size={16} className="text-danger shrink-0" />
-                    <span className="text-sm text-danger">Generation failed. You can retry or go back to change settings.</span>
+                    <span className="text-sm text-danger">{uiT("Generation failed. You can retry or go back to change settings.")}</span>
                   </div>
                   <div className="flex gap-3">
                     <button
                       onClick={() => { setStep(2); setGenStatus('idle'); setGenerating(false); }}
                       className="btn-quiet px-4 py-2 text-sm"
                     >
-                      <ChevronLeft size={14} /> Change voice/settings
-                    </button>
+                      <ChevronLeft size={14} />{uiT(" Change voice/settings")}</button>
                     <button
                       onClick={handleRetry}
                       disabled={generating}
                       className="btn-ghost px-4 py-2 text-sm"
                     >
-                      <RefreshCw size={14} /> Retry
-                    </button>
+                      <RefreshCw size={14} />{uiT(" Retry")}</button>
                   </div>
                 </div>
               )}
@@ -1364,9 +1339,7 @@ function ActorShortsTab({ geminiApiKey, elevenLabsKey, falKey, uploadPostKey, up
         {step === 4 && genResult && (
           <div className="animate-fade space-y-6">
             <div className="card p-6">
-              <h2 className="font-display lowercase text-xl text-ink mb-4">
-                Your Short is Ready
-              </h2>
+              <h2 className="font-display lowercase text-xl text-ink mb-4">{uiT("Your Short is Ready")}</h2>
 
               <div className="mb-4">
                 <StarBanner message="Happy with your short?" />
@@ -1387,23 +1360,23 @@ function ActorShortsTab({ geminiApiKey, elevenLabsKey, falKey, uploadPostKey, up
                 <div className="space-y-4">
                   <div>
                     <h3 className="text-sm font-medium text-ink mb-1">{genResult.script?.title}</h3>
-                    <p className="readout">{genResult.duration?.toFixed(1)}s &middot; 9:16 vertical</p>
+                    <p className="readout">{uiT(genResult.duration?.toFixed(1))}{uiT("s · 9:16 vertical")}</p>
                   </div>
 
                   {/* Cost breakdown */}
                   {genResult.cost_estimate && (
                     <div className="card p-4">
-                      <div className="eyebrow mb-2">Cost Breakdown</div>
+                      <div className="eyebrow mb-2">{uiT("Cost Breakdown")}</div>
                       <div className="space-y-1">
                         {Object.entries(genResult.cost_estimate).filter(([k]) => k !== 'total').map(([k, v]) => (
                           <div key={k} className="flex justify-between readout">
-                            <span>{k.replace(/_/g, ' ')}</span>
-                            <span>{v == null ? '요금 미확인' : `$${v}`}</span>
+                            <span>{uiT(k.replace(/_/g, ' '))}</span>
+                            <span>{uiT(v == null ? '요금 미확인' : `$${v}`)}</span>
                           </div>
                         ))}
                         <div className="flex justify-between readout text-ink border-t border-rule pt-1.5 mt-1.5">
-                          <span>Total</span>
-                          <span>{genResult.cost_estimate.total == null ? 'Gemini 요금 미확인 + 위 부분합' : `$${genResult.cost_estimate.total}`}</span>
+                          <span>{uiT("Total")}</span>
+                          <span>{uiT(genResult.cost_estimate.total == null ? 'Gemini 요금 미확인 + 위 부분합' : `$${genResult.cost_estimate.total}`)}</span>
                         </div>
                       </div>
                     </div>
@@ -1413,13 +1386,13 @@ function ActorShortsTab({ geminiApiKey, elevenLabsKey, falKey, uploadPostKey, up
                   {genResult.script?.caption && (
                     <div>
                       <div className="flex items-center justify-between mb-1.5">
-                        <span className="eyebrow">Caption</span>
+                        <span className="eyebrow">{uiT("Caption")}</span>
                         <button
                           onClick={() => handleCopy(genResult.script.caption, 'caption')}
                           className="text-xs lowercase text-muted hover:text-brass flex items-center gap-1 transition-colors"
                         >
                           {copied === 'caption' ? <Check size={10} className="text-ok" /> : <Copy size={10} />}
-                          {copied === 'caption' ? 'Copied' : 'Copy'}
+                          {uiT(copied === 'caption' ? 'Copied' : 'Copy')}
                         </button>
                       </div>
                       <p className="text-xs text-ink2 bg-paper border border-rule rounded-input p-2.5">{genResult.script.caption}</p>
@@ -1430,13 +1403,13 @@ function ActorShortsTab({ geminiApiKey, elevenLabsKey, falKey, uploadPostKey, up
                   {genResult.script?.hashtags && (
                     <div>
                       <div className="flex items-center justify-between mb-1.5">
-                        <span className="eyebrow">Hashtags</span>
+                        <span className="eyebrow">{uiT("Hashtags")}</span>
                         <button
                           onClick={() => handleCopy(genResult.script.hashtags.join(' '), 'hashtags')}
                           className="text-xs lowercase text-muted hover:text-brass flex items-center gap-1 transition-colors"
                         >
                           {copied === 'hashtags' ? <Check size={10} className="text-ok" /> : <Copy size={10} />}
-                          {copied === 'hashtags' ? 'Copied' : 'Copy'}
+                          {uiT(copied === 'hashtags' ? 'Copied' : 'Copy')}
                         </button>
                       </div>
                       <div className="flex flex-wrap gap-1.5">
@@ -1454,22 +1427,20 @@ function ActorShortsTab({ geminiApiKey, elevenLabsKey, falKey, uploadPostKey, up
                       download
                       className="btn-primary px-4 py-2 text-sm"
                     >
-                      <Download size={14} /> Download
-                    </a>
+                      <Download size={14} />{uiT(" Download")}</a>
                     <button
                       onClick={handleReset}
                       className="btn-ghost px-4 py-2 text-sm"
                     >
-                      <RefreshCw size={14} /> New video
-                    </button>
+                      <RefreshCw size={14} />{uiT(" New video")}</button>
                   </div>
 
                   {/* Publish to Social Media */}
                   <div className="card p-4 space-y-3 mt-2">
-                    <h3 className="eyebrow">Publish to Social Media</h3>
+                    <h3 className="eyebrow">{uiT("Publish to Social Media")}</h3>
 
                     {!uploadPostKey ? (
-                      <p className="text-xs lowercase text-muted">Set your Upload-Post API key in Settings to enable publishing.</p>
+                      <p className="text-xs lowercase text-muted">{uiT("Set your Upload-Post API key in Settings to enable publishing.")}</p>
                     ) : (
                       <>
                         {/* Platform toggles */}
@@ -1492,11 +1463,7 @@ function ActorShortsTab({ geminiApiKey, elevenLabsKey, falKey, uploadPostKey, up
                         {/* Same notice as ResultCard: TikTok lands as a draft,
                             and finding nothing live reads as a failed post. */}
                         {publishPlatforms.tiktok && (
-                          <p className="mt-2 text-xs text-muted lowercase">
-                            tiktok arrives as a <b className="text-ink2">draft</b> and you'll get a
-                            notification in the app — finishing it there lets you add trending sounds
-                            and hashtags, which reaches more people than posting from an api.
-                          </p>
+                          <p className="mt-2 text-xs text-muted lowercase">{uiT("tiktok arrives as a ")}<b className="text-ink2">{uiT("draft")}</b>{uiT(" and you'll get a notification in the app — finishing it there lets you add trending sounds and hashtags, which reaches more people than posting from an api.")}</p>
                         )}
 
                         {/* Schedule toggle */}
@@ -1508,8 +1475,7 @@ function ActorShortsTab({ geminiApiKey, elevenLabsKey, falKey, uploadPostKey, up
                               onChange={(e) => setIsScheduling(e.target.checked)}
                               className="w-3.5 h-3.5 rounded accent-brass"
                             />
-                            <Calendar size={12} /> Schedule
-                          </label>
+                            <Calendar size={12} />{uiT(" Schedule")}</label>
                           {isScheduling && (
                             <input
                               type="datetime-local"
@@ -1562,15 +1528,15 @@ function ActorShortsTab({ geminiApiKey, elevenLabsKey, falKey, uploadPostKey, up
                           className="btn-primary w-full py-2 text-sm"
                         >
                           {publishing ? (
-                            <><Loader2 size={14} className="animate-spin" /> {isScheduling ? 'Scheduling...' : 'Publishing...'}</>
+                            <><Loader2 size={14} className="animate-spin" /> {uiT(isScheduling ? 'Scheduling...' : 'Publishing...')}</>
                           ) : (
-                            <><Share2 size={14} /> {isScheduling ? 'Schedule post' : 'Publish now'}</>
+                            <><Share2 size={14} /> {uiT(isScheduling ? 'Schedule post' : 'Publish now')}</>
                           )}
                         </button>
 
                         {publishResult && (
                           <p className={`text-xs ${publishResult.ok ? 'text-ok' : 'text-danger'}`}>
-                            {publishResult.msg}
+                            {uiT(publishResult.msg)}
                           </p>
                         )}
                       </>
@@ -1588,11 +1554,12 @@ function ActorShortsTab({ geminiApiKey, elevenLabsKey, falKey, uploadPostKey, up
 
 
 export default function SaaShortsTab(props) {
+  useUiLocale();
   const [mode, setMode] = useState('product');
   return <div className="h-full flex flex-col min-h-0">
-    <div className="flex flex-wrap gap-2 p-3 border-b border-rule" role="group" aria-label="영상 제작 모드">
-      <button className="btn-ghost p-2" aria-pressed={mode === 'product'} onClick={() => setMode('product')}>제품 영상형 (기본·fal.ai 불필요)</button>
-      <button className="btn-ghost p-2" aria-pressed={mode === 'actor'} onClick={() => setMode('actor')}>AI 배우형 (fal.ai)</button>
+    <div className="flex flex-wrap gap-2 p-3 border-b border-rule" role="group" aria-label={uiT("영상 제작 모드")}>
+      <button className="btn-ghost p-2" aria-pressed={mode === 'product'} onClick={() => setMode('product')}>{uiT("제품 영상형 (기본·fal.ai 불필요)")}</button>
+      <button className="btn-ghost p-2" aria-pressed={mode === 'actor'} onClick={() => setMode('actor')}>{uiT("AI 배우형 (fal.ai)")}</button>
     </div>
     <div className="flex-1 min-h-0">{mode === 'product' ? <ProductVideoStudio geminiApiKey={props.geminiApiKey} /> : <ActorShortsTab {...props} />}</div>
   </div>;

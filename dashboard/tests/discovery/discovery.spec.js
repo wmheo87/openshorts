@@ -4,7 +4,7 @@ import { mockApi, historyEntry, historyRequest, searchResponse, videos } from '.
 async function open(page, options) {
   const calls = await mockApi(page, options);
   await page.goto('/#app?tab=discovery');
-  await expect(page.getByRole('heading', { name: 'Video Discovery', exact: true })).toBeVisible();
+  await expect(page.getByRole('heading', { name: '영상 찾기', exact: true })).toBeVisible();
   return calls;
 }
 async function search(page, keyword = '한국 요리') {
@@ -16,7 +16,7 @@ const cardTitles = (page) => page.getByLabel('영상 후보 목록').locator('ar
 
 test('search renders, sends exact P1 filters, and preserves all existing menus', async ({ page, isMobile }) => {
   const calls = await open(page);
-  await expect(page.getByText('Required API keys missing.')).toHaveCount(0);
+  await expect(page.getByText('필수 API 키가 없습니다.')).toHaveCount(0);
   await page.getByLabel('최소 조회수', { exact: true }).fill('10000');
   await page.getByLabel('최소 길이 (초)', { exact: true }).fill('120');
   await page.getByLabel('최대 길이 (초)', { exact: true }).fill('1200');
@@ -30,8 +30,8 @@ test('search renders, sends exact P1 filters, and preserves all existing menus',
   await expect(page.getByText(/조회 범위 또는 결과 상한/)).toBeVisible();
   await expect(page.getByText(/바이럴 성공 확률이나/).first()).toBeVisible();
   await page.screenshot({ path: test.info().outputPath('discovery.png') });
-  if (isMobile) await page.getByRole('button', { name: 'open navigation' }).click();
-  for (const label of ['Clip Generator', 'AI Shorts', 'AI Agent', 'UGC Gallery', 'YouTube Studio', 'Settings', 'Video Discovery']) await expect(page.getByRole('button', { name: new RegExp(label) }).first()).toBeVisible();
+  if (isMobile) await page.getByRole('button', { name: '메뉴 열기' }).click();
+  for (const label of ['쇼츠 편집', 'AI 쇼츠 제작', 'AI 에이전트', '영상 보관함', '유튜브 스튜디오', '설정', '영상 찾기']) await expect(page.getByRole('button', { name: new RegExp(label) }).first()).toBeVisible();
   expect(calls.some((call) => /process|render|social|translate/.test(call.path))).toBe(false);
 });
 
@@ -199,9 +199,9 @@ test('feature flag off hides discovery and keeps the original Clip Generator', a
   const calls = await mockApi(page);
   await page.goto('http://127.0.0.1:5181/#app?tab=discovery');
   await expect(page.getByTestId('discovery-page')).toHaveCount(0);
-  await expect(page.getByText('Required API keys missing.')).toBeVisible();
-  if (isMobile) await page.getByRole('button', { name: 'open navigation' }).click();
-  await expect(page.getByRole('button', { name: /Video Discovery/ })).toHaveCount(0);
-  await expect(page.getByRole('button', { name: /Clip Generator/ }).first()).toBeVisible();
+  await expect(page.getByText('필수 API 키가 없습니다.')).toBeVisible();
+  if (isMobile) await page.getByRole('button', { name: '메뉴 열기' }).click();
+  await expect(page.getByRole('button', { name: /영상 찾기/ })).toHaveCount(0);
+  await expect(page.getByRole('button', { name: /쇼츠 편집/ }).first()).toBeVisible();
   expect(calls.some((call) => call.path.startsWith('/api/discovery'))).toBe(false);
 });
