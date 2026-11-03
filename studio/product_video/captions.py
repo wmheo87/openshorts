@@ -56,8 +56,8 @@ def style_product_captions(path, position="bottom", style="outline"):
                 tokens = list(re.finditer(r"[가-힣A-Za-z0-9]{2,}", spoken))
                 if tokens:
                     token = max(tokens, key=lambda m: len(m.group(0)))
-                    spoken = (spoken[:token.start()] + r"{\\c&H0000FFFF&}" +
-                              token.group(0) + r"{\\c&H00FFFFFF&}" +
+                    spoken = (spoken[:token.start()] + r"{\c&H0000FFFF&}" +
+                              token.group(0) + r"{\c&H00FFFFFF&}" +
                               spoken[token.end():])
                     fields[9] = spoken
                     line = ",".join(fields) + "\n"
