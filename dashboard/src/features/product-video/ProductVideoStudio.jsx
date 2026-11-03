@@ -25,6 +25,8 @@ export default function ProductVideoStudio({ geminiApiKey }) {
   const [musicVolume, setMusicVolume] = useState(.12);
   const [transition, setTransition] = useState('fade');
   const [voice, setVoice] = useState('Kore');
+  const [subtitlePosition, setSubtitlePosition] = useState('bottom');
+  const [subtitleStyle, setSubtitleStyle] = useState('outline');
   const [rights, setRights] = useState(false);
   const [paid, setPaid] = useState(false);
   const [content, setContent] = useState(false);
@@ -100,7 +102,8 @@ export default function ProductVideoStudio({ geminiApiKey }) {
     write(PENDING, request); setPending(request); setPaid(false);
     const body = { request_id: request.request_id, scenes: scenes.map(({ kind: _kind, source_duration: _source, preview: _preview, ...scene }) => scene),
       description, rights_confirmed: true, paid_confirmed: true, content_confirmed: content,
-      script: action === 'generate' ? script : null, voice, music_id: music?.id || null, music_volume: musicVolume, transition };
+      script: action === 'generate' ? script : null, voice, music_id: music?.id || null, music_volume: musicVolume, transition,
+      subtitle_position: subtitlePosition, subtitle_style: subtitleStyle };
     try {
       await jsonRequest(`/${action}`, { method: 'POST', headers: { 'Content-Type': 'application/json', ...(geminiApiKey ? { 'X-Gemini-Key': geminiApiKey } : {}) }, body: JSON.stringify(body) });
     } catch (e) {
@@ -131,6 +134,25 @@ export default function ProductVideoStudio({ geminiApiKey }) {
     </fieldset>)}
     <label className="block">{uiT("확인된 상품 정보")}<textarea aria-label={uiT("확인된 상품 정보")} className={input} maxLength={4000} disabled={disabled} value={description} onChange={e => { setDescription(e.target.value); setScript(null); }} placeholder={uiT("확인된 사양·원화 가격만 입력하세요. 미확인 효능·할인율·후기를 만들지 않습니다.")} /></label>
     <div className="flex flex-wrap gap-4"><label>{uiT("장면 전환")}<select aria-label={uiT("장면 전환")} disabled={disabled} value={transition} onChange={e => setTransition(e.target.value)}><option value="fade">{uiT("페이드")}</option><option value="cut">{uiT("컷")}</option></select></label><label>{uiT("한국어 Gemini 음성")}<select aria-label={uiT("제품형 한국어 음성")} disabled={disabled} value={voice} onChange={e => setVoice(e.target.value)}><option>{uiT("Kore")}</option>{['Puck','Zephyr','Charon','Leda','Aoede','Achird','Sulafat','Laomedeia','Schedar','Iapetus','Callirrhoe','Vindemiatrix','Autonoe','Orus','Fenrir','Enceladus','Umbriel','Algieba','Despina','Erinome','Algenib','Rasalgethi','Achernar','Alnilam','Gacrux','Pulcherrima','Zubenelgenubi','Sadachbia','Sadaltager'].map(v => <option key={v} value={v}>{v}</option>)}</select></label></div>
+    <fieldset className="card p-3 space-y-3" disabled={disabled}>
+      <legend>{uiT("자동 자막 디자인")}</legend>
+      <p className="text-xs text-muted">{uiT("Whisper로 음성 타이밍을 분석한 뒤 MP4에 자막을 입힙니다. 하단은 쇼츠 앱의 버튼과 겹치지 않도록 위로 올린 위치입니다.")}</p>
+      <label className="block text-sm">{uiT("자막 위치")}
+        <select className={input} aria-label={uiT("제품형 자막 위치")} value={subtitlePosition} onChange={e => setSubtitlePosition(e.target.value)}>
+          <option value="top">{uiT("상단")}</option>
+          <option value="center">{uiT("중앙")}</option>
+          <option value="bottom">{uiT("하단 (안전 영역)")}</option>
+        </select>
+      </label>
+      <label className="block text-sm">{uiT("자막 스타일")}
+        <select className={input} aria-label={uiT("제품형 자막 스타일")} value={subtitleStyle} onChange={e => setSubtitleStyle(e.target.value)}>
+          <option value="outline">{uiT("흰색 굵은 글씨 + 검은 테두리")}</option>
+          <option value="highlight">{uiT("핵심 단어 노란색 강조")}</option>
+          <option value="box">{uiT("반투명 검정 배경")}</option>
+        </select>
+      </label>
+      <p className="text-xs text-muted">{uiT("현재 선택: ")}{uiT(subtitlePosition === 'top' ? '상단' : subtitlePosition === 'center' ? '중앙' : '하단')} · {uiT(subtitleStyle === 'highlight' ? '노란색 강조' : subtitleStyle === 'box' ? '검정 배경' : '흰색 테두리')}</p>
+    </fieldset>
     <label className="block">{uiT("권리 확인된 배경음 업로드(선택)")}<LocalizedFileInput aria-label={uiT("배경음 업로드")} accept="audio/mpeg,audio/wav,audio/mp4,audio/ogg" disabled={!rights || disabled} onChange={e => e.target.files[0] && upload([e.target.files[0]], true)} /></label>
     {music && <div><span>{uiT("배경음 선택됨")}</span><label>{uiT("배경음 음량")}<input aria-label={uiT("배경음 음량")} type="range" min={0} max={.4} step={.01} value={musicVolume} disabled={disabled} onChange={e => setMusicVolume(Number(e.target.value))} /></label><button className="btn-ghost" disabled={disabled} onClick={() => setMusic(null)}>{uiT("배경음 없음")}</button></div>}
     {script && <div className="space-y-2">
