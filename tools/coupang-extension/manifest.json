@@ -1,0 +1,14 @@
+{
+  "manifest_version": 3,
+  "name": "OpenShorts 쿠팡 상품 분석",
+  "version": "0.1.0",
+  "description": "현재 열린 쿠팡 상품의 이미지 후보와 리뷰를 사용자 요청 시 로컬 JSON으로 내보냅니다.",
+  "permissions": [
+    "activeTab",
+    "scripting"
+  ],
+  "action": {
+    "default_title": "OpenShorts 상품 분석",
+    "default_popup": "popup.html"
+  }
+}
