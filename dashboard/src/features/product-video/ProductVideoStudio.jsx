@@ -20,6 +20,7 @@ export default function ProductVideoStudio({ geminiApiKey }) {
   useUiLocale();
   const [scenes, setScenes] = useState(() => read(DRAFT)?.scenes || []);
   const [description, setDescription] = useState(() => read(DRAFT)?.description || '');
+  const [coupangImport, setCoupangImport] = useState(null);
   const [script, setScript] = useState(() => read(DRAFT)?.script || null);
   const [music, setMusic] = useState(null);
   const [musicVolume, setMusicVolume] = useState(.12);
@@ -93,6 +94,34 @@ export default function ProductVideoStudio({ geminiApiKey }) {
     finally { setBusy(false); }
   };
 
+  const importCoupang = async file => {
+    if (!file || busy || pending) return;
+    setError('');
+    try {
+      if (file.size > 2 * 1024 * 1024) throw new Error('JSON 파일은 최대 2MB입니다.');
+      const data = JSON.parse(await file.text());
+      if (data.schema_version !== 1 || data.source !== 'coupang-dom' ||
+          !/^https:\/\/www\.coupang\.com\/vp\/products\/\d+/.test(data.product_url || '') ||
+          !Array.isArray(data.images?.gallery) || !Array.isArray(data.images?.details) ||
+          !Array.isArray(data.reviews)) throw new Error('OpenShorts 쿠팡 확장프로그램 JSON 파일이 아닙니다.');
+      const gallery = data.images.gallery.slice(0, 30);
+      const details = data.images.details.slice(0, 30);
+      const reviews = data.reviews.filter(r => typeof r.body === 'string').slice(0, 30);
+      // Review snippets are unverified observations, not product specifications or marketing claims.
+      const lines = [
+        '쿠팡 상품페이지에서 참고용으로 가져온 정보 (자동 사실 검증 아님)',
+        '상품명: ' + String(data.title || '').slice(0, 300),
+        '출처: ' + data.product_url,
+        '이미지 후보: 갤러리 ' + gallery.length + '개 / 상세설명 ' + details.length + '개 (사진 사용 권리 별도 확인)',
+        '현재 화면의 리뷰 표본: ' + reviews.length + '개 (전체 구매자 의견을 대표하지 않음)',
+        ...reviews.slice(0, 5).map((r, i) => '리뷰 발췌 ' + (i + 1) + ': ' + r.body.replace(/\s+/g, ' ').slice(0, 180))
+      ];
+      setDescription(lines.join('\n').slice(0, 4000));
+      setCoupangImport({ gallery, details, reviews: reviews.length, url: data.product_url });
+      setScript(null); setContent(false);
+    } catch (e) { setError('쿠팡 JSON 불러오기 실패: ' + e.message); }
+  };
+
   const submit = async action => {
     if (lock.current || pending || busy || !rights || !paid || !scenes.length || (action === 'generate' && (!script || !content))) return;
     lock.current = true; setError(''); setVideo(''); setStatus(null);
@@ -119,6 +148,16 @@ export default function ProductVideoStudio({ geminiApiKey }) {
     <p className="text-xs text-muted">{uiT("구성된 Gemini TTS 모델: ")}{uiT(ttsModel)}{uiT(". 실제 계정 이용·음성 생성은 별도 확인이 필요합니다.")}</p>
     <p className="text-sm text-warn">{uiT("필수 키: Gemini 사용자 키. 제품 영상형 fal.ai 비용: $0 (호출 없음). Gemini 대본·TTS 요금은 미확인으로 무료를 보장하지 않습니다. 로컬 컴퓨팅 비용 별도. 배우형은 fal.ai와 선택한 TTS 비용이 추가됩니다. 실패도 과금될 수 있으며 다른 유료 공급자로 자동 전환하지 않습니다.")}</p>
     <label className="block text-sm"><input type="checkbox" checked={rights} onChange={e => setRights(e.target.checked)} disabled={disabled} />{uiT(" 원본 영상·사진·음원의 사용 및 편집 권리를 확인했습니다.")}</label>
+    <div className="card p-3 space-y-2">
+      <p className="font-semibold">{uiT("쿠팡 상품 분석 JSON 불러오기 (선택)")}</p>
+      <p className="text-xs text-muted">{uiT("크롬 확장프로그램에서 직접 저장한 JSON으로 상품 설명과 현재 보이는 리뷰 표본을 가져옵니다. 이미지 URL은 후보로만 표시하며 자동 다운로드·업로드하지 않습니다.")}</p>
+      <input type="file" accept=".json,application/json" aria-label={uiT("쿠팡 분석 JSON 파일")} disabled={disabled}
+        onChange={e => { const file = e.target.files?.[0]; if (file) void importCoupang(file); e.target.value = ''; }} />
+      {coupangImport && <div className="text-xs space-y-1">
+        <p>{uiT("갤러리 이미지 후보: ")}{coupangImport.gallery.length}{uiT("개 · 상세 이미지 후보: ")}{coupangImport.details.length}{uiT("개 · 현재 화면 리뷰: ")}{coupangImport.reviews}{uiT("개")}</p>
+        <p className="text-warn">{uiT("확인된 권리의 원본 파일만 아래에서 직접 업로드하세요. JSON의 후기·상품 설명은 검증 전 참고자료입니다.")}</p>
+      </div>}
+    </div>
     <label className="block text-sm">{uiT("제품 영상·사진 업로드")}<LocalizedFileInput aria-label={uiT("제품 영상·사진 업로드")} multiple accept="video/mp4,video/webm,video/quicktime,image/png,image/jpeg,image/webp" disabled={!rights || disabled} onChange={e => upload([...e.target.files])} /></label>
     {scenes.map((scene, index) => <fieldset key={`${scene.asset_id}-${index}`} disabled={disabled} className="card p-3 space-y-2"><legend>{uiT("장면 ")}{uiT(index + 1)} · {uiT(scene.kind === 'video' ? '원본 영상' : '사진')}</legend>
       {!scene.preview && <button className="btn-ghost p-2" onClick={async () => { try { const response = await apiFetch(`/api/saasshorts/product/assets/${scene.asset_id}`); if (!response.ok) throw new Error('원본이 만료됐거나 접근 권한이 없습니다.'); const url = URL.createObjectURL(await response.blob()); urls.current.add(url); setScenes(old => old.map((item, i) => i === index ? { ...item, preview: url } : item)); } catch (e) { setError(e.message); } }}>{uiT("원본 미리보기 불러오기")}</button>}
