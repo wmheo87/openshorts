@@ -16,7 +16,7 @@ Only mention KRW prices explicitly supplied; never convert foreign prices or inv
 Do not require an actor, avatar, lip-sync, generated images, b-roll, or a fixed five-section structure.
 Use one segment per supplied scene in this order, describing only what the user says is shown; otherwise neutral product information.
 CTA should ask to check current information on the seller page, without assuming where the link is.
-Return JSON: {{"title":"short title", "full_narration":"20-45 seconds of factual speech", "hook_text":"short factual hook", "segments":[{{"asset_id":"approved id", "narration":"spoken words", "subtitle_text":"short caption"}}], "hashtags":[], "caption":"factual caption"}}.
+Return JSON: {{"title":"short title", "full_narration":"20-30 seconds of factual speech", "hook_text":"short factual hook", "segments":[{{"asset_id":"approved id", "narration":"spoken words", "subtitle_text":"short caption"}}], "hashtags":[], "caption":"factual caption"}}.
 full_narration must concatenate segment narrations. No actor_description or generated scene prompts.'''
     with client_for(key) as client:
         response = client.models.generate_content(model=GEMINI_MODEL, contents=prompt,

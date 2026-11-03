@@ -44,6 +44,8 @@ class ProductRequest(BaseModel):
 
 def create_router(engine):
     router = APIRouter(prefix='/api/saasshorts/product', tags=['product-video'])
+    from .url_api import create_router as url_router
+    router.include_router(url_router(engine))
     tasks = set()
     active = set()  # Only this process's tasks; after restart never replay paid work.
 
