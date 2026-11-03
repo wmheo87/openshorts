@@ -41,6 +41,8 @@ class ProductRequest(BaseModel):
     music_id: str | None = None
     music_volume: float = Field(default=.12, ge=0, le=.4)
     transition: Literal['cut', 'fade'] = 'fade'
+    subtitle_position: Literal['top', 'center', 'bottom'] = 'bottom'
+    subtitle_style: Literal['outline', 'highlight', 'box'] = 'outline'
 
 
 def create_router(engine):
@@ -103,7 +105,8 @@ def create_router(engine):
         if not fresh: return await storage.read(engine, request, body.request_id)
         active.add(body.request_id)
         config = {'gemini_key': key, 'scenes': scenes, 'music': music, 'music_volume': body.music_volume,
-                  'transition': body.transition, 'voice': body.voice, 'model': gemini_tts.model_name()}
+                  'transition': body.transition, 'voice': body.voice, 'model': gemini_tts.model_name(),
+                  'subtitle_position': body.subtitle_position, 'subtitle_style': body.subtitle_style}
         async def work():
             logs = []
             def log(message):
