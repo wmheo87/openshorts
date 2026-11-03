@@ -1,0 +1,9 @@
+<!doctype html>
+<html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<style>body{width:340px;padding:14px;font:14px/1.5 system-ui,sans-serif;color:#17212f}h1{font-size:18px;margin:0 0 8px}button{width:100%;padding:10px;margin:8px 0;border:0;border-radius:8px;background:#1769d2;color:white;cursor:pointer}button:disabled{opacity:.5}pre{white-space:pre-wrap;word-break:break-word;font:12px/1.5 system-ui}small{color:#566}label{display:block;margin:8px 0}</style></head>
+<body><h1>OpenShorts 상품 분석</h1><small>열려 있는 쿠팡 상품페이지의 현재 DOM만 읽습니다. 리뷰 전체 수집이나 차단 우회를 하지 않습니다.</small>
+<label><input type="checkbox" id="consent"> 화면에 보이는 상품정보와 후기를 로컬 분석 파일로 저장하는 데 동의</label>
+<button id="collect" disabled>현재 페이지 분석 및 JSON 저장</button>
+<pre id="status" role="status">쿠팡 상품페이지에서 실행하세요.</pre>
+<small>사진·후기 저작권과 상업적 이용 허락은 별도로 확인해야 합니다. 파일은 자동 업로드되지 않습니다.</small>
+<script src="popup.js"></script></body></html>
