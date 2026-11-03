@@ -1,3 +1,5 @@
+import LocalizedDiagnostic from '../i18n/LocalizedDiagnostic';
+import { getUiLocale, t as uiT, useUiLocale } from "../i18n/runtime.js";
 import React, { useState, useRef, useEffect } from 'react';
 import { Loader2, Star } from 'lucide-react';
 import { apiJson } from '../lib/api';
@@ -30,7 +32,7 @@ const DETAIL_PROMPT = {
 const fmtDate = (iso) => {
   if (!iso) return 'the end of your billing period';
   try {
-    return new Date(iso).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+    return new Date(iso).toLocaleDateString(getUiLocale(), { year: 'numeric', month: 'long', day: 'numeric' });
   } catch (_) { return 'the end of your billing period'; }
 };
 
@@ -39,6 +41,7 @@ const fmtDate = (iso) => {
 // "keep my plan" exit leaves the subscription untouched. The last step leads
 // with the retention offer when the server says this subscription gets one.
 export default function CancelPlanModal({ plan, periodEnd, onClose, onCanceled }) {
+  useUiLocale();
   const [step, setStep] = useState(0);
   const [reason, setReason] = useState('');
   const [details, setDetails] = useState('');
@@ -121,16 +124,14 @@ export default function CancelPlanModal({ plan, periodEnd, onClose, onCanceled }
 
   if (saved) {
     return (
-      <Modal isOpen onClose={onCanceled} eyebrow="YOU'RE STAYING" title="Discount applied">
+      <Modal isOpen onClose={onCanceled} eyebrow="YOU'RE STAYING" title={uiT("Discount applied")}>
         <div className="space-y-4 text-sm text-ink2">
-          <p>
-            Thanks for giving us another go. Your plan stays as it is, and your next
-            {saved.months ? ` ${saved.months}` : ''} invoice{saved.months > 1 ? 's are' : ' is'}{' '}
-            <b className="text-ink">{saved.percent_off}% off</b>.
+          <p>{uiT("Thanks for giving us another go. Your plan stays as it is, and your next")}{uiT(saved.months ? ` ${saved.months}` : '')}{uiT(" invoice")}{uiT(saved.months > 1 ? 's are' : ' is')}{uiT(' ')}
+            <b className="text-ink">{uiT(saved.percent_off)}{uiT("% off")}</b>.
           </p>
-          <p>We read every answer you gave us and will work on it.</p>
+          <p>{uiT("We read every answer you gave us and will work on it.")}</p>
           <div className="flex justify-end pt-1">
-            <button onClick={onCanceled} className="btn-primary px-4 py-2 text-xs">Done</button>
+            <button onClick={onCanceled} className="btn-primary px-4 py-2 text-xs">{uiT("Done")}</button>
           </div>
         </div>
       </Modal>
@@ -139,11 +140,11 @@ export default function CancelPlanModal({ plan, periodEnd, onClose, onCanceled }
 
   return (
     <Modal isOpen onClose={busy ? undefined : keep} eyebrow={`CANCEL PLAN · ${step + 1}/3`}
-           title={['Why are you cancelling?', 'How was OpenShorts?',
-                   offer ? 'Before you go' : 'Confirm cancellation'][step]}>
+           title={uiT(['Why are you cancelling?', 'How was OpenShorts?',
+                   offer ? 'Before you go' : 'Confirm cancellation'][step])}>
       {step === 0 && (
         <div className="space-y-4">
-          <p className="text-sm text-muted">Your answer goes straight to the people building OpenShorts.</p>
+          <p className="text-sm text-muted">{uiT("Your answer goes straight to the people building OpenShorts.")}</p>
           <div className="space-y-1.5">
             {REASONS.map(([value, label]) => (
               <label key={value}
@@ -151,50 +152,48 @@ export default function CancelPlanModal({ plan, periodEnd, onClose, onCanceled }
                        ${reason === value ? 'border-brass text-ink' : 'border-rule text-ink2 hover:border-brass/60'}`}>
                 <input type="radio" name="cancel-reason" value={value} checked={reason === value}
                        onChange={() => setReason(value)} />
-                {label}
+                {uiT(label)}
               </label>
             ))}
           </div>
           {reason && (
             <label className="block">
-              <span className="text-sm text-muted">{DETAIL_PROMPT[reason] || 'Anything else we should know?'} (optional)</span>
+              <span className="text-sm text-muted">{uiT(DETAIL_PROMPT[reason] || 'Anything else we should know?')}{uiT(" (optional)")}</span>
               <textarea value={details} onChange={(e) => setDetails(e.target.value)} maxLength={2000} rows={3}
                         className="input-field w-full text-sm mt-1" />
             </label>
           )}
           <div className="flex items-center justify-between gap-2 pt-1">
-            <button onClick={keep} className="btn-quiet">Keep my plan</button>
-            <button onClick={() => setStep(1)} disabled={!reason} className="btn-ghost px-4 py-2">Continue</button>
+            <button onClick={keep} className="btn-quiet">{uiT("Keep my plan")}</button>
+            <button onClick={() => setStep(1)} disabled={!reason} className="btn-ghost px-4 py-2">{uiT("Continue")}</button>
           </div>
         </div>
       )}
 
       {step === 1 && (
         <div className="space-y-4">
-          <p className="text-sm text-muted">Rate your experience and leave a short review. It takes ten seconds and helps us more than anything else.</p>
+          <p className="text-sm text-muted">{uiT("Rate your experience and leave a short review. It takes ten seconds and helps us more than anything else.")}</p>
           <div className="flex items-center gap-1" onMouseLeave={() => setHover(0)}>
             {[1, 2, 3, 4, 5].map((n) => (
-              <button key={n} type="button" aria-label={`${n} star${n > 1 ? 's' : ''}`}
+              <button key={n} type="button" aria-label={uiT(`${n} star${n > 1 ? 's' : ''}`)}
                       onClick={() => setRating(n)} onMouseEnter={() => setHover(n)} className="p-1">
                 <Star size={26} className={n <= shown ? 'text-brass fill-current' : 'text-muted'} />
               </button>
             ))}
           </div>
           <label className="block">
-            <span className="text-sm text-muted">Your review</span>
+            <span className="text-sm text-muted">{uiT("Your review")}</span>
             <textarea value={review} onChange={(e) => setReview(e.target.value)} maxLength={2000} rows={4}
-                      placeholder="What worked, what didn't, who you'd recommend it to…"
+                      placeholder={uiT("What worked, what didn't, who you'd recommend it to…")}
                       className="input-field w-full text-sm mt-1" />
           </label>
           {review.trim() && (
             <label className="flex items-start gap-2 text-sm text-ink2 cursor-pointer">
-              <input type="checkbox" checked={publicOk} onChange={(e) => setPublicOk(e.target.checked)} className="mt-0.5" />
-              OpenShorts may quote this review publicly (first name only).
-            </label>
+              <input type="checkbox" checked={publicOk} onChange={(e) => setPublicOk(e.target.checked)} className="mt-0.5" />{uiT("OpenShorts may quote this review publicly (first name only).")}</label>
           )}
           <div className="flex items-center justify-between gap-2 pt-1">
-            <button onClick={() => setStep(0)} className="btn-quiet">Back</button>
-            <button onClick={() => setStep(2)} disabled={!rating} className="btn-ghost px-4 py-2">Continue</button>
+            <button onClick={() => setStep(0)} className="btn-quiet">{uiT("Back")}</button>
+            <button onClick={() => setStep(2)} disabled={!rating} className="btn-ghost px-4 py-2">{uiT("Continue")}</button>
           </div>
         </div>
       )}
@@ -203,32 +202,25 @@ export default function CancelPlanModal({ plan, periodEnd, onClose, onCanceled }
         <div className="space-y-4 text-sm text-ink2">
           {offer && (
             <div className="rounded-card border border-brass bg-brass/5 p-4 space-y-3">
-              <p className="text-ink">
-                Stay and get <b>{offer.percent_off}% off{months}</b>. Same plan, same
-                minutes, half the price.
-              </p>
+              <p className="text-ink">{uiT("Stay and get ")}<b>{uiT(offer.percent_off)}{uiT("% off")}{uiT(months)}</b>{uiT(". Same plan, same minutes, half the price.")}</p>
               <button onClick={acceptOffer} disabled={busy} className="btn-primary px-4 py-2 text-xs">
-                {busy && <Loader2 size={16} className="animate-spin" />}
-                Keep my plan with {offer.percent_off}% off
-              </button>
+                {busy && <Loader2 size={16} className="animate-spin" />}{uiT("Keep my plan with ")}{uiT(offer.percent_off)}{uiT("% off")}</button>
             </div>
           )}
           <p>
-            {offer ? 'If you still want to leave, your' : 'Your'}
-            {' '}{plan ? <b className="text-ink capitalize">{plan}</b> : null} plan stays active until{' '}
-            <b className="text-ink">{fmtDate(periodEnd)}</b>, with every minute you have left.
-            You won't be charged again.
-          </p>
-          <p>You can undo this from your account page any time before then.</p>
-          {error && <p className="text-danger">{error}</p>}
+            {uiT(offer ? 'If you still want to leave, your' : 'Your')}
+            {uiT(' ')}{plan ? <b className="text-ink capitalize">{uiT(plan)}</b> : null}{uiT(" plan stays active until")}{uiT(' ')}
+            <b className="text-ink">{uiT(fmtDate(periodEnd))}</b>{uiT(", with every minute you have left. You won't be charged again.")}</p>
+          <p>{uiT("You can undo this from your account page any time before then.")}</p>
+          {error && <p className="text-danger">{<LocalizedDiagnostic value={error} error />}</p>}
           <div className="flex items-center justify-between gap-2 pt-1">
             <button onClick={keep} disabled={busy}
                     className={offer ? 'btn-quiet' : 'btn-primary px-4 py-2 text-xs'}>
-              {offer ? 'Keep my plan at full price' : 'Keep my plan'}
+              {uiT(offer ? 'Keep my plan at full price' : 'Keep my plan')}
             </button>
             <button onClick={submit} disabled={busy} className="btn-danger px-4 py-2">
               {busy && <Loader2 size={16} className="animate-spin" />}
-              {busy ? 'Cancelling…' : 'Cancel subscription'}
+              {uiT(busy ? 'Cancelling…' : 'Cancel subscription')}
             </button>
           </div>
         </div>

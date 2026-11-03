@@ -1,3 +1,5 @@
+import LocalizedDiagnostic from '../i18n/LocalizedDiagnostic';
+import { t as uiT, useUiLocale } from "../i18n/runtime.js";
 import React, { useEffect, useMemo, useState } from 'react';
 import { Plug, Loader2, ShieldCheck } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
@@ -18,6 +20,7 @@ function readParams() {
 }
 
 export default function OAuthConsent() {
+  useUiLocale();
   const { isSignedIn, loading, me } = useAuth();
   const params = useMemo(readParams, []);
   const [client, setClient] = useState(null);
@@ -74,33 +77,29 @@ export default function OAuthConsent() {
         <div className="w-12 h-12 rounded-full bg-brass/10 flex items-center justify-center mx-auto mb-4">
           <Plug size={20} className="text-brass" />
         </div>
-        <h1 className="font-display lowercase text-2xl text-ink mb-2">Connect {name} to OpenShorts</h1>
+        <h1 className="font-display lowercase text-2xl text-ink mb-2">{uiT("Connect ")}{name}{uiT(" to OpenShorts")}</h1>
         {error ? (
-          <p className="text-warn text-sm">{error}</p>
+          <p className="text-warn text-sm">{<LocalizedDiagnostic value={error} error />}</p>
         ) : (
           <>
             <p className="text-muted text-sm mb-6">
-              <b className="text-ink">{name}</b> wants to clip and publish videos with your account
-              {me?.email ? <> (<span className="text-ink">{me.email}</span>)</> : null}.
-              It will use your plan&apos;s minutes and you can disconnect it any time from
-              Account → API keys.
-            </p>
+              <b className="text-ink">{name}</b>{uiT(" wants to clip and publish videos with your account")}{me?.email ? <> (<span className="text-ink">{uiT(me.email)}</span>)</> : null}{uiT(". It will use your plan's minutes and you can disconnect it any time from Account → API keys.")}</p>
             <ul className="text-left text-xs text-ink2 space-y-1.5 mb-6">
-              <li className="flex gap-2"><ShieldCheck size={14} className="text-ok shrink-0 mt-0.5" /> Process videos and read the resulting clips</li>
-              <li className="flex gap-2"><ShieldCheck size={14} className="text-ok shrink-0 mt-0.5" /> Add subtitles, recut and publish clips you own</li>
-              <li className="flex gap-2"><ShieldCheck size={14} className="text-ok shrink-0 mt-0.5" /> Nothing else: no billing, no account settings, no key management</li>
+              <li className="flex gap-2"><ShieldCheck size={14} className="text-ok shrink-0 mt-0.5" />{uiT(" Process videos and read the resulting clips")}</li>
+              <li className="flex gap-2"><ShieldCheck size={14} className="text-ok shrink-0 mt-0.5" />{uiT(" Add subtitles, recut and publish clips you own")}</li>
+              <li className="flex gap-2"><ShieldCheck size={14} className="text-ok shrink-0 mt-0.5" />{uiT(" Nothing else: no billing, no account settings, no key management")}</li>
             </ul>
             {loading || !client ? (
               <div className="flex justify-center py-2"><Loader2 className="animate-spin text-brass" size={18} /></div>
             ) : isSignedIn ? (
               <div className="flex gap-3">
-                <button onClick={() => decide(false)} disabled={busy} className="btn-ghost flex-1 py-2.5">Cancel</button>
+                <button onClick={() => decide(false)} disabled={busy} className="btn-ghost flex-1 py-2.5">{uiT("Cancel")}</button>
                 <button onClick={() => decide(true)} disabled={busy} className="btn-primary flex-1 py-2.5">
-                  {busy ? <Loader2 size={16} className="animate-spin" /> : 'Allow'}
+                  {busy ? <Loader2 size={16} className="animate-spin" /> : uiT('Allow')}
                 </button>
               </div>
             ) : (
-              <button onClick={() => setShowLogin(true)} className="btn-primary w-full py-2.5">Sign in to continue</button>
+              <button onClick={() => setShowLogin(true)} className="btn-primary w-full py-2.5">{uiT("Sign in to continue")}</button>
             )}
           </>
         )}

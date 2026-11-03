@@ -1,3 +1,4 @@
+import { t as uiT, useUiLocale } from "../i18n/runtime.js";
 import React, { useState, useEffect, useRef } from 'react';
 import { Link2, Upload, FileVideo, X, Info, Loader2, ChevronDown } from 'lucide-react';
 import { track } from '../lib/analytics';
@@ -30,6 +31,7 @@ const readVideoDuration = (file) => new Promise((resolve) => {
 });
 
 export default function MediaInput({ onProcess, isProcessing }) {
+  useUiLocale();
     const [youtubeUrlEnabled, setYoutubeUrlEnabled] = useState(true);
     // File upload is the primary path; the link is secondary.
     const [mode, setMode] = useState('file'); // 'file' | 'url'
@@ -155,9 +157,7 @@ export default function MediaInput({ onProcess, isProcessing }) {
                         : 'text-muted border-transparent hover:text-ink2'
                         }`}
                 >
-                    <Upload size={16} className={`hidden sm:block ${mode === 'file' ? 'text-brass' : ''}`} />
-                    Upload File
-                </button>
+                    <Upload size={16} className={`hidden sm:block ${mode === 'file' ? 'text-brass' : ''}`} />{uiT("Upload File")}</button>
                 {youtubeUrlEnabled && (
                     <button
                         onClick={() => setMode('url')}
@@ -166,9 +166,7 @@ export default function MediaInput({ onProcess, isProcessing }) {
                             : 'text-muted border-transparent hover:text-ink2'
                             }`}
                     >
-                        <Link2 size={16} className={`hidden sm:block ${mode === 'url' ? 'text-brass' : ''}`} />
-                        Video URL
-                    </button>
+                        <Link2 size={16} className={`hidden sm:block ${mode === 'url' ? 'text-brass' : ''}`} />{uiT("Video URL")}</button>
                 )}
             </div>
 
@@ -188,24 +186,22 @@ export default function MediaInput({ onProcess, isProcessing }) {
                                 <button
                                     type="button"
                                     onClick={() => setShowInfo((v) => !v)}
-                                    aria-label="Supported platforms"
+                                    aria-label={uiT("Supported platforms")}
                                     className="p-1.5 text-muted hover:text-brass transition-colors"
                                 >
                                     <Info size={16} />
                                 </button>
                                 {showInfo && (
                                     <div className="absolute right-0 top-full mt-2 w-64 z-20 card p-4 text-left animate-fade">
-                                        <p className="eyebrow mb-2">Paste a link from</p>
+                                        <p className="eyebrow mb-2">{uiT("Paste a link from")}</p>
                                         <div className="flex flex-wrap gap-1.5">
                                             {SUPPORTED_PLATFORMS.map((p) => (
                                                 <span key={p} className="text-xs px-2 py-0.5 rounded-full bg-paper3 text-ink2">
-                                                    {p}
+                                                    {uiT(p)}
                                                 </span>
                                             ))}
                                         </div>
-                                        <p className="text-xs text-muted mt-2.5 leading-relaxed">
-                                            …and 1,000+ more sites. If a link has a public video, we can usually fetch it.
-                                        </p>
+                                        <p className="text-xs text-muted mt-2.5 leading-relaxed">{uiT("…and 1,000+ more sites. If a link has a public video, we can usually fetch it.")}</p>
                                     </div>
                                 )}
                             </div>
@@ -233,10 +229,7 @@ export default function MediaInput({ onProcess, isProcessing }) {
                             </div>
                         ) : null}
                         {file && fileTooShort ? (
-                            <p className="text-danger text-sm mt-3" role="alert">
-                                This video is {Math.round(fileSeconds)}s long. Clip generation needs at least {MIN_SOURCE_SECONDS}s
-                                of footage to cut from: it already is a short. Pick a longer video.
-                            </p>
+                            <p className="text-danger text-sm mt-3" role="alert">{uiT("This video is ")}{uiT(Math.round(fileSeconds))}{uiT("s long. Clip generation needs at least ")}{uiT(MIN_SOURCE_SECONDS)}{uiT("s of footage to cut from: it already is a short. Pick a longer video.")}</p>
                         ) : null}
                         {!file && (
                             <label className="cursor-pointer block">
@@ -247,8 +240,8 @@ export default function MediaInput({ onProcess, isProcessing }) {
                                     className="hidden"
                                 />
                                 <Upload className="mx-auto mb-3 text-muted" size={18} />
-                                <p className="text-ink2 lowercase">Click to upload or drag and drop</p>
-                                <p className="readout mt-2">MP4, MOV up to 500MB · at least {MIN_SOURCE_SECONDS}s long</p>
+                                <p className="text-ink2 lowercase">{uiT("Click to upload or drag and drop")}</p>
+                                <p className="readout mt-2">{uiT("MP4, MOV up to 500MB · at least ")}{uiT(MIN_SOURCE_SECONDS)}{uiT("s long")}</p>
                             </label>
                         )}
                     </div>
@@ -256,7 +249,7 @@ export default function MediaInput({ onProcess, isProcessing }) {
 
                 {/* Output format selector */}
                 <div className="mt-5" data-tutorial="output-format">
-                    <p className="eyebrow mb-2">Output format</p>
+                    <p className="eyebrow mb-2">{uiT("Output format")}</p>
                     <div className="grid grid-cols-3 gap-2">
                         {[
                             { value: 'vertical', label: '9:16', hint: 'Shorts · Reels · TikTok', w: 18, h: 32 },
@@ -282,8 +275,8 @@ export default function MediaInput({ onProcess, isProcessing }) {
                                             backgroundColor: active ? 'color-mix(in srgb, var(--color-accent) 22%, transparent)' : 'transparent',
                                         }}
                                     />
-                                    <span className="block font-mono text-sm leading-none">{f.label}</span>
-                                    <span className="block text-[11px] sm:text-[10px] leading-tight text-center text-muted">{f.hint}</span>
+                                    <span className="block font-mono text-sm leading-none">{uiT(f.label)}</span>
+                                    <span className="block text-[11px] sm:text-[10px] leading-tight text-center text-muted">{uiT(f.hint)}</span>
                                 </button>
                             );
                         })}
@@ -297,9 +290,7 @@ export default function MediaInput({ onProcess, isProcessing }) {
                         onClick={() => setShowAdvanced((v) => !v)}
                         className="flex items-center gap-1.5 text-xs text-muted hover:text-ink2 lowercase transition-colors"
                     >
-                        <ChevronDown size={14} className={`transition-transform ${showAdvanced ? 'rotate-180' : ''}`} />
-                        advanced options
-                        {(targetClips || clipMinSeconds || clipMaxSeconds || !autoHook) && (
+                        <ChevronDown size={14} className={`transition-transform ${showAdvanced ? 'rotate-180' : ''}`} />{uiT("advanced options")}{(targetClips || clipMinSeconds || clipMaxSeconds || !autoHook) && (
                             <span className="text-brass">·</span>
                         )}
                     </button>
@@ -308,17 +299,17 @@ export default function MediaInput({ onProcess, isProcessing }) {
                            ~100px each, which crushes both label and value. */
                         <div className="mt-3 grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-2 animate-fade">
                             <div>
-                                <p className="eyebrow mb-1.5">clips to aim for</p>
+                                <p className="eyebrow mb-1.5">{uiT("clips to aim for")}</p>
                                 <input
                                     type="number" min="1" max="15" step="1"
                                     value={targetClips}
                                     onChange={(e) => setTargetClips(e.target.value)}
-                                    placeholder="auto"
+                                    placeholder={uiT("auto")}
                                     className="input-field"
                                 />
                             </div>
                             <div>
-                                <p className="eyebrow mb-1.5">min length (s)</p>
+                                <p className="eyebrow mb-1.5">{uiT("min length (s)")}</p>
                                 <input
                                     type="number" min="5" max="175" step="1"
                                     value={clipMinSeconds}
@@ -328,7 +319,7 @@ export default function MediaInput({ onProcess, isProcessing }) {
                                 />
                             </div>
                             <div>
-                                <p className="eyebrow mb-1.5">max length (s)</p>
+                                <p className="eyebrow mb-1.5">{uiT("max length (s)")}</p>
                                 <input
                                     type="number" min="10" max="180" step="1"
                                     value={clipMaxSeconds}
@@ -337,22 +328,19 @@ export default function MediaInput({ onProcess, isProcessing }) {
                                     className="input-field"
                                 />
                             </div>
-                            <p className="col-span-1 sm:col-span-3 text-[11px] leading-relaxed text-muted">
-                                Targets, not guarantees: the AI returns fewer clips when the
-                                material doesn't hold them. Leave blank to let it decide.
-                            </p>
+                            <p className="col-span-1 sm:col-span-3 text-[11px] leading-relaxed text-muted">{uiT("Targets, not guarantees: the AI returns fewer clips when the material doesn't hold them. Leave blank to let it decide.")}</p>
                             <div className="col-span-1 sm:col-span-3 flex flex-wrap items-center justify-between gap-3 pt-3 sm:pt-1 border-t border-rule">
-                                <span className="text-xs text-ink2">vertical layout</span>
+                                <span className="text-xs text-ink2">{uiT("vertical layout")}</span>
                                 <select
                                     value={layout}
                                     onChange={(e) => setLayout(e.target.value)}
                                     className="input-field !w-auto text-xs py-1.5"
-                                    aria-label="vertical layout"
+                                    aria-label={uiT("vertical layout")}
                                 >
-                                    <option value="auto">Auto (AI picks per video)</option>
-                                    <option value="split">Two speakers stacked</option>
-                                    <option value="screencast">Screen over presenter</option>
-                                    <option value="none">Single crop only</option>
+                                    <option value="auto">{uiT("Auto (AI picks per video)")}</option>
+                                    <option value="split">{uiT("Two speakers stacked")}</option>
+                                    <option value="screencast">{uiT("Screen over presenter")}</option>
+                                    <option value="none">{uiT("Single crop only")}</option>
                                 </select>
                             </div>
                             <div className="col-span-1 sm:col-span-3 flex flex-wrap items-center justify-between gap-3 pt-3 sm:pt-1 border-t border-rule">
@@ -362,29 +350,24 @@ export default function MediaInput({ onProcess, isProcessing }) {
                                         checked={autoHook}
                                         onChange={(e) => setAutoHook(e.target.checked)}
                                         className="w-4 h-4 shrink-0 accent-[var(--color-accent)] cursor-pointer"
-                                    />
-                                    auto hook titles on clips
-                                </label>
+                                    />{uiT("auto hook titles on clips")}</label>
                                 {autoHook && (
                                     <select
                                         value={autoHookStyle}
                                         onChange={(e) => setAutoHookStyle(e.target.value)}
                                         className="input-field !w-auto text-xs py-1.5"
                                     >
-                                        <option value="pill">Pills</option>
-                                        <option value="classic">Classic</option>
-                                        <option value="dark">Dark</option>
-                                        <option value="yellow">Yellow</option>
-                                        <option value="red">Red</option>
-                                        <option value="outline">Outline</option>
-                                        <option value="outline_yellow">Outline+</option>
+                                        <option value="pill">{uiT("Pills")}</option>
+                                        <option value="classic">{uiT("Classic")}</option>
+                                        <option value="dark">{uiT("Dark")}</option>
+                                        <option value="yellow">{uiT("Yellow")}</option>
+                                        <option value="red">{uiT("Red")}</option>
+                                        <option value="outline">{uiT("Outline")}</option>
+                                        <option value="outline_yellow">{uiT("Outline+")}</option>
                                     </select>
                                 )}
                                 {autoHook && (
-                                    <p className="w-full text-[11px] leading-relaxed text-muted">
-                                        You can change each clip&apos;s hook text, style, position and size
-                                        afterwards with its hook button.
-                                    </p>
+                                    <p className="w-full text-[11px] leading-relaxed text-muted">{uiT("You can change each clip's hook text, style, position and size afterwards with its hook button.")}</p>
                                 )}
                             </div>
                         </div>
@@ -398,8 +381,7 @@ export default function MediaInput({ onProcess, isProcessing }) {
                         onChange={(e) => setAcknowledged(e.target.checked)}
                         className="mt-0.5 w-4 h-4 shrink-0 accent-[var(--color-accent)] cursor-pointer"
                     />
-                    <span>
-                        I confirm I own this content or have the rights to process it. I am responsible for any content I submit. See our <a href="/terms" target="_blank" rel="noopener noreferrer" className="text-ink2 underline underline-offset-2 hover:text-brass transition-colors" onClick={(e) => e.stopPropagation()}>Terms</a> and <a href="/privacy" target="_blank" rel="noopener noreferrer" className="text-ink2 underline underline-offset-2 hover:text-brass transition-colors" onClick={(e) => e.stopPropagation()}>Privacy Policy</a>.
+                    <span>{uiT("I confirm I own this content or have the rights to process it. I am responsible for any content I submit. See our ")}<a href="/terms" target="_blank" rel="noopener noreferrer" className="text-ink2 underline underline-offset-2 hover:text-brass transition-colors" onClick={(e) => e.stopPropagation()}>{uiT("Terms")}</a>{uiT(" and ")}<a href="/privacy" target="_blank" rel="noopener noreferrer" className="text-ink2 underline underline-offset-2 hover:text-brass transition-colors" onClick={(e) => e.stopPropagation()}>{uiT("Privacy Policy")}</a>.
                     </span>
                 </label>
 
@@ -411,13 +393,9 @@ export default function MediaInput({ onProcess, isProcessing }) {
                 >
                     {isProcessing ? (
                         <>
-                            <Loader2 size={16} className="animate-spin" />
-                            Processing Video...
-                        </>
+                            <Loader2 size={16} className="animate-spin" />{uiT("Processing Video...")}</>
                     ) : (
-                        <>
-                            Generate Clips
-                        </>
+                        <>{uiT("Generate Clips")}</>
                     )}
                 </button>
             </form>

@@ -19,6 +19,8 @@ jobs:
       # the tests exercise the gated-off paths. numpy+opencv cover the layout
       # modules, fastapi/boto3/PyJWT/python-multipart cover importing app.py
       # for the MCP endpoint tests, google-genai covers gemini_worker.
+      - name: Install FFmpeg and Korean fonts for local composition tests
+        run: sudo apt-get update && sudo apt-get install -y ffmpeg fonts-noto-cjk
       - name: Install test dependencies
         run: >
           pip install pytest pillow httpx pydantic sqlalchemy greenlet numpy

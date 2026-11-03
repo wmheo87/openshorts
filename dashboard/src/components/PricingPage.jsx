@@ -1,3 +1,5 @@
+import LocalizedText from '../i18n/LocalizedText';
+import { t as uiT, useUiLocale } from "../i18n/runtime.js";
 import React, { useState } from 'react';
 import { ArrowDown, ArrowRight, Check, ChevronDown, Github, MoveRight, Cpu, KeyRound, Send, Server, HardDrive } from 'lucide-react';
 import PricingSection from './PricingSection';
@@ -77,37 +79,25 @@ const TRUST_CARDS = [
   {
     eyebrow: 'open source',
     body: (
-      <>
-        The full code is public on{' '}
+      <><LocalizedText value={"The full code is public on"} /><LocalizedText value={" "} />
         <a
           href="https://github.com/mutonby/openshorts"
           target="_blank"
           rel="noopener noreferrer"
           className="text-ink underline decoration-1 underline-offset-2 hover:text-brass transition-colors"
-        >
-          GitHub
-        </a>
-        , and self-hosting it stays free forever. What a plan here buys is the GPU, the API keys
-        and the setup, not the software.
-      </>
+        ><LocalizedText value={"GitHub"} /></a><LocalizedText value={", and self-hosting it stays free forever. What a plan here buys is the GPU, the API keys and the setup, not the software."} /></>
     ),
   },
   {
     eyebrow: 'no watermark on paid plans · no per-clip credits',
     body: (
-      <>
-        Paid plans export clean clips, with no watermark. Plans meter minutes of input video per billing
-        period, never per-clip credits.
-      </>
+      <><LocalizedText value={"Paid plans export clean clips, with no watermark. Plans meter minutes of input video per billing period, never per-clip credits."} /></>
     ),
   },
   {
     eyebrow: 'cancel anytime',
     body: (
-      <>
-        Start on the free plan — your first video free up to 60 minutes, then 20 minutes a month, no credit card. Billing for paid
-        plans runs on Stripe — cancel anytime from your account.
-      </>
+      <><LocalizedText value={"Start on the free plan — your first video free up to 60 minutes, then 20 minutes a month, no credit card. Billing for paid plans runs on Stripe — cancel anytime from your account."} /></>
     ),
   },
 ];
@@ -118,7 +108,7 @@ const FAQItem = ({ question, answer, isOpen, onClick }) => (
       onClick={onClick}
       className="w-full flex items-center justify-between px-1 py-5 text-left"
     >
-      <span className="text-ink font-medium pr-4">{question}</span>
+      <span className="text-ink font-medium pr-4">{uiT(question)}</span>
       <ChevronDown
         size={18}
         className={`text-muted flex-shrink-0 transition-transform ${isOpen ? 'rotate-180' : ''}`}
@@ -126,7 +116,7 @@ const FAQItem = ({ question, answer, isOpen, onClick }) => (
     </button>
     {isOpen && (
       <div className="px-1 pb-6">
-        <p className="text-muted text-sm leading-relaxed">{answer}</p>
+        <p className="text-muted text-sm leading-relaxed">{uiT(answer)}</p>
       </div>
     )}
   </div>
@@ -144,14 +134,15 @@ const DemoFigure = ({ src, label, className = '', children }) => (
         preload="metadata"
         className="block w-full h-auto"
       />
-      {children}
+      {uiT(children)}
     </div>
-    <figcaption className="readout px-3 py-2 border-t border-rule">{label}</figcaption>
+    <figcaption className="readout px-3 py-2 border-t border-rule">{uiT(label)}</figcaption>
   </figure>
 );
 
 // Conversion-focused paywall / pricing page (#/pricing). Wraps <PricingSection/>.
 export default function PricingPage({ onRequireLogin }) {
+  useUiLocale();
   const [openFaq, setOpenFaq] = useState(null);
 
   const scrollToPlans = () => {
@@ -163,11 +154,9 @@ export default function PricingPage({ onRequireLogin }) {
       {/* Header */}
       <header className="px-6 pt-20 pb-12">
         <div className="max-w-6xl mx-auto text-center">
-          <p className="eyebrow mb-5">Pricing</p>
-          <h1 className="font-display lowercase text-ink tracking-tight text-4xl md:text-6xl leading-[1.02] mb-5">
-            start clipping in minutes.
-          </h1>
-          <p className="readout">first video free (up to 60 min) · then 20 min/month · no credit card</p>
+          <p className="eyebrow mb-5">{uiT("Pricing")}</p>
+          <h1 className="font-display lowercase text-ink tracking-tight text-4xl md:text-6xl leading-[1.02] mb-5">{uiT("start clipping in minutes.")}</h1>
+          <p className="readout">{uiT("first video free (up to 60 min) · then 20 min/month · no credit card")}</p>
         </div>
       </header>
 
@@ -175,20 +164,18 @@ export default function PricingPage({ onRequireLogin }) {
       <section className="px-6 pb-16">
         <div className="max-w-4xl mx-auto">
           <div className="grid grid-cols-1 md:grid-cols-[minmax(0,1fr)_auto_auto] items-center gap-5 md:gap-6">
-            <DemoFigure src="/demo/clip-source.mp4" label="input · 16:9" />
+            <DemoFigure src="/demo/clip-source.mp4" label={uiT("input · 16:9")} />
 
             <MoveRight size={20} className="text-brass hidden md:block" aria-hidden="true" />
             <ArrowDown size={20} className="text-brass md:hidden justify-self-center" aria-hidden="true" />
 
             <DemoFigure
               src="/demo/clip-vertical.mp4"
-              label="output · 9:16 · tracked"
+              label={uiT("output · 9:16 · tracked")}
               className="w-44 sm:w-48 justify-self-center md:justify-self-auto"
             />
           </div>
-          <p className="text-center text-xs text-muted lowercase mt-4">
-            real output from the clip generator — same footage, reframed by AI face tracking.
-          </p>
+          <p className="text-center text-xs text-muted lowercase mt-4">{uiT("real output from the clip generator — same footage, reframed by AI face tracking.")}</p>
         </div>
       </section>
 
@@ -203,20 +190,15 @@ export default function PricingPage({ onRequireLogin }) {
       <section className="px-6 py-16 border-t border-rule">
         <div className="max-w-5xl mx-auto">
           <div className="mb-8">
-            <p className="eyebrow mb-3">Hosted or self-hosted</p>
-            <h2 className="font-display text-3xl md:text-4xl lowercase text-ink tracking-tight">
-              what you are actually paying for
-            </h2>
-            <p className="text-muted text-sm mt-3 max-w-2xl leading-relaxed">
-              The software is the same and it is open source either way. What a plan buys you is the
-              hardware, the API keys and the setup, so here is exactly what that means.
-            </p>
+            <p className="eyebrow mb-3">{uiT("Hosted or self-hosted")}</p>
+            <h2 className="font-display text-3xl md:text-4xl lowercase text-ink tracking-tight">{uiT("what you are actually paying for")}</h2>
+            <p className="text-muted text-sm mt-3 max-w-2xl leading-relaxed">{uiT("The software is the same and it is open source either way. What a plan buys you is the hardware, the API keys and the setup, so here is exactly what that means.")}</p>
           </div>
 
           <div className="hidden md:grid grid-cols-[9rem_1fr_1fr] gap-x-6 pb-2 mb-2 border-b border-rule">
             <span />
-            <span className="eyebrow">Hosted on this site</span>
-            <span className="eyebrow">Self-hosted</span>
+            <span className="eyebrow">{uiT("Hosted on this site")}</span>
+            <span className="eyebrow">{uiT("Self-hosted")}</span>
           </div>
 
           <div className="divide-y divide-rule border-b border-rule">
@@ -224,35 +206,31 @@ export default function PricingPage({ onRequireLogin }) {
               <div key={label} className="py-4 grid gap-2 md:grid-cols-[9rem_1fr_1fr] md:gap-x-6 md:items-start">
                 <div className="flex items-center gap-2 text-ink2">
                   <Icon size={15} className="text-muted shrink-0" />
-                  <span className="text-sm font-medium">{label}</span>
+                  <span className="text-sm font-medium">{uiT(label)}</span>
                 </div>
                 <div>
-                  <span className="eyebrow block mb-1 md:hidden">Hosted on this site</span>
+                  <span className="eyebrow block mb-1 md:hidden">{uiT("Hosted on this site")}</span>
                   <p className="text-sm text-ink2 leading-relaxed">
                     <Check size={14} className="text-ok inline-block mr-1.5 -mt-0.5" />
-                    {hosted}
+                    {uiT(hosted)}
                   </p>
                 </div>
                 <div>
-                  <span className="eyebrow block mb-1 mt-2 md:hidden">Self-hosted</span>
-                  <p className="text-sm text-muted leading-relaxed">{self}</p>
+                  <span className="eyebrow block mb-1 mt-2 md:hidden">{uiT("Self-hosted")}</span>
+                  <p className="text-sm text-muted leading-relaxed">{uiT(self)}</p>
                 </div>
               </div>
             ))}
           </div>
 
           <div className="mt-6 flex flex-col sm:flex-row sm:items-center gap-3 justify-between">
-            <p className="text-xs text-muted leading-relaxed max-w-xl">
-              Self-hosting is genuinely free and always will be. It costs you a machine, your own API
-              keys and the time to keep it running.
-            </p>
+            <p className="text-xs text-muted leading-relaxed max-w-xl">{uiT("Self-hosting is genuinely free and always will be. It costs you a machine, your own API keys and the time to keep it running.")}</p>
             <a
               href="https://github.com/mutonby/openshorts"
               target="_blank" rel="noopener noreferrer"
               className="shrink-0 text-sm text-muted hover:text-ink transition-colors inline-flex items-center gap-1.5"
             >
-              <Github size={15} /> View the source
-            </a>
+              <Github size={15} />{uiT(" View the source")}</a>
           </div>
         </div>
       </section>
@@ -264,9 +242,9 @@ export default function PricingPage({ onRequireLogin }) {
             <div key={card.eyebrow} className="card p-6">
               <div className="flex items-center gap-2 mb-3">
                 <Check size={16} className="text-ok shrink-0" />
-                <span className="eyebrow">{card.eyebrow}</span>
+                <span className="eyebrow">{uiT(card.eyebrow)}</span>
               </div>
-              <p className="text-sm text-muted leading-relaxed">{card.body}</p>
+              <p className="text-sm text-muted leading-relaxed">{uiT(card.body)}</p>
             </div>
           ))}
         </div>
@@ -276,10 +254,8 @@ export default function PricingPage({ onRequireLogin }) {
       <section className="px-6 py-16 border-t border-rule">
         <div className="max-w-3xl mx-auto">
           <div className="mb-10">
-            <p className="eyebrow mb-3">Billing · FAQ</p>
-            <h2 className="font-display text-3xl md:text-4xl lowercase text-ink tracking-tight">
-              common questions
-            </h2>
+            <p className="eyebrow mb-3">{uiT("Billing · FAQ")}</p>
+            <h2 className="font-display text-3xl md:text-4xl lowercase text-ink tracking-tight">{uiT("common questions")}</h2>
           </div>
           <div className="divide-y divide-rule border-y border-rule">
             {FAQS.map((faq, i) => (
@@ -298,13 +274,9 @@ export default function PricingPage({ onRequireLogin }) {
       {/* Closing statement */}
       <section className="px-6 py-24 border-t border-rule">
         <div className="max-w-3xl mx-auto text-center">
-          <h2 className="font-display text-4xl md:text-5xl lowercase text-ink tracking-tight mb-10">
-            twenty free minutes. every month. no card until you decide.
-          </h2>
+          <h2 className="font-display text-4xl md:text-5xl lowercase text-ink tracking-tight mb-10">{uiT("twenty free minutes. every month. no card until you decide.")}</h2>
           <div className="flex flex-wrap items-center justify-center gap-4">
-            <button onClick={scrollToPlans} className="btn-primary whitespace-nowrap">
-              start free
-              <ArrowRight size={16} />
+            <button onClick={scrollToPlans} className="btn-primary whitespace-nowrap">{uiT("start free")}<ArrowRight size={16} />
             </button>
             <a
               href="https://github.com/mutonby/openshorts"
@@ -312,9 +284,7 @@ export default function PricingPage({ onRequireLogin }) {
               rel="noopener noreferrer"
               className="btn-ghost whitespace-nowrap"
             >
-              <Github size={16} />
-              view source
-            </a>
+              <Github size={16} />{uiT("view source")}</a>
           </div>
         </div>
       </section>

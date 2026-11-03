@@ -1,3 +1,5 @@
+import LocalizedDiagnostic from '../i18n/LocalizedDiagnostic';
+import { getUiLocale, t as uiT, useUiLocale } from "../i18n/runtime.js";
 import React, { useState, useEffect, useMemo } from 'react';
 import { Loader2, Download, Film, FolderOpen } from 'lucide-react';
 import { apiJson } from '../lib/api';
@@ -6,6 +8,7 @@ import { apiJson } from '../lib/api';
 // Videos are grouped by project (job); re-openable projects get a "reopen"
 // action that restores the whole job for further editing in the Clip Generator.
 export default function HistoryTab({ onReopenProject }) {
+  useUiLocale();
   const [videos, setVideos] = useState(null);
   const [projects, setProjects] = useState({});
   const [reopening, setReopening] = useState(null);
@@ -48,7 +51,7 @@ export default function HistoryTab({ onReopenProject }) {
     }
   };
 
-  const fmtDate = (iso) => (iso ? new Date(iso).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' }) : '');
+  const fmtDate = (iso) => (iso ? new Date(iso).toLocaleDateString(getUiLocale(), { year: 'numeric', month: 'short', day: 'numeric' }) : '');
 
   if (videos === null && !error) {
     return <div className="flex justify-center py-20"><Loader2 className="animate-spin text-brass" /></div>;
@@ -56,19 +59,17 @@ export default function HistoryTab({ onReopenProject }) {
 
   return (
     <div className="h-full overflow-y-auto p-8 max-w-5xl mx-auto animate-fade">
-      <p className="eyebrow mb-1.5">07 · HISTORY</p>
-      <h1 className="font-display lowercase text-2xl text-ink mb-2">Your library</h1>
-      <p className="text-muted text-sm mb-8 lowercase">
-        All the shorts you've generated, saved while your plan is active. Kept for 7 days after your plan ends. Reopen a project to keep editing its clips.
-      </p>
+      <p className="eyebrow mb-1.5">{uiT("07 · HISTORY")}</p>
+      <h1 className="font-display lowercase text-2xl text-ink mb-2">{uiT("Your library")}</h1>
+      <p className="text-muted text-sm mb-8 lowercase">{uiT("All the shorts you've generated, saved while your plan is active. Kept for 7 days after your plan ends. Reopen a project to keep editing its clips.")}</p>
 
-      {error && <p className="text-danger text-sm">{error}</p>}
-      {reopenError && <p className="text-danger text-sm mb-4">{reopenError}</p>}
+      {error && <p className="text-danger text-sm">{<LocalizedDiagnostic value={error} error />}</p>}
+      {reopenError && <p className="text-danger text-sm mb-4">{<LocalizedDiagnostic value={reopenError} error />}</p>}
 
       {videos && videos.length === 0 && (
         <div className="text-center py-20 text-muted">
           <Film size={40} className="mx-auto mb-4 text-muted" />
-          <p className="lowercase">No videos yet. Generate your first short from the Clip Generator.</p>
+          <p className="lowercase">{uiT("No videos yet. Generate your first short from the Clip Generator.")}</p>
         </div>
       )}
 
@@ -80,10 +81,10 @@ export default function HistoryTab({ onReopenProject }) {
               <div className="flex flex-wrap items-center justify-between gap-3 mb-4 pb-2 border-b border-rule">
                 <div className="min-w-0">
                   <p className="text-sm text-ink font-medium truncate" title={project?.title || vids[0]?.title}>
-                    {project?.title || vids[0]?.title || 'Project'}
+                    {project?.title || vids[0]?.title || uiT('Project')}
                   </p>
                   <p className="readout mt-0.5">
-                    {fmtDate(vids[0]?.created_at)} · {vids.length} clip{vids.length === 1 ? '' : 's'}
+                    {uiT(fmtDate(vids[0]?.created_at))} · {uiT(vids.length)}{uiT(" clip")}{uiT(vids.length === 1 ? '' : 's')}
                   </p>
                 </div>
                 {project && onReopenProject && (
@@ -91,11 +92,11 @@ export default function HistoryTab({ onReopenProject }) {
                     onClick={() => handleReopen(jobId)}
                     disabled={!!reopening}
                     className="btn-ghost px-3 py-2 text-xs shrink-0"
-                    title="Restore this project in the Clip Generator to keep editing subtitles, hooks, effects and dubbing"
+                    title={uiT("Restore this project in the Clip Generator to keep editing subtitles, hooks, effects and dubbing")}
                   >
                     {reopening === jobId
-                      ? <><Loader2 size={14} className="animate-spin" /> reopening…</>
-                      : <><FolderOpen size={14} /> reopen project</>}
+                      ? <><Loader2 size={14} className="animate-spin" />{uiT(" reopening…")}</>
+                      : <><FolderOpen size={14} />{uiT(" reopen project")}</>}
                   </button>
                 )}
               </div>
@@ -106,12 +107,11 @@ export default function HistoryTab({ onReopenProject }) {
                       <video src={v.view_url} controls preload="metadata" className="w-full h-full object-contain" />
                     </div>
                     <div className="p-3">
-                      <p className="text-sm text-ink font-medium line-clamp-2 mb-1" title={v.title}>{v.title || 'Short'}</p>
+                      <p className="text-sm text-ink font-medium line-clamp-2 mb-1" title={v.title}>{v.title || uiT('Short')}</p>
                       <div className="flex items-center justify-between">
-                        <span className="readout">{fmtDate(v.created_at)}</span>
-                        <a href={v.download_url} className="text-micro font-mono uppercase text-brass hover:text-ink flex items-center gap-1 transition-colors" title="Download">
-                          <Download size={14} /> Download
-                        </a>
+                        <span className="readout">{uiT(fmtDate(v.created_at))}</span>
+                        <a href={v.download_url} className="text-micro font-mono uppercase text-brass hover:text-ink flex items-center gap-1 transition-colors" title={uiT("Download")}>
+                          <Download size={14} />{uiT(" Download")}</a>
                       </div>
                     </div>
                   </div>

@@ -1,3 +1,5 @@
+import LocalizedDiagnostic from '../i18n/LocalizedDiagnostic';
+import { t as uiT, useUiLocale } from "../i18n/runtime.js";
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { AlertCircle, Loader2 } from 'lucide-react';
 import { getApiUrl } from '../config';
@@ -6,6 +8,7 @@ import GalleryCard from './GalleryCard';
 const CLIPS_PER_PAGE = 20;
 
 export default function Gallery() {
+  useUiLocale();
     const [clips, setClips] = useState([]);
     const [loading, setLoading] = useState(true);
     const [loadingMore, setLoadingMore] = useState(false);
@@ -78,7 +81,7 @@ export default function Gallery() {
         return (
             <div className="h-full flex flex-col items-center justify-center text-muted animate-fade">
                 <Loader2 size={32} className="animate-spin mb-4 text-brass" />
-                <p className="lowercase">Loading your viral history...</p>
+                <p className="lowercase">{uiT("Loading your viral history...")}</p>
             </div>
         );
     }
@@ -87,7 +90,7 @@ export default function Gallery() {
         return (
             <div className="h-full flex flex-col items-center justify-center text-danger p-6">
                 <AlertCircle size={32} className="mb-4" />
-                <p>Error loading gallery: {error}</p>
+                <p>{uiT("Error loading gallery: ")}{<LocalizedDiagnostic value={error} error />}</p>
                 <button
                     onClick={() => {
                         setError(null);
@@ -95,9 +98,7 @@ export default function Gallery() {
                         fetchClips(0, false);
                     }}
                     className="btn-quiet mt-4"
-                >
-                    Retry
-                </button>
+                >{uiT("Retry")}</button>
             </div>
         );
     }
@@ -106,18 +107,18 @@ export default function Gallery() {
         <div className="h-full overflow-y-auto p-6 md:p-8 animate-fade">
             <div className="flex items-end justify-between mb-8">
                 <div>
-                    <p className="eyebrow mb-1.5">Library</p>
-                    <h1 className="font-display lowercase text-2xl text-ink">Clip Gallery</h1>
+                    <p className="eyebrow mb-1.5">{uiT("Library")}</p>
+                    <h1 className="font-display lowercase text-2xl text-ink">{uiT("Clip Gallery")}</h1>
                 </div>
                 <span className="readout">
-                    {clips.length} {clips.length === 1 ? 'Clip' : 'Clips'}{hasMore ? '+' : ''}
+                    {uiT(clips.length)} {uiT(clips.length === 1 ? 'Clip' : 'Clips')}{uiT(hasMore ? '+' : '')}
                 </span>
             </div>
 
             {clips.length === 0 ? (
                 <div className="text-center py-20 text-muted">
-                    <p className="text-lg mb-2 lowercase">No clips found yet.</p>
-                    <p className="text-sm lowercase">Process some videos to populate your gallery!</p>
+                    <p className="text-lg mb-2 lowercase">{uiT("No clips found yet.")}</p>
+                    <p className="text-sm lowercase">{uiT("Process some videos to populate your gallery!")}</p>
                 </div>
             ) : (
                 <>
@@ -136,7 +137,7 @@ export default function Gallery() {
                             {loadingMore && (
                                 <div className="flex items-center gap-2 text-muted">
                                     <Loader2 size={20} className="animate-spin" />
-                                    <span className="text-sm lowercase">Loading more clips...</span>
+                                    <span className="text-sm lowercase">{uiT("Loading more clips...")}</span>
                                 </div>
                             )}
                         </div>

@@ -99,9 +99,9 @@ test('quality gate only forces low resolution after explicit confirmation', asyn
     ? { job_id: 'discovery-job' } : { needs_confirmation: true, quality_check: { max_height: 360, min_height: 720 } } }) });
   const panel = await selectVideo(page); await confirm(panel);
   await panel.getByRole('button', { name: '쇼츠 제작하기', exact: true }).click();
-  await expect(page.getByText(/YouTube only offers/)).toBeVisible();
+  await expect(page.getByText(/YouTube에서 제공하는 화질/)).toBeVisible();
   expect(submitted).toHaveLength(1); expect(submitted[0].force_low_quality).toBe(false);
-  await page.getByRole('button', { name: 'process anyway', exact: true }).click();
+  await page.getByRole('button', { name: '이 화질로 계속 처리', exact: true }).click();
   await expect(page.getByText(/작업 discovery-job/)).toBeVisible();
   expect(submitted).toHaveLength(2); expect(submitted[1].force_low_quality).toBe(true);
 });
@@ -138,20 +138,29 @@ test('queued, partial and completed results use the original player and MP4 down
     : { status: count === 2 ? 'processing' : 'completed', logs: ['AI analysis', 'FFmpeg rendered'], result: { clips: [clip] } } }) });
   const panel = await selectVideo(page); await confirm(panel);
   await panel.getByRole('button', { name: '쇼츠 제작하기', exact: true }).click();
-  await expect(page.getByText(/in line · about/)).toBeVisible({ timeout: 10000 });
+  await expect(page.getByText(/번째 · 예상 약/)).toBeVisible({ timeout: 10000 });
   const video = page.locator('video[src*="/videos/discovery-job/clip.mp4"]').first();
   await expect(video).toBeVisible({ timeout: 15000 });
-  await expect(page.getByText('COMPLETE', { exact: true })).toBeVisible({ timeout: 15000 });
+  await expect(page.getByText('완료', { exact: true })).toBeVisible({ timeout: 15000 });
   await expect.poll(() => video.evaluate((element) => element.videoWidth)).toBe(90);
   expect(await video.evaluate((element) => element.videoHeight)).toBe(160);
   await video.evaluate(async (element) => { element.muted = true; await element.play(); });
   await expect.poll(() => video.evaluate((element) => element.currentTime)).toBeGreaterThan(0);
   const downloadEvent = page.waitForEvent('download');
-  await page.getByRole('button', { name: 'download', exact: true }).first().click();
+  await page.getByRole('button', { name: '다운로드', exact: true }).first().click();
   const download = await downloadEvent;
   expect(await download.failure()).toBeNull();
   expect(readFileSync(await download.path())).toEqual(media);
   expect(polled.length).toBeGreaterThanOrEqual(3);
+  await page.route('**/api/clip/discovery-job/0/edl',route=>route.fulfill({json:{segments:[{start:1,end:3}],canonical_range:{start:1,end:3},source:{available:false},current_file:'clip.mp4',words:[{s:1,e:2,w:'Settings'}]}}));
+  await page.getByRole('button',{name:'클립 편집',exact:true}).click();
+  await expect(page.getByRole('heading',{name:'클립 편집',exact:true})).toBeVisible();
+  await page.getByRole('button',{name:'편집기 닫기',exact:true}).click();
+  await page.getByRole('button',{name:'자막',exact:true}).click();
+  const dialog=page.getByRole('dialog');await expect(dialog.getByRole('heading',{name:'자막',exact:true})).toBeVisible();
+  await expect(dialog.getByRole('button',{name:'닫기',exact:true})).toBeVisible();
+  await dialog.getByRole('button',{name:'닫기',exact:true}).click();
+
 });
 
 for (const error of ['yt-dlp download failed', 'AI analysis failed', 'ffmpeg encoder error']) test(`worker failure: ${error}`, async ({ page }) => {
@@ -159,7 +168,7 @@ for (const error of ['yt-dlp download failed', 'AI analysis failed', 'ffmpeg enc
   const panel = await selectVideo(page); await confirm(panel);
   await panel.getByRole('button', { name: '쇼츠 제작하기', exact: true }).click();
   await expect(page.getByRole('region', { name: '탐색 영상 제작 정보' }).getByRole('alert')).toBeVisible({ timeout: 10000 });
-  await expect(page.getByText('COMPLETE', { exact: true })).toHaveCount(0);
+  await expect(page.getByText('완료', { exact: true })).toHaveCount(0);
 });
 
 test('lost submission response stays locked after reload and is never replayed', async ({ page }) => {
@@ -189,18 +198,18 @@ test('reloaded accepted job resumes status reads; missing job becomes an error w
 test('existing direct URL and file upload still use the same processing API', async ({ page }) => {
   const { submitted } = await setup(page, { keys: true });
   await page.goto('/#app');
-  await page.getByRole('button', { name: 'Video URL', exact: true }).click();
+  await page.getByRole('button', { name: '영상 URL', exact: true }).click();
   await page.getByPlaceholder('https://... paste a video link').fill(videos[1].url);
-  await page.getByRole('checkbox', { name: /I confirm I own/ }).check();
-  await page.getByRole('button', { name: 'Generate Clips', exact: true }).click();
+  await page.getByRole('checkbox', { name: /이 콘텐츠를 소유하거나/ }).check();
+  await page.getByRole('button', { name: '클립 생성', exact: true }).click();
   await expect.poll(() => submitted.length).toBe(1);
   expect(submitted[0].url).toBe(videos[1].url); expect(submitted[0]).not.toHaveProperty('discovery_source');
-  await page.getByRole('button', { name: 'New Project', exact: true }).click();
+  await page.getByRole('button', { name: '새 프로젝트', exact: true }).click();
   // Unknown-duration upload exercises multipart wiring; the real server length gate
   // is exercised separately in ASGI tests. No duration or security checks are disabled.
   await page.locator('input[type="file"]').setInputFiles({ name: 'owned.mp4', mimeType: 'video/mp4', buffer: Buffer.from('fixture-with-unknown-browser-duration') });
-  await page.getByRole('checkbox', { name: /I confirm I own/ }).check();
-  await page.getByRole('button', { name: 'Generate Clips', exact: true }).click();
+  await page.getByRole('checkbox', { name: /이 콘텐츠를 소유하거나/ }).check();
+  await page.getByRole('button', { name: '클립 생성', exact: true }).click();
   await expect.poll(() => submitted.length, { timeout: 12000 }).toBe(2);
   expect(submitted[1]).toContain('filename="owned.mp4"'); expect(submitted[1]).toContain('name="acknowledged"');
 });
@@ -214,7 +223,7 @@ test('reloaded cached Discovery completion rechecks files before showing success
       results: { clips: [savedClip] }, discoveryOrigin: source, activeTab: 'dashboard', timestamp: Date.now() }));
   }, { source: videos[0], savedClip: clip });
   await page.reload();
-  await expect(page.getByText('COMPLETE', { exact: true })).toHaveCount(0);
+  await expect(page.getByText('완료', { exact: true })).toHaveCount(0);
   await expect(page.getByText(/작업 또는 결과 파일을 찾을 수 없습니다/)).toBeVisible({ timeout: 10000 });
   expect(polled.length).toBeGreaterThan(0);
   expect(submitted).toHaveLength(0);

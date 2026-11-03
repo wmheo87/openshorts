@@ -1,15 +1,16 @@
 import { test, expect } from '@playwright/test';
 import { mockApi } from './fixtures';
 
-async function setup(page, { voices = true, source = 'elevenlabs' } = {}) {
-  await page.addInitScript(() => {
-    for (const key of ['gemini_key', 'elevenLabsKey_v1', 'falKey_v1']) localStorage.setItem(key, 'mock-key');
+async function setup(page, { voices = true, source = 'elevenlabs', elevenKey = true, modelError = false } = {}) {
+  await page.addInitScript((elevenKey) => {
+    for (const key of ['gemini_key', 'falKey_v1', ...(elevenKey ? ['elevenLabsKey_v1'] : [])]) localStorage.setItem(key, 'mock-key');
     localStorage.setItem('os_social_nudge_dismissed', '1');
-  });
+  }, elevenKey);
   await mockApi(page);
   const requests = [];
   await page.route('**/api/saasshorts/**', async route => {
     const path = new URL(route.request().url()).pathname;
+    if (path.endsWith('/tts-model')) return route.fulfill(modelError ? { status: 503, json: { detail: '요청 모델의 계정 이용 가능 여부를 확인하지 못했습니다. 요금 미확인. 자동 전환하지 않습니다.' } } : { json: { model: 'gemini-3.8-flash-lite-tts', catalog_confirmed: true, audio_synthesis_verified: false, estimated_tts_usd: null } });
     if (path.endsWith('/voices')) return route.fulfill({ json: { source, voices: voices ? [
       { voice_id: 'ko-account-voice', name: '한국어 계정 음성', labels: { gender: 'female', language: 'ko' }, supports_korean: true, korean_preview_url: '/mock-korean-preview.mp3' },
       { voice_id: 'english-voice', name: 'English voice', labels: { gender: 'female', language: 'en' }, supports_korean: false },
@@ -23,33 +24,36 @@ async function setup(page, { voices = true, source = 'elevenlabs' } = {}) {
       ] } });
     }
     if (path.endsWith('/generate')) {
-      requests.push({ path, body: route.request().postDataJSON() });
+      requests.push({ path, body: route.request().postDataJSON(), headers: route.request().headers() });
       return route.fulfill({ json: { job_id: 'mock-korean-job' } });
     }
     return route.fulfill({ json: { status: 'processing', logs: [] } });
   });
+  page.on('dialog', dialog => dialog.accept());
   await page.goto('/#app');
-  if (page.viewportSize().width < 768) await page.getByRole('button', { name: 'open navigation' }).click();
-  await page.getByRole('button', { name: /^AI Shorts/ }).click();
+  if (page.viewportSize().width < 768) await page.getByRole('button', { name: '메뉴 열기' }).click();
+  await page.getByRole('button', { name: /^AI 쇼츠 제작/ }).first().click();
+  await page.getByRole('button', { name: 'AI 배우형 (fal.ai)', exact: true }).click();
   return requests;
 }
 
-async function configure(page, language = 'ko') {
-  if (language !== 'ko') await page.getByRole('radio', { name: language === 'en' ? /English/ : /Español/ }).click();
-  await page.getByPlaceholder('e.g. artisan pizzeria in Madrid, productivity coach, sportswear store, meditation app...').fill('텀블러, 확인된 판매 가격 12000원');
-  await page.getByRole('button', { name: 'generate scripts', exact: true }).click();
-  await page.getByRole('button', { name: /Configure video/ }).click();
-  await page.getByRole('button').filter({ has: page.getByAltText('Actor 1', { exact: true }) }).click();
+async function configure(page, language = 'ko', provider = 'elevenlabs') {
+  if (language !== 'ko') await page.getByRole('radio', { name: language === 'en' ? /영어/ : /스페인어/ }).click();
+  await page.getByPlaceholder('예: 수제 피자 가게, 생산성 코칭, 운동복 매장, 명상 앱…').fill('텀블러, 확인된 판매 가격 12000원');
+  await page.getByRole('button', { name: '대본 생성', exact: true }).click();
+  await page.getByRole('button', { name: /영상 설정/ }).click();
+  if (language === 'ko') await page.getByRole('combobox', { name: '음성 공급자', exact: true }).selectOption(provider);
+  await page.getByRole('button').filter({ has: page.getByAltText('배우 1', { exact: true }) }).click();
 }
 
 for (const language of ['ko', 'en', 'es']) test(`AI Shorts ${language} preserves language and voice in API requests`, async ({ page }) => {
   const requests = await setup(page);
   await expect(page.getByRole('radio', { name: /한국어/ })).toHaveAttribute('aria-checked', 'true');
-  await expect(page.getByRole('button', { name: /Low Cost/ })).toBeVisible();
-  await expect(page.getByRole('button', { name: /Premium/ })).toBeVisible();
-  await expect(page.getByRole('radio', { name: /Before\/After/ })).toBeVisible();
+  await expect(page.getByRole('button', { name: /저비용/ })).toBeVisible();
+  await expect(page.getByRole('button', { name: /프리미엄/ })).toBeVisible();
+  await expect(page.getByRole('radio', { name: /전후 비교/ })).toBeVisible();
   await configure(page, language);
-  const generate = page.getByRole('button', { name: /Generate video \(/ });
+  const generate = page.getByRole('button', { name: /영상 생성 \(/ });
   if (language === 'ko') {
     await expect(generate).toBeDisabled();
     await page.getByRole('combobox', { name: '한국어 음성', exact: true }).selectOption('ko-account-voice');
@@ -72,6 +76,33 @@ for (const source of ['elevenlabs', 'defaults']) test(`unconfirmed Korean voice 
   const requests = await setup(page, { voices: source === 'defaults', source });
   await configure(page);
   await expect(page.getByText(/현재 ElevenLabs 계정에서 한국어 음성을 확인하지 못했습니다/)).toBeVisible();
-  await expect(page.getByRole('button', { name: /Generate video \(/ })).toBeDisabled();
+  await expect(page.getByRole('button', { name: /영상 생성 \(/ })).toBeDisabled();
+  expect(requests).toHaveLength(1);
+});
+
+
+test('default Korean Gemini TTS generates without an ElevenLabs key', async ({ page }) => {
+  const requests = await setup(page, { elevenKey: false });
+  await configure(page, 'ko', 'gemini');
+  await expect(page.getByRole('combobox', { name: '음성 공급자', exact: true })).toHaveValue('gemini');
+  await expect(page.getByRole('combobox', { name: 'Gemini 음성', exact: true })).toHaveValue('Kore');
+  await expect(page.getByText('ElevenLabs API 키가 없습니다.', { exact: false })).toHaveCount(0);
+  await expect(page.getByText(/Gemini TTS 예상 비용: 요금 미확인/)).toBeVisible();
+  const generate = page.getByRole('button', { name: /영상 생성 \(/ });
+  await expect(generate).toBeEnabled();
+  await generate.click();
+  await expect.poll(() => requests.length).toBe(2);
+  expect(requests[1].body.tts_provider).toBe('gemini');
+  expect(requests[1].body.gemini_voice).toBe('Kore');
+  expect(requests[1].headers['x-gemini-key']).toBe('mock-key');
+  expect(requests[1].headers).not.toHaveProperty('x-elevenlabs-key');
+});
+
+test('unavailable Gemini model blocks paid generation and never switches providers', async ({ page }) => {
+  const requests = await setup(page, { elevenKey: false, modelError: true });
+  await configure(page, 'ko', 'gemini');
+  await expect(page.getByText(/요청 모델의 계정 이용 가능 여부를 확인하지 못했습니다/)).toBeVisible();
+  await expect(page.getByRole('button', { name: /영상 생성 \(/ })).toBeDisabled();
+  await expect(page.getByRole('combobox', { name: '음성 공급자', exact: true })).toHaveValue('gemini');
   expect(requests).toHaveLength(1);
 });

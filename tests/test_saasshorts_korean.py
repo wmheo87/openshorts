@@ -117,14 +117,14 @@ def test_korean_url_analysis_does_not_use_saas_research(monkeypatch):
 @pytest.mark.parametrize('voice_id,voices', [(None, []), ('rachel', []), ('rachel', [{'voice_id': 'rachel', 'supports_korean': False}])])
 def test_korean_generate_fails_before_paid_work_without_verified_voice(monkeypatch, voice_id, voices):
     monkeypatch.setattr(api, 'get_elevenlabs_voices', lambda key: voices)
-    body = {'script': {'language': 'ko'}, 'voice_id': voice_id}
+    body = {'tts_provider': 'elevenlabs', 'script': {'language': 'ko'}, 'voice_id': voice_id}
     response = asyncio.run(request('POST', '/api/saasshorts/generate', json=body,
                                   headers={'X-Fal-Key': 'mock', 'X-ElevenLabs-Key': 'mock'}))
     assert response.status_code == 400 and '한국어' in response.json()['detail']
 
 
 def test_generate_retains_key_checks():
-    response = asyncio.run(request('POST', '/api/saasshorts/generate', json={'script': {'language': 'ko'}}))
+    response = asyncio.run(request('POST', '/api/saasshorts/generate', json={'tts_provider': 'elevenlabs', 'script': {'language': 'ko'}}))
     assert response.status_code == 400 and 'X-Fal-Key' in response.json()['detail']
 
 
@@ -140,7 +140,7 @@ def test_generate_passes_locale_and_voice_to_existing_pipeline(monkeypatch, tmp_
     monkeypatch.setattr(api, 'generate_full_video', pipeline)
     async def run():
         monkeypatch.setattr(api, 'concurrency_semaphore', asyncio.Semaphore(1))
-        response = await request('POST', '/api/saasshorts/generate', json={'script': {'language': language}, 'voice_id': voice_id},
+        response = await request('POST', '/api/saasshorts/generate', json={'tts_provider': 'elevenlabs', 'script': {'language': language}, 'voice_id': voice_id},
                                  headers={'X-Fal-Key': 'mock', 'X-ElevenLabs-Key': 'mock'})
         assert response.status_code == 200, response.text
         # Await the actual existing background task; do not call external engines.
@@ -214,6 +214,6 @@ def test_korean_whisper_failure_releases_model(monkeypatch):
 def test_korean_voice_service_error_is_explicit(monkeypatch):
     def fail(key): raise httpx.ConnectError('mock unavailable')
     monkeypatch.setattr(api, 'get_elevenlabs_voices', fail)
-    response = asyncio.run(request('POST', '/api/saasshorts/generate', json={'script': {'language': 'ko'}, 'voice_id': 'korean'},
+    response = asyncio.run(request('POST', '/api/saasshorts/generate', json={'tts_provider': 'elevenlabs', 'script': {'language': 'ko'}, 'voice_id': 'korean'},
                                   headers={'X-Fal-Key': 'mock', 'X-ElevenLabs-Key': 'mock'}))
     assert response.status_code == 503 and '확인하지 못했습니다' in response.json()['detail']

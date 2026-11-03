@@ -1,3 +1,4 @@
+import { t as uiT, useUiLocale } from "../i18n/runtime.js";
 import React, { useState } from 'react';
 import { Loader2, Languages, AlertCircle } from 'lucide-react';
 import Modal from './ui/Modal';
@@ -37,6 +38,7 @@ const LANGUAGES = {
 };
 
 export default function TranslateModal({ isOpen, onClose, onTranslate, isProcessing, videoUrl, hasApiKey }) {
+  useUiLocale();
     const [targetLanguage, setTargetLanguage] = useState('es');
 
     if (!isOpen) return null;
@@ -51,7 +53,7 @@ export default function TranslateModal({ isOpen, onClose, onTranslate, isProcess
             isOpen={isOpen}
             onClose={isProcessing ? undefined : onClose}
             eyebrow="DUB"
-            title="dub voice"
+            title={uiT("dub voice")}
             size="md"
             footer={
                 <div className="flex gap-3">
@@ -59,9 +61,7 @@ export default function TranslateModal({ isOpen, onClose, onTranslate, isProcess
                         onClick={onClose}
                         disabled={isProcessing}
                         className="btn-ghost flex-1"
-                    >
-                        Cancel
-                    </button>
+                    >{uiT("Cancel")}</button>
                     <button
                         onClick={handleSubmit}
                         disabled={isProcessing || !hasApiKey}
@@ -69,14 +69,10 @@ export default function TranslateModal({ isOpen, onClose, onTranslate, isProcess
                     >
                         {isProcessing ? (
                             <>
-                                <Loader2 size={16} className="animate-spin" />
-                                Dubbing...
-                            </>
+                                <Loader2 size={16} className="animate-spin" />{uiT("Dubbing...")}</>
                         ) : (
                             <>
-                                <Languages size={16} />
-                                Dub Voice
-                            </>
+                                <Languages size={16} />{uiT("Dub Voice")}</>
                         )}
                     </button>
                 </div>
@@ -86,13 +82,13 @@ export default function TranslateModal({ isOpen, onClose, onTranslate, isProcess
                 <div className="w-10 h-10 rounded-input bg-paper3 flex items-center justify-center shrink-0">
                     <Languages size={18} className="text-brass" />
                 </div>
-                <p className="text-xs text-muted">AI voice translation by ElevenLabs</p>
+                <p className="text-xs text-muted">{uiT("AI voice translation by ElevenLabs")}</p>
             </div>
 
             {!hasApiKey && (
                 <div className="mb-4 flex items-start gap-2">
-                    <span className="badge-warn shrink-0"><AlertCircle size={12} /> key missing</span>
-                    <p className="text-sm text-muted">Configure ElevenLabs API Key in Settings first.</p>
+                    <span className="badge-warn shrink-0"><AlertCircle size={12} />{uiT(" key missing")}</span>
+                    <p className="text-sm text-muted">{uiT("Configure ElevenLabs API Key in Settings first.")}</p>
                 </div>
             )}
 
@@ -108,9 +104,7 @@ export default function TranslateModal({ isOpen, onClose, onTranslate, isProcess
 
             {/* Language Selection */}
             <div className="mb-5">
-                <label className="eyebrow block mb-2">
-                    Target Language
-                </label>
+                <label className="eyebrow block mb-2">{uiT("Target Language")}</label>
                 <select
                     value={targetLanguage}
                     onChange={(e) => setTargetLanguage(e.target.value)}
@@ -126,16 +120,12 @@ export default function TranslateModal({ isOpen, onClose, onTranslate, isProcess
             </div>
 
             {/* Info */}
-            <p className="text-xs text-muted leading-relaxed mb-2">
-                The audio will be dubbed with AI-generated voice in the selected language, matching the original speaker's characteristics.
-            </p>
+            <p className="text-xs text-muted leading-relaxed mb-2">{uiT("The audio will be dubbed with AI-generated voice in the selected language, matching the original speaker's characteristics.")}</p>
 
             {/* AI Act art. 50: we mark the file, the person publishing it is the
                 one who owes the audience the disclosure. Saying so here is the
                 only place they will read it. */}
-            <p className="text-xs text-muted leading-relaxed mb-2">
-                The dubbed file is tagged as AI-generated content. When you publish it, disclose that the voice is synthetic.
-            </p>
+            <p className="text-xs text-muted leading-relaxed mb-2">{uiT("The dubbed file is tagged as AI-generated content. When you publish it, disclose that the voice is synthetic.")}</p>
 
             {/* Processing State */}
             {isProcessing && (
@@ -143,8 +133,8 @@ export default function TranslateModal({ isOpen, onClose, onTranslate, isProcess
                     <div className="flex items-center gap-3">
                         <Loader2 size={18} className="text-brass animate-spin" />
                         <div>
-                            <p className="text-sm text-ink font-medium lowercase">Dubbing audio...</p>
-                            <p className="text-xs text-muted lowercase">This may take a few minutes</p>
+                            <p className="text-sm text-ink font-medium lowercase">{uiT("Dubbing audio...")}</p>
+                            <p className="text-xs text-muted lowercase">{uiT("This may take a few minutes")}</p>
                         </div>
                     </div>
                 </div>

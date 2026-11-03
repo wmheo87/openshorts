@@ -1,3 +1,4 @@
+import { t as uiT, useUiLocale } from "../../i18n/runtime.js";
 import { Check } from 'lucide-react';
 
 /**
@@ -10,8 +11,9 @@ import { Check } from 'lucide-react';
  *  - onStepClick(index)? — optional, only past steps are clickable
  */
 export default function StepIndicator({ steps, current, onStepClick }) {
+  useUiLocale();
   return (
-    <ol className="flex items-center w-full" aria-label="progress">
+    <ol className="flex items-center w-full" aria-label={uiT("progress")}>
       {steps.map((label, i) => {
         const done = i < current;
         const active = i === current;
@@ -32,7 +34,7 @@ export default function StepIndicator({ steps, current, onStepClick }) {
                 {done ? <Check size={11} /> : String(i + 1).padStart(2, '0')}
               </span>
               <span className={`hidden sm:block text-micro font-mono uppercase tracking-widest ${active ? 'text-ink' : 'text-muted'}`}>
-                {label}
+                {uiT(label)}
               </span>
             </button>
             {i < steps.length - 1 && (

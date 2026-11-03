@@ -1,3 +1,5 @@
+import LocalizedDiagnostic from '../../i18n/LocalizedDiagnostic';
+import { t as uiT, useUiLocale } from "../../i18n/runtime.js";
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Search, ShieldCheck } from 'lucide-react';
 import { searchVideos } from './api';
@@ -10,6 +12,7 @@ import { text } from './strings';
 import { buildProductionData } from './production';
 
 export default function DiscoveryPage({ onProduce }) {
+  useUiLocale();
   const [filters, setFilters] = useState({ ...defaultFilters });
   const [errors, setErrors] = useState({});
   const [error, setError] = useState('');
@@ -86,19 +89,19 @@ export default function DiscoveryPage({ onProduce }) {
   return (
     <div className="h-full min-w-0 overflow-y-auto custom-scrollbar" data-testid="discovery-page">
       <div className="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8 space-y-6">
-        <header><p className="eyebrow text-brass mb-2">AI Shorts Studio · 영상 탐색</p><h1 className="font-display text-2xl sm:text-3xl text-ink">{text.title}</h1><p className="text-sm text-muted mt-2">{text.intro}</p></header>
+        <header><p className="eyebrow text-brass mb-2">{uiT("AI Shorts Studio · 영상 탐색")}</p><h1 className="font-display text-2xl sm:text-3xl text-ink">{uiT(text.title)}</h1><p className="text-sm text-muted mt-2">{uiT(text.intro)}</p></header>
         <SearchFilters filters={filters} errors={errors} loading={loading} onSubmit={submit} onCancel={() => pending.current?.abort()}
           onChange={(name, value) => { setFilters((previous) => ({ ...previous, [name]: value })); setErrors((previous) => ({ ...previous, [name]: undefined })); }} />
-        {error && <p ref={alert} tabIndex={-1} role="alert" className="rounded-input border border-danger/40 bg-danger/10 p-4 text-sm text-danger focus:outline-none">{error}</p>}
-        {loading && <div role="status" aria-live="polite" className="flex items-center gap-3 p-4 rounded-card border border-rule bg-paper2 text-sm text-muted"><Search className="animate-pulse shrink-0" size={20} /><span>{slow ? '검색이 지연되고 있습니다. 자동 재시도는 하지 않습니다. 대기를 중단해도 서버 작업은 계속될 수 있습니다.' : 'YouTube 영상 정보를 검색하고 있습니다…'}</span></div>}
+        {error && <p ref={alert} tabIndex={-1} role="alert" className="rounded-input border border-danger/40 bg-danger/10 p-4 text-sm text-danger focus:outline-none">{<LocalizedDiagnostic value={error} error />}</p>}
+        {loading && <div role="status" aria-live="polite" className="flex items-center gap-3 p-4 rounded-card border border-rule bg-paper2 text-sm text-muted"><Search className="animate-pulse shrink-0" size={20} /><span>{uiT(slow ? '검색이 지연되고 있습니다. 자동 재시도는 하지 않습니다. 대기를 중단해도 서버 작업은 계속될 수 있습니다.' : 'YouTube 영상 정보를 검색하고 있습니다…')}</span></div>}
         {selected && <div ref={detail} tabIndex={-1} className="focus:outline-none"><VideoDetail video={selected} acknowledged={acknowledged} onAcknowledge={setAcknowledged} onClose={() => { setSelected(null); setAcknowledged(false); setDownloadConfirmed(false); }} downloadConfirmed={downloadConfirmed} onDownloadConfirm={setDownloadConfirmed} options={productionOptions} onOptions={setProductionOptions} onProduce={produce} producing={producing} productionError={productionError} /></div>}
-        {result && <section aria-label="영상 검색 결과" className="space-y-4">
-          <div className="flex flex-wrap items-center justify-between gap-3"><div><h2 className="text-lg text-ink font-medium">검색 결과 {result.total}개</h2><p className="text-xs text-muted mt-1">“{resultKeyword}” · {result.cache_hit ? '캐시 결과' : '새 조회 결과'} · 조회 시각 {formatDate(result.fetched_at, true)}</p></div><label className="text-xs text-muted flex items-center gap-2">정렬<select aria-label="정렬" value={order} onChange={(event) => setOrder(event.target.value)} className="bg-paper2 border border-rule2 rounded-input p-2 text-ink2"><option value="score">추천 점수순</option><option value="views">조회수순</option><option value="newest">최신순</option></select></label></div>
-          {result.limited && <p className="text-xs text-warn">조회 범위 또는 결과 상한에 도달했습니다. 전체 YouTube 영상의 순위가 아니며 다른 후보가 더 있을 수 있습니다.</p>}
+        {result && <section aria-label={uiT("영상 검색 결과")} className="space-y-4">
+          <div className="flex flex-wrap items-center justify-between gap-3"><div><h2 className="text-lg text-ink font-medium">{uiT("검색 결과 ")}{uiT(result.total)}{uiT("개")}</h2><p className="text-xs text-muted mt-1">“{resultKeyword}” · {uiT(result.cache_hit ? '캐시 결과' : '새 조회 결과')}{uiT(" · 조회 시각 ")}{uiT(formatDate(result.fetched_at, true))}</p></div><label className="text-xs text-muted flex items-center gap-2">{uiT("정렬")}<select aria-label={uiT("정렬")} value={order} onChange={(event) => setOrder(event.target.value)} className="bg-paper2 border border-rule2 rounded-input p-2 text-ink2"><option value="score">{uiT("추천 점수순")}</option><option value="views">{uiT("조회수순")}</option><option value="newest">{uiT("최신순")}</option></select></label></div>
+          {result.limited && <p className="text-xs text-warn">{uiT("조회 범위 또는 결과 상한에 도달했습니다. 전체 YouTube 영상의 순위가 아니며 다른 후보가 더 있을 수 있습니다.")}</p>}
           <VideoGrid videos={videos} selectedId={selected?.video_id} onSelect={(video) => { if (productionLock.current) return; setSelected(video); setAcknowledged(false); setDownloadConfirmed(false); setProductionError(''); }} />
-          <div className="text-xs text-muted space-y-2 leading-relaxed"><p>{text.scoreNotice}</p><p>{text.rightsNotice}</p><details><summary className="cursor-pointer">서버 제공 안내 원문</summary><p className="mt-2 break-words">{result.score_notice}</p><p className="mt-2 break-words">{result.rights_notice}</p></details></div>
+          <div className="text-xs text-muted space-y-2 leading-relaxed"><p>{uiT(text.scoreNotice)}</p><p>{uiT(text.rightsNotice)}</p><details><summary className="cursor-pointer">{uiT("서버 제공 안내 원문")}</summary><p className="mt-2 break-words">{result.score_notice}</p><p className="mt-2 break-words">{result.rights_notice}</p></details></div>
         </section>}
-        {!result && !loading && !error && <div className="border border-dashed border-rule2 rounded-card p-8 text-center text-sm text-muted"><ShieldCheck size={24} className="mx-auto mb-3 text-brass" /><p>검색어와 조건을 입력해 CC BY 영상 후보를 찾아보세요.</p><p className="mt-2 text-xs">검색은 영상 정보만 조회하며 원본을 자동 다운로드하지 않습니다.</p></div>}
+        {!result && !loading && !error && <div className="border border-dashed border-rule2 rounded-card p-8 text-center text-sm text-muted"><ShieldCheck size={24} className="mx-auto mb-3 text-brass" /><p>{uiT("검색어와 조건을 입력해 CC BY 영상 후보를 찾아보세요.")}</p><p className="mt-2 text-xs">{uiT("검색은 영상 정보만 조회하며 원본을 자동 다운로드하지 않습니다.")}</p></div>}
         <SearchHistory key={historyVersion} onReplay={replay} searchLoading={loading} />
       </div>
     </div>

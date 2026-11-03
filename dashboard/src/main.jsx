@@ -1,3 +1,5 @@
+import LanguageSwitcher from './i18n/LanguageSwitcher';
+import { t as uiT, useUiLocale } from "./i18n/runtime.js";
 import { StrictMode, useState, useEffect, lazy, Suspense } from 'react'
 import { createRoot } from 'react-dom/client'
 import './index.css'
@@ -16,21 +18,24 @@ const Legal = lazy(() => import('./Legal.jsx'))
 const OAuthConsent = lazy(() => import('./components/OAuthConsent'))
 
 function PageShell({ title, children }) {
+  useUiLocale();
   return (
     <div className="min-h-screen bg-paper text-ink2">
       <header className="h-14 sm:h-16 border-b border-rule bg-paper flex items-center justify-between gap-3 px-4 sm:px-6 sticky top-0 z-20">
-        <a href="#app" className="font-display lowercase text-lg text-ink truncate">OpenShorts</a>
-        <a href="#app" className="text-sm lowercase text-muted hover:text-ink transition-colors shrink-0">← <span className="hidden sm:inline">Back to app</span><span className="sm:hidden">back</span></a>
+        <LanguageSwitcher />
+        <a href="#app" className="font-display lowercase text-lg text-ink truncate">{uiT("OpenShorts")}</a>
+        <a href="#app" className="text-sm lowercase text-muted hover:text-ink transition-colors shrink-0">← <span className="hidden sm:inline">{uiT("Back to app")}</span><span className="sm:hidden">{uiT("back")}</span></a>
       </header>
       <main className="p-4 sm:p-6 md:p-8 pb-[max(2rem,env(safe-area-inset-bottom))]">
         {title && <h1 className="font-display lowercase text-2xl sm:text-3xl text-ink text-center mb-6 sm:mb-10">{title}</h1>}
-        {children}
+        {uiT(children)}
       </main>
     </div>
   );
 }
 
 function PricingView() {
+  useUiLocale();
   const { isSignedIn, loading } = useAuth();
   // A plan picked on the landing while signed out lands here: ask for the
   // sign-in straight away instead of a second click on the same plan.
@@ -48,6 +53,7 @@ function PricingView() {
 }
 
 function AccountView() {
+  useUiLocale();
   const { isSignedIn, loading } = useAuth();
   useEffect(() => {
     if (!loading && !isSignedIn) window.location.hash = '#/pricing';
@@ -59,26 +65,21 @@ function AccountView() {
 // gone: sending the user to #/account would bounce them to pricing with no
 // explanation, and "openshorts_skip_landing" would send them into the app.
 function DeletedView() {
+  useUiLocale();
   return (
     <div className="min-h-screen bg-paper text-ink2 flex items-center justify-center p-6">
       <div className="max-w-md text-center space-y-4">
-        <h1 className="font-display lowercase text-2xl sm:text-3xl text-ink">Your account is deleted</h1>
-        <p className="text-sm">
-          Your projects, clips and transcripts are gone, any subscription is
-          cancelled, and your API keys no longer work. We've emailed you a
-          confirmation with the details.
-        </p>
-        <p className="text-sm text-muted">
-          You're welcome back any time — signing up again with the same address
-          starts a brand-new, empty account.
-        </p>
-        <a href="#landing" className="btn-ghost px-4 py-2 inline-flex">Back to openshorts.app</a>
+        <h1 className="font-display lowercase text-2xl sm:text-3xl text-ink">{uiT("Your account is deleted")}</h1>
+        <p className="text-sm">{uiT("Your projects, clips and transcripts are gone, any subscription is cancelled, and your API keys no longer work. We've emailed you a confirmation with the details.")}</p>
+        <p className="text-sm text-muted">{uiT("You're welcome back any time — signing up again with the same address starts a brand-new, empty account.")}</p>
+        <a href="#landing" className="btn-ghost px-4 py-2 inline-flex">{uiT("Back to openshorts.app")}</a>
       </div>
     </div>
   );
 }
 
 function Root() {
+  useUiLocale();
   const resolveView = () => {
     const hash = window.location.hash || '';
     if (hash.startsWith('#/auth/')) return 'auth';       // AuthContext consumes then redirects
@@ -113,7 +114,7 @@ function Root() {
   if (view === 'oauth') return <OAuthConsent />;
   if (view === 'deleted') return <DeletedView />;
   if (view === 'auth') {
-    return <div className="min-h-screen flex items-center justify-center bg-background text-zinc-400">Signing you in…</div>;
+    return <div className="min-h-screen flex items-center justify-center bg-background text-zinc-400">{uiT("Signing you in…")}</div>;
   }
   if (view === 'app') return <App />;
   return <Landing onLaunchApp={handleLaunchApp} />;
@@ -130,7 +131,7 @@ applyConsent();
 createRoot(document.getElementById('root')).render(
   <StrictMode>
     <AuthProvider>
-      <Suspense fallback={<div className="min-h-screen bg-paper flex items-center justify-center text-muted text-sm lowercase">loading…</div>}>
+      <Suspense fallback={<div className="min-h-screen bg-paper flex items-center justify-center text-muted text-sm lowercase">{uiT("loading…")}</div>}>
         <Root />
       </Suspense>
       <CookieBanner />

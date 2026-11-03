@@ -1,3 +1,4 @@
+import { t as uiT, useUiLocale } from "../i18n/runtime.js";
 import React, { useState, useEffect, useReducer, useRef, useCallback, useMemo, useDeferredValue } from 'react';
 import {
     X, Loader2, Plus, Trash2, ChevronUp, ChevronDown, Scissors,
@@ -96,6 +97,7 @@ function editorReducer(state, action) {
 }
 
 export default function ClipEditor({ jobId, clipIndex, clipTitle, onClose, onRerendered }) {
+  useUiLocale();
     const { refreshMe } = useAuth();
     const [edl, setEdl] = useState(null);
     const [loadError, setLoadError] = useState(null);
@@ -954,9 +956,9 @@ export default function ClipEditor({ jobId, clipIndex, clipTitle, onClose, onRer
         return (
             <div className="fixed inset-0 z-[110] bg-black/70 flex items-center justify-center p-4 animate-fade" onMouseDown={onClose}>
                 <div className="card p-6 max-w-md" onMouseDown={(e) => e.stopPropagation()}>
-                    <p className="eyebrow mb-2">EDITOR · CLIP {clipIndex + 1}</p>
-                    <div className="flex items-center gap-2 text-danger text-sm"><AlertCircle size={16} /> {loadError}</div>
-                    <button className="btn-ghost mt-5" onClick={onClose}>close</button>
+                    <p className="eyebrow mb-2">{uiT("EDITOR · CLIP ")}{uiT(clipIndex + 1)}</p>
+                    <div className="flex items-center gap-2 text-danger text-sm"><AlertCircle size={16} /> {uiT(loadError)}</div>
+                    <button className="btn-ghost mt-5" onClick={onClose}>{uiT("close")}</button>
                 </div>
             </div>
         );
@@ -966,8 +968,7 @@ export default function ClipEditor({ jobId, clipIndex, clipTitle, onClose, onRer
         return (
             <div className="fixed inset-0 z-[110] bg-paper/90 flex items-center justify-center animate-fade">
                 <div className="flex items-center gap-3 text-muted text-sm lowercase">
-                    <Loader2 size={18} className="animate-spin text-brass" /> loading clip recipe…
-                </div>
+                    <Loader2 size={18} className="animate-spin text-brass" />{uiT(" loading clip recipe…")}</div>
             </div>
         );
     }
@@ -992,14 +993,11 @@ export default function ClipEditor({ jobId, clipIndex, clipTitle, onClose, onRer
     const sourceTrack = (
         <div className="shrink-0 select-none">
             <div className="flex items-center justify-between mb-1.5 gap-3">
-                <p className="readout">
-                    SOURCE · {fmt(sourceDuration)}{edl.source.duration_estimated ? ' (EST.)' : ''}
-                    {!sourceAvailable && ' · EXPIRED — TRIMS LIMITED TO THE ORIGINAL RANGE'}
+                <p className="readout">{uiT("SOURCE · ")}{uiT(fmt(sourceDuration))}{uiT(edl.source.duration_estimated ? ' (EST.)' : '')}
+                    {uiT(!sourceAvailable && ' · EXPIRED — TRIMS LIMITED TO THE ORIGINAL RANGE')}
                 </p>
                 {sourceAvailable && (
-                    <p className="readout hidden xl:block truncate">
-                        DRAG EMPTY SPACE TO MARK IN/OUT · BLOCK TO MOVE · EDGES TO TRIM
-                    </p>
+                    <p className="readout hidden xl:block truncate">{uiT("DRAG EMPTY SPACE TO MARK IN/OUT · BLOCK TO MOVE · EDGES TO TRIM")}</p>
                 )}
             </div>
             <div
@@ -1032,7 +1030,7 @@ export default function ClipEditor({ jobId, clipIndex, clipTitle, onClose, onRer
                             minWidth: '14px',
                             background: SEGMENT_COLORS[i % SEGMENT_COLORS.length],
                         }}
-                        title={`#${i + 1} · ${fmt(seg.start)} → ${fmt(seg.end)} — drag to move, edges to trim`}
+                        title={uiT(`#${i + 1} · ${fmt(seg.start)} → ${fmt(seg.end)} — drag to move, edges to trim`)}
                     >
                         {/* Capped at a third each so the middle stays grabbable
                             however narrow the block gets. */}
@@ -1085,8 +1083,8 @@ export default function ClipEditor({ jobId, clipIndex, clipTitle, onClose, onRer
             </div>
             <div className="flex justify-between mt-1">
                 <span className="readout">0:00</span>
-                <span className="readout">{fmt(sourceDuration / 2)}</span>
-                <span className="readout">{fmt(sourceDuration)}</span>
+                <span className="readout">{uiT(fmt(sourceDuration / 2))}</span>
+                <span className="readout">{uiT(fmt(sourceDuration))}</span>
             </div>
         </div>
     );
@@ -1096,47 +1094,47 @@ export default function ClipEditor({ jobId, clipIndex, clipTitle, onClose, onRer
             {/* header */}
             <div className="px-4 sm:px-6 pt-4 pb-3 border-b border-rule flex items-start justify-between gap-4 shrink-0">
                 <div className="min-w-0">
-                    <p className="eyebrow mb-1">EDITOR · CLIP {clipIndex + 1}</p>
-                    <h2 className="font-display lowercase text-xl sm:text-2xl text-ink truncate">edit clip</h2>
+                    <p className="eyebrow mb-1">{uiT("EDITOR · CLIP ")}{uiT(clipIndex + 1)}</p>
+                    <h2 className="font-display lowercase text-xl sm:text-2xl text-ink truncate">{uiT("edit clip")}</h2>
                     {clipTitle && <p className="text-xs text-muted truncate mt-0.5">{clipTitle}</p>}
                     {/* Phone: the readouts move under the title — as a third
                         column they squeezed the title to two characters. */}
                     <p className="readout sm:hidden mt-1 truncate">
-                        {fmt(total)} · {needsSourcePath ? 'FULL RE-FRAME' : 'FAST RECUT'}
+                        {uiT(fmt(total))} · {uiT(needsSourcePath ? 'FULL RE-FRAME' : 'FAST RECUT')}
                     </p>
                 </div>
                 <div className="flex items-center gap-2 sm:gap-3 shrink-0">
                     <div className="text-right hidden sm:block">
-                        <p className="readout">DURATION · {fmt(total)}</p>
+                        <p className="readout">{uiT("DURATION · ")}{uiT(fmt(total))}</p>
                         <p className="readout mt-1">
-                            {needsSourcePath ? 'PATH · FULL RE-FRAME' : 'PATH · FAST RECUT'}
-                            {edl.rerender_minutes > 0 && ` · ≈${Math.max(1, Math.ceil(total / 60))} MIN`}
+                            {uiT(needsSourcePath ? 'PATH · FULL RE-FRAME' : 'PATH · FAST RECUT')}
+                            {uiT(edl.rerender_minutes > 0 && ` · ≈${Math.max(1, Math.ceil(total / 60))} MIN`)}
                         </p>
                     </div>
                     {sourceAvailable && (
                         <button
                             onClick={() => setShowSource((v) => !v)}
-                            title={showSource
+                            title={uiT(showSource
                                 ? 'put the source monitor away and edit the clip on its own'
-                                : 'bring back the source monitor, its transcript and in/out marking'}
-                            aria-label={showSource ? 'hide source' : 'show source'}
+                                : 'bring back the source monitor, its transcript and in/out marking')}
+                            aria-label={uiT(showSource ? 'hide source' : 'show source')}
                             className="btn-quiet text-xs py-1.5 px-2.5 sm:px-3 flex items-center gap-1.5 lowercase"
                         >
                             {showSource ? <PanelLeftClose size={14} /> : <PanelLeft size={14} />}
-                            <span className="hidden sm:inline">{showSource ? 'hide source' : 'show source'}</span>
+                            <span className="hidden sm:inline">{uiT(showSource ? 'hide source' : 'show source')}</span>
                         </button>
                     )}
                     {confirmClose ? (
                         <div className="flex flex-wrap items-center justify-end gap-2">
-                            <span className="text-xs text-warn lowercase hidden sm:inline">discard changes?</span>
-                            <button className="btn-danger text-xs py-1.5 px-3" onClick={onClose}>discard</button>
-                            <button className="btn-ghost text-xs py-1.5 px-3" onClick={() => setConfirmClose(false)}>keep editing</button>
+                            <span className="text-xs text-warn lowercase hidden sm:inline">{uiT("discard changes?")}</span>
+                            <button className="btn-danger text-xs py-1.5 px-3" onClick={onClose}>{uiT("discard")}</button>
+                            <button className="btn-ghost text-xs py-1.5 px-3" onClick={() => setConfirmClose(false)}>{uiT("keep editing")}</button>
                         </div>
                     ) : (
                         <button
                             onClick={() => (rendering ? onClose() : dirty ? setConfirmClose(true) : onClose())}
                             className="p-2 rounded-input text-muted hover:text-ink hover:bg-paper3 transition-colors"
-                            aria-label="close editor"
+                            aria-label={uiT("close editor")}
                         >
                             <X size={18} />
                         </button>
@@ -1152,7 +1150,7 @@ export default function ClipEditor({ jobId, clipIndex, clipTitle, onClose, onRer
                 {/* ---- column 1 · source ---- */}
                 {sourceOpen && (
                     <div className="flex-1 min-w-0 flex flex-col min-h-0 gap-2">
-                        <p className="eyebrow shrink-0">Source</p>
+                        <p className="eyebrow shrink-0">{uiT("Source")}</p>
                         {/* The black hugs the picture instead of the column: a wide
                             box around a short 16:9 frame is exactly the dead space
                             this layout set out to remove. */}
@@ -1169,32 +1167,32 @@ export default function ClipEditor({ jobId, clipIndex, clipTitle, onClose, onRer
                             />
                         </div>
 
-                        {sourceTrack}
+                        {uiT(sourceTrack)}
 
                         {/* Two steps, shown as two: pick a range on the source, then
                             put it in the clip. Six controls in one undifferentiated
                             row read as six unrelated buttons. */}
                         <div className="shrink-0 rounded-input border border-rule bg-paper2 p-2 flex items-stretch gap-3">
                             <div className="flex items-center gap-1.5 flex-1 min-w-0">
-                                <span className="readout shrink-0 text-muted">1 · MARK</span>
+                                <span className="readout shrink-0 text-muted">{uiT("1 · MARK")}</span>
                                 <button onClick={() => markHere('in')} className="btn-quiet text-[11px] py-1 px-2 flex items-center gap-1 shrink-0">
-                                    <ChevronsRight size={12} /> in <span className="text-muted">i</span>
+                                    <ChevronsRight size={12} />{uiT(" in ")}<span className="text-muted">{uiT("i")}</span>
                                 </button>
                                 <button onClick={() => markHere('out')} className="btn-quiet text-[11px] py-1 px-2 flex items-center gap-1 shrink-0">
-                                    <ChevronsLeft size={12} /> out <span className="text-muted">o</span>
+                                    <ChevronsLeft size={12} />{uiT(" out ")}<span className="text-muted">{uiT("o")}</span>
                                 </button>
                                 <p className={`readout px-1 truncate ${markRange ? 'text-ink' : ''}`}>
-                                    {markIn === null ? '—:——' : fmt(markIn)}
-                                    {' → '}{markOut === null ? '—:——' : fmt(markOut)}
-                                    {markRange && ` · ${fmt(markRange.end - markRange.start)}`}
-                                    {markIn !== null && markOut !== null && !markRange
-                                        && ` · UNDER ${minSeg}S`}
+                                    {uiT(markIn === null ? '—:——' : fmt(markIn))}
+                                    {uiT(' → ')}{uiT(markOut === null ? '—:——' : fmt(markOut))}
+                                    {uiT(markRange && ` · ${fmt(markRange.end - markRange.start)}`)}
+                                    {uiT(markIn !== null && markOut !== null && !markRange
+                                        && ` · UNDER ${minSeg}S`)}
                                 </p>
                                 <button
                                     onClick={clearMarks}
                                     disabled={markIn === null && markOut === null}
                                     className="p-1 rounded-input text-muted hover:text-ink hover:bg-paper3 disabled:opacity-40 shrink-0"
-                                    aria-label="clear in and out marks"
+                                    aria-label={uiT("clear in and out marks")}
                                 >
                                     <X size={13} />
                                 </button>
@@ -1203,22 +1201,20 @@ export default function ClipEditor({ jobId, clipIndex, clipTitle, onClose, onRer
                             <div className="w-px bg-[color:var(--color-rule-2)] shrink-0" />
 
                             <div className="flex items-center gap-1.5 shrink-0">
-                                <span className="readout text-muted">2 · SEND</span>
+                                <span className="readout text-muted">{uiT("2 · SEND")}</span>
                                 <button
                                     onClick={() => sendToClip('replace')}
                                     disabled={!markRange}
-                                    title="the selected segment becomes this range (.)"
+                                    title={uiT("the selected segment becomes this range (.)")}
                                     className="btn-primary text-[11px] py-1.5 px-2 disabled:opacity-40"
-                                >
-                                    replace #{selected + 1}
+                                >{uiT("replace #")}{uiT(selected + 1)}
                                 </button>
                                 <button
                                     onClick={() => sendToClip('insert')}
                                     disabled={!markRange || segments.length >= limits.max_segments}
-                                    title="add this range as a new segment after the selected one (,)"
+                                    title={uiT("add this range as a new segment after the selected one (,)")}
                                     className="btn-quiet text-[11px] py-1.5 px-2 disabled:opacity-40"
-                                >
-                                    insert after #{selected + 1}
+                                >{uiT("insert after #")}{uiT(selected + 1)}
                                 </button>
                             </div>
                         </div>
@@ -1226,7 +1222,7 @@ export default function ClipEditor({ jobId, clipIndex, clipTitle, onClose, onRer
                         {/* transcript of the whole source */}
                         <div className="shrink-0 h-[30%] min-h-[9rem] flex flex-col">
                             <div className="flex items-center justify-between mb-1.5 gap-2 shrink-0">
-                                <p className="eyebrow">Transcript · full source</p>
+                                <p className="eyebrow">{uiT("Transcript · full source")}</p>
                                 {/* Boundary actions live HERE, above the words they
                                     act on, because this is where the eye is when
                                     picking a cut point from the text (issue #73). */}
@@ -1234,25 +1230,23 @@ export default function ClipEditor({ jobId, clipIndex, clipTitle, onClose, onRer
                                     <div className="flex items-center gap-1.5 shrink-0">
                                         <button
                                             onClick={() => setSegment(selected, { start: selectedWord.s }, { snap: false })}
-                                            title={`segment #${selected + 1} starts at "${selectedWord.w}" (${fmt(selectedWord.s)})`}
+                                            title={uiT(`segment #${selected + 1} starts at "${selectedWord.w}" (${fmt(selectedWord.s)})`)}
                                             className="btn-quiet text-[11px] py-1 px-2"
                                         >
-                                            #{selected + 1} starts here
-                                        </button>
+                                            #{uiT(selected + 1)}{uiT(" starts here")}</button>
                                         <button
                                             onClick={() => setSegment(selected, { end: selectedWord.e }, { snap: false })}
-                                            title={`segment #${selected + 1} ends after "${selectedWord.w}" (${fmt(selectedWord.e)})`}
+                                            title={uiT(`segment #${selected + 1} ends after "${selectedWord.w}" (${fmt(selectedWord.e)})`)}
                                             className="btn-quiet text-[11px] py-1 px-2"
                                         >
-                                            #{selected + 1} ends here
-                                        </button>
+                                            #{uiT(selected + 1)}{uiT(" ends here")}</button>
                                     </div>
                                 ) : words.length > 0 ? (
-                                    <span className="readout shrink-0">CLICK A WORD, THEN SET A BOUNDARY</span>
+                                    <span className="readout shrink-0">{uiT("CLICK A WORD, THEN SET A BOUNDARY")}</span>
                                 ) : null}
                             </div>
                             {words.length === 0 ? (
-                                <p className="text-xs text-muted lowercase">this job kept no transcript</p>
+                                <p className="text-xs text-muted lowercase">{uiT("this job kept no transcript")}</p>
                             ) : (
                                 <div
                                     ref={transcriptRef}
@@ -1267,7 +1261,7 @@ export default function ClipEditor({ jobId, clipIndex, clipTitle, onClose, onRer
                                         let lit = 'none';
                                         if (highlightSeg && !(last <= highlightSeg.start || first >= highlightSeg.end)) {
                                             lit = (first >= highlightSeg.start && last <= highlightSeg.end)
-                                                ? 'all' : highlightSeg;
+                                                ? uiT('all') : highlightSeg;
                                         }
                                         const local = (idx) => (
                                             idx >= c.offset && idx < c.offset + c.items.length ? idx - c.offset : -1
@@ -1299,12 +1293,12 @@ export default function ClipEditor({ jobId, clipIndex, clipTitle, onClose, onRer
                     the clip track its full precision back. */}
                 <div className={`flex flex-col min-h-0 gap-2 ${sourceOpen ? 'xl:w-[26rem] 2xl:w-[30rem] xl:shrink-0' : 'flex-1'}`}>
                     <div className="flex items-center justify-between gap-2 shrink-0">
-                        <p className="eyebrow">Program</p>
+                        <p className="eyebrow">{uiT("Program")}</p>
                         {dirty && (
                             <span className="badge-warn">
-                                {missingSeconds > COVERAGE_EPSILON
+                                {uiT(missingSeconds > COVERAGE_EPSILON
                                     ? `${fmt(missingSeconds)} needs rendering`
-                                    : 'previewing the edit · re-render to keep it'}
+                                    : 'previewing the edit · re-render to keep it')}
                             </span>
                         )}
                     </div>
@@ -1327,12 +1321,12 @@ export default function ClipEditor({ jobId, clipIndex, clipTitle, onClose, onRer
                     {/* clip track */}
                     <div className="shrink-0 select-none">
                         <div className="flex items-center justify-between mb-1.5 gap-3">
-                            <p className="readout">CLIP · {fmt(total)}</p>
+                            <p className="readout">{uiT("CLIP · ")}{uiT(fmt(total))}</p>
                             {dirty && (
                                 <p className="readout truncate">
-                                    {missingSeconds > COVERAGE_EPSILON
+                                    {uiT(missingSeconds > COVERAGE_EPSILON
                                         ? `RED · ${fmt(missingSeconds)} NOT RENDERED YET`
-                                        : 'PREVIEWING THE EDIT'}
+                                        : 'PREVIEWING THE EDIT')}
                                 </p>
                             )}
                         </div>
@@ -1349,7 +1343,7 @@ export default function ClipEditor({ jobId, clipIndex, clipTitle, onClose, onRer
                                     style={{ left: `${left}%`, width: `${width}%`, background: `color-mix(in oklab, ${SEGMENT_COLORS[i % SEGMENT_COLORS.length]} 28%, transparent)` }}
                                 >
                                     <span className="absolute inset-0 flex items-center justify-center readout pointer-events-none select-none">
-                                        #{i + 1} · {fmt(seg.end - seg.start)}
+                                        #{uiT(i + 1)} · {uiT(fmt(seg.end - seg.start))}
                                     </span>
                                     {/* trim handles */}
                                     <div
@@ -1386,14 +1380,14 @@ export default function ClipEditor({ jobId, clipIndex, clipTitle, onClose, onRer
                                 pointerdown bubbles to the track, which already
                                 scrubs from the pointer position. */}
                             <div
-                                title="drag to move through the clip"
+                                title={uiT("drag to move through the clip")}
                                 className="absolute top-1 bottom-1 w-2.5 -ml-[5px] rounded-[4px] bg-ink border border-paper cursor-grab active:cursor-grabbing"
                                 style={{ left: `${(Math.min(playhead, clipTrackSeconds) / clipTrackSeconds) * 100}%` }}
                             />
                         </div>
                     </div>
 
-                    {!sourceAvailable && sourceTrack}
+                    {uiT(!sourceAvailable && sourceTrack)}
                 </div>
 
                 {/* ---- column 3 · controls ---- */}
@@ -1402,10 +1396,10 @@ export default function ClipEditor({ jobId, clipIndex, clipTitle, onClose, onRer
                         {/* segments */}
                         <div>
                             <div className="flex items-center justify-between mb-2">
-                                <p className="eyebrow">Segments · {segments.length}/{limits.max_segments}</p>
+                                <p className="eyebrow">{uiT("Segments · ")}{uiT(segments.length)}/{uiT(limits.max_segments)}</p>
                                 <div className="flex items-center gap-1">
-                                    <button className="p-1.5 rounded-input text-muted hover:text-ink hover:bg-paper3 disabled:opacity-45" disabled={!state.past.length} onClick={() => dispatch({ type: 'undo' })} aria-label="undo"><Undo2 size={14} /></button>
-                                    <button className="p-1.5 rounded-input text-muted hover:text-ink hover:bg-paper3 disabled:opacity-45" disabled={!state.future.length} onClick={() => dispatch({ type: 'redo' })} aria-label="redo"><Redo2 size={14} /></button>
+                                    <button className="p-1.5 rounded-input text-muted hover:text-ink hover:bg-paper3 disabled:opacity-45" disabled={!state.past.length} onClick={() => dispatch({ type: 'undo' })} aria-label={uiT("undo")}><Undo2 size={14} /></button>
+                                    <button className="p-1.5 rounded-input text-muted hover:text-ink hover:bg-paper3 disabled:opacity-45" disabled={!state.future.length} onClick={() => dispatch({ type: 'redo' })} aria-label={uiT("redo")}><Redo2 size={14} /></button>
                                 </div>
                             </div>
                             <div className="space-y-2">
@@ -1417,7 +1411,7 @@ export default function ClipEditor({ jobId, clipIndex, clipTitle, onClose, onRer
                                     >
                                         <div className="flex items-center gap-2">
                                             <span className="w-4 h-4 rounded-full shrink-0" style={{ background: SEGMENT_COLORS[i % SEGMENT_COLORS.length] }} />
-                                            <span className="readout">#{i + 1}</span>
+                                            <span className="readout">#{uiT(i + 1)}</span>
                                             <input
                                                 type="number"
                                                 step="0.1"
@@ -1425,7 +1419,7 @@ export default function ClipEditor({ jobId, clipIndex, clipTitle, onClose, onRer
                                                 onClick={(e) => e.stopPropagation()}
                                                 onChange={(e) => setSegment(i, { start: parseFloat(e.target.value) || 0 }, { snap: false })}
                                                 className="input-field w-20 py-1 px-1.5 text-xs text-center"
-                                                aria-label={`segment ${i + 1} start`}
+                                                aria-label={uiT(`segment ${i + 1} start`)}
                                             />
                                             <span className="text-muted text-xs">→</span>
                                             <input
@@ -1435,21 +1429,21 @@ export default function ClipEditor({ jobId, clipIndex, clipTitle, onClose, onRer
                                                 onClick={(e) => e.stopPropagation()}
                                                 onChange={(e) => setSegment(i, { end: parseFloat(e.target.value) || 0 }, { snap: false })}
                                                 className="input-field w-20 py-1 px-1.5 text-xs text-center"
-                                                aria-label={`segment ${i + 1} end`}
+                                                aria-label={uiT(`segment ${i + 1} end`)}
                                             />
-                                            <span className="readout ml-auto">{fmt(seg.end - seg.start)}</span>
+                                            <span className="readout ml-auto">{uiT(fmt(seg.end - seg.start))}</span>
                                         </div>
                                         <div className="flex items-center gap-1 mt-2">
                                             {sourceOpen && (
-                                                <button className="p-1 rounded-input text-muted hover:text-ink hover:bg-paper" onClick={(e) => { e.stopPropagation(); dispatch({ type: 'select', index: i }); seekSource(seg.start); }} aria-label="show this segment in the source monitor"><Film size={13} /></button>
+                                                <button className="p-1 rounded-input text-muted hover:text-ink hover:bg-paper" onClick={(e) => { e.stopPropagation(); dispatch({ type: 'select', index: i }); seekSource(seg.start); }} aria-label={uiT("show this segment in the source monitor")}><Film size={13} /></button>
                                             )}
-                                            <button className="p-1 rounded-input text-muted hover:text-ink hover:bg-paper disabled:opacity-45" disabled={i === 0} onClick={(e) => { e.stopPropagation(); moveSegment(i, -1); }} aria-label="move up"><ChevronUp size={13} /></button>
-                                            <button className="p-1 rounded-input text-muted hover:text-ink hover:bg-paper disabled:opacity-45" disabled={i === segments.length - 1} onClick={(e) => { e.stopPropagation(); moveSegment(i, 1); }} aria-label="move down"><ChevronDown size={13} /></button>
-                                            <button className="p-1 rounded-input text-muted hover:text-ink hover:bg-paper disabled:opacity-45" disabled={seg.end - seg.start < minSeg * 2 || segments.length >= limits.max_segments} onClick={(e) => { e.stopPropagation(); splitSegment(i); }} aria-label="split segment"><Scissors size={13} /></button>
-                                            <button className="p-1 rounded-input text-muted hover:text-danger hover:bg-paper disabled:opacity-45 ml-auto" disabled={segments.length <= 1} onClick={(e) => { e.stopPropagation(); deleteSegment(i); }} aria-label="delete segment"><Trash2 size={13} /></button>
+                                            <button className="p-1 rounded-input text-muted hover:text-ink hover:bg-paper disabled:opacity-45" disabled={i === 0} onClick={(e) => { e.stopPropagation(); moveSegment(i, -1); }} aria-label={uiT("move up")}><ChevronUp size={13} /></button>
+                                            <button className="p-1 rounded-input text-muted hover:text-ink hover:bg-paper disabled:opacity-45" disabled={i === segments.length - 1} onClick={(e) => { e.stopPropagation(); moveSegment(i, 1); }} aria-label={uiT("move down")}><ChevronDown size={13} /></button>
+                                            <button className="p-1 rounded-input text-muted hover:text-ink hover:bg-paper disabled:opacity-45" disabled={seg.end - seg.start < minSeg * 2 || segments.length >= limits.max_segments} onClick={(e) => { e.stopPropagation(); splitSegment(i); }} aria-label={uiT("split segment")}><Scissors size={13} /></button>
+                                            <button className="p-1 rounded-input text-muted hover:text-danger hover:bg-paper disabled:opacity-45 ml-auto" disabled={segments.length <= 1} onClick={(e) => { e.stopPropagation(); deleteSegment(i); }} aria-label={uiT("delete segment")}><Trash2 size={13} /></button>
                                         </div>
                                         {outOfRange(seg) && (
-                                            <p className="text-[11px] text-danger mt-1.5 lowercase">outside the original range — the source video is gone</p>
+                                            <p className="text-[11px] text-danger mt-1.5 lowercase">{uiT("outside the original range — the source video is gone")}</p>
                                         )}
                                     </div>
                                 ))}
@@ -1459,20 +1453,15 @@ export default function ClipEditor({ jobId, clipIndex, clipTitle, onClose, onRer
                                 disabled={segments.length >= limits.max_segments}
                                 className="mt-2 w-full flex items-center justify-center gap-1.5 py-2 rounded-input border border-dashed border-rule2 text-xs lowercase text-ink2 hover:bg-paper3 transition-colors disabled:opacity-45"
                             >
-                                <Plus size={14} /> add segment
-                            </button>
+                                <Plus size={14} />{uiT(" add segment")}</button>
                             {!sourceAvailable && (
-                                <p className="text-[11px] text-muted mt-2 leading-relaxed">
-                                    the source video is no longer on the server, so cuts are
-                                    limited to the original clip range (extending or reframing
-                                    needs it; newly processed videos keep theirs)
-                                </p>
+                                <p className="text-[11px] text-muted mt-2 leading-relaxed">{uiT("the source video is no longer on the server, so cuts are limited to the original clip range (extending or reframing needs it; newly processed videos keep theirs)")}</p>
                             )}
                         </div>
 
                         {/* framing override */}
                         <div>
-                            <p className="eyebrow mb-2">Framing</p>
+                            <p className="eyebrow mb-2">{uiT("Framing")}</p>
                             <div className="grid grid-cols-3 gap-1.5">
                                 {[
                                     { value: 'auto', label: 'auto', hint: 'AI decides per scene' },
@@ -1482,7 +1471,7 @@ export default function ClipEditor({ jobId, clipIndex, clipTitle, onClose, onRer
                                     <button
                                         key={f.value}
                                         type="button"
-                                        title={f.hint}
+                                        title={uiT(f.hint)}
                                         disabled={f.value !== 'auto' && !sourceAvailable}
                                         onClick={() => setFraming(f.value)}
                                         className={`py-1.5 px-2 rounded-input border text-xs lowercase transition-colors
@@ -1491,33 +1480,29 @@ export default function ClipEditor({ jobId, clipIndex, clipTitle, onClose, onRer
                                                 : 'border-rule2 text-muted hover:border-[color:var(--color-accent)]'}
                                             disabled:opacity-40 disabled:cursor-not-allowed`}
                                     >
-                                        {f.label}
+                                        {uiT(f.label)}
                                     </button>
                                 ))}
                             </div>
                             {!sourceAvailable && (
-                                <p className="text-[11px] text-muted mt-1.5 leading-relaxed">
-                                    framing changes need the source video, which is no longer on the server
-                                </p>
+                                <p className="text-[11px] text-muted mt-1.5 leading-relaxed">{uiT("framing changes need the source video, which is no longer on the server")}</p>
                             )}
                             {framing !== renderedFraming && (
-                                <p className="text-[11px] text-muted mt-1.5 leading-relaxed">
-                                    changing the framing re-runs the reframe engine (slower than a fast recut)
-                                </p>
+                                <p className="text-[11px] text-muted mt-1.5 leading-relaxed">{uiT("changing the framing re-runs the reframe engine (slower than a fast recut)")}</p>
                             )}
                         </div>
 
                         {/* toggles */}
                         <div className="space-y-2.5">
                             <label className="flex items-center justify-between cursor-pointer">
-                                <span className="text-xs lowercase text-ink2">snap cuts to words</span>
+                                <span className="text-xs lowercase text-ink2">{uiT("snap cuts to words")}</span>
                                 <span className="relative inline-flex items-center">
                                     <input type="checkbox" checked={snapToWords} onChange={(e) => setSnapToWords(e.target.checked)} className="sr-only peer" />
                                     <span className="w-8 h-4 rounded-full bg-paper3 peer-checked:bg-brass transition-colors after:content-[''] after:absolute after:left-0.5 after:top-0.5 after:w-3 after:h-3 after:rounded-full after:bg-ink after:transition-transform peer-checked:after:translate-x-4" />
                                 </span>
                             </label>
                             <label className="flex items-center justify-between cursor-pointer">
-                                <span className="text-xs lowercase text-ink2">re-apply captions after recut</span>
+                                <span className="text-xs lowercase text-ink2">{uiT("re-apply captions after recut")}</span>
                                 <span className="relative inline-flex items-center">
                                     <input type="checkbox" checked={reapplyCaptions} onChange={(e) => setReapplyCaptions(e.target.checked)} className="sr-only peer" />
                                     <span className="w-8 h-4 rounded-full bg-paper3 peer-checked:bg-brass transition-colors after:content-[''] after:absolute after:left-0.5 after:top-0.5 after:w-3 after:h-3 after:rounded-full after:bg-ink after:transition-transform peer-checked:after:translate-x-4" />
@@ -1528,10 +1513,8 @@ export default function ClipEditor({ jobId, clipIndex, clipTitle, onClose, onRer
                         {/* keyboard legend — moved off the clip track, which no longer
                             has the width for it */}
                         <div>
-                            <p className="eyebrow mb-2">Shortcuts</p>
-                            <p className="readout leading-relaxed">
-                                SPACE PLAY · S SPLIT · ⌫ DELETE · ⌘Z UNDO
-                                {sourceOpen && ' · I MARK IN · O MARK OUT · , INSERT · . REPLACE'}
+                            <p className="eyebrow mb-2">{uiT("Shortcuts")}</p>
+                            <p className="readout leading-relaxed">{uiT("SPACE PLAY · S SPLIT · ⌫ DELETE · ⌘Z UNDO")}{uiT(sourceOpen && ' · I MARK IN · O MARK OUT · , INSERT · . REPLACE')}
                             </p>
                         </div>
                     </div>
@@ -1540,12 +1523,12 @@ export default function ClipEditor({ jobId, clipIndex, clipTitle, onClose, onRer
                     <div className="shrink-0 pt-4 mt-4 border-t border-rule">
                         {renderError && (
                             <div className="mb-3 px-3 py-2 rounded-input text-xs text-danger bg-[color-mix(in_oklab,var(--color-danger)_10%,transparent)] flex items-center gap-2">
-                                <AlertCircle size={14} className="shrink-0" /> {renderError}
+                                <AlertCircle size={14} className="shrink-0" /> {uiT(renderError)}
                             </div>
                         )}
                         {overCaps && (
                             <p className="mb-3 text-[11px] text-warn lowercase">
-                                {total > limits.max_total_seconds ? `clip is over ${Math.round(limits.max_total_seconds)}s` : `more than ${limits.max_segments} segments`}
+                                {uiT(total > limits.max_total_seconds ? `clip is over ${Math.round(limits.max_total_seconds)}s` : `more than ${limits.max_segments} segments`)}
                             </p>
                         )}
                         <div className="flex gap-2">
@@ -1553,18 +1536,16 @@ export default function ClipEditor({ jobId, clipIndex, clipTitle, onClose, onRer
                                 className="btn-ghost"
                                 onClick={() => (rendering ? onClose() : dirty ? setConfirmClose(true) : onClose())}
                             >
-                                {rendering ? 'close' : dirty ? 'cancel' : 'close'}
+                                {uiT(rendering ? 'close' : dirty ? 'cancel' : 'close')}
                             </button>
                             <button className="btn-primary flex-1 flex items-center justify-center gap-2" disabled={!canRender || !dirty} onClick={doRender}>
                                 {rendering
-                                    ? (<><Loader2 size={16} className="animate-spin text-brassink" /> re-rendering… {renderSeconds}s</>)
-                                    : (needsSourcePath ? 're-render from source' : 're-render clip')}
+                                    ? (<><Loader2 size={16} className="animate-spin text-brassink" />{uiT(" re-rendering… ")}{uiT(renderSeconds)}{uiT("s")}</>)
+                                    : (needsSourcePath ? uiT('re-render from source') : uiT('re-render clip'))}
                             </button>
                         </div>
                         {rendering && (
-                            <p className="text-[11px] text-muted mt-2 lowercase">
-                                you can close this editor; the render keeps going and the clip card updates when it finishes
-                            </p>
+                            <p className="text-[11px] text-muted mt-2 lowercase">{uiT("you can close this editor; the render keeps going and the clip card updates when it finishes")}</p>
                         )}
                     </div>
                 </div>
@@ -1585,6 +1566,7 @@ export default function ClipEditor({ jobId, clipIndex, clipTitle, onClose, onRer
 const TranscriptChunk = React.memo(function TranscriptChunk({
     items, offset, lit, active, anchorAt, selectedAt, onPick,
 }) {
+  useUiLocale();
     return (
         <>
             {items.map((w, i) => {
@@ -1598,7 +1580,7 @@ const TranscriptChunk = React.memo(function TranscriptChunk({
                         data-anchor={i === anchorAt ? '1' : undefined}
                         data-active={isActive ? '1' : undefined}
                         onClick={() => onPick(w)}
-                        title={`${fmt(w.s)} – ${fmt(w.e)}`}
+                        title={uiT(`${fmt(w.s)} – ${fmt(w.e)}`)}
                         className={`px-1 py-0.5 rounded text-xs transition-colors ${
                             isSel ? 'bg-brass text-brassink'
                                 : isActive ? 'bg-brass/30 text-ink'

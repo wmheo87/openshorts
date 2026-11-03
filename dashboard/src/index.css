@@ -264,3 +264,33 @@
     transition-duration: 0.01ms !important;
   }
 }
+
+@font-face {
+  font-family: "OpenShorts Korean UI";
+  src: url("/fonts/openshorts-korean-ui.woff") format("woff");
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+}
+
+/* UI locale only: video typography and generated captions keep their own settings. */
+html[lang="ko-KR"] body {
+  font-family: "OpenShorts Korean UI", "Noto Sans KR", "Noto Sans CJK KR", "Malgun Gothic", "Apple SD Gothic Neo", system-ui, sans-serif;
+  line-height: 1.55;
+}
+html[lang="ko-KR"] .font-display,
+html[lang="ko-KR"] .eyebrow {
+  font-family: "OpenShorts Korean UI", "Noto Sans KR", "Noto Sans CJK KR", "Malgun Gothic", "Apple SD Gothic Neo", system-ui, sans-serif;
+  letter-spacing: 0.02em;
+}
+html[lang="ko-KR"] button,
+html[lang="ko-KR"] label,
+html[lang="ko-KR"] p { word-break: keep-all; overflow-wrap: anywhere; }
+html[lang="ko-KR"] .btn-primary,
+html[lang="ko-KR"] .btn-ghost,
+html[lang="ko-KR"] .btn-quiet { white-space: normal; line-height: 1.45; }
+html[lang="ko-KR"] nav button .truncate,
+html[lang="ko-KR"] aside button .truncate,
+html[lang="ko-KR"] header .font-display.truncate { white-space: normal; text-overflow: clip; overflow: visible; }
+html[lang="ko-KR"] .lowercase { text-transform: none; }
+html[lang="ko-KR"] nav.md\:hidden button > span { max-width: 100%; white-space: normal; line-height: 1.3; }

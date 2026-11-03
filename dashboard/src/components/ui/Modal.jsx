@@ -1,3 +1,4 @@
+import { t as uiT, useUiLocale } from "../../i18n/runtime.js";
 import { X } from 'lucide-react';
 
 /**
@@ -21,6 +22,7 @@ const SIZES = {
 };
 
 export default function Modal({ isOpen, onClose, title, eyebrow, size = 'md', children, footer, hideClose = false }) {
+  useUiLocale();
   if (!isOpen) return null;
 
   return (
@@ -44,7 +46,7 @@ export default function Modal({ isOpen, onClose, title, eyebrow, size = 'md', ch
         {!hideClose && onClose && (
           <button
             onClick={onClose}
-            aria-label="close"
+            aria-label={uiT("close")}
             className="absolute top-3 right-3 sm:top-4 sm:right-4 z-10 p-2 rounded-full text-muted hover:text-ink hover:bg-paper3 transition-colors"
           >
             <X size={18} />
@@ -52,16 +54,16 @@ export default function Modal({ isOpen, onClose, title, eyebrow, size = 'md', ch
         )}
         {(title || eyebrow) && (
           <div className="px-4 sm:px-6 pt-3 sm:pt-6 pb-4 border-b border-rule shrink-0">
-            {eyebrow && <p className="eyebrow mb-1.5">{eyebrow}</p>}
+            {eyebrow && <p className="eyebrow mb-1.5">{uiT(eyebrow)}</p>}
             {title && <h2 className="font-display lowercase text-xl sm:text-2xl text-ink leading-tight break-words pr-10">{title}</h2>}
           </div>
         )}
         <div className="px-4 sm:px-6 py-5 overflow-y-auto overscroll-contain custom-scrollbar grow">
-          {children}
+          {uiT(children)}
         </div>
         {footer && (
           <div className="px-4 sm:px-6 py-4 border-t border-rule shrink-0 safe-bottom">
-            {footer}
+            {uiT(footer)}
           </div>
         )}
         {!footer && <div className="sm:hidden safe-bottom" />}

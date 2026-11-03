@@ -1,7 +1,9 @@
+import { t as uiT, useUiLocale } from "../i18n/runtime.js";
 import React, { useState, useEffect } from 'react';
 import { Key, Eye, EyeOff, Check } from 'lucide-react';
 
 export default function KeyInput({ onKeySet, savedKey }) {
+  useUiLocale();
     const [key, setKey] = useState(savedKey || '');
     const [isVisible, setIsVisible] = useState(false);
     const [isSaved, setIsSaved] = useState(!!savedKey);
@@ -23,7 +25,7 @@ export default function KeyInput({ onKeySet, savedKey }) {
                 <div className="p-2 bg-paper3 rounded-input text-brass">
                     <Key size={18} />
                 </div>
-                <h2 className="font-display lowercase text-lg text-ink">Gemini API Key</h2>
+                <h2 className="font-display lowercase text-lg text-ink">{uiT("Gemini API Key")}</h2>
             </div>
 
             <div className="flex flex-col sm:flex-row gap-3">
@@ -35,7 +37,7 @@ export default function KeyInput({ onKeySet, savedKey }) {
                             setKey(e.target.value);
                             setIsSaved(false);
                         }}
-                        placeholder="AIzaSy..."
+                        placeholder={uiT("AIzaSy...")}
                         className="input-field pr-12 font-mono"
                     />
                     <button
@@ -50,20 +52,16 @@ export default function KeyInput({ onKeySet, savedKey }) {
                     disabled={!key || isSaved}
                     className={isSaved ? 'badge-ok px-4 cursor-default' : 'btn-primary'}
                 >
-                    {isSaved ? <><Check size={14} /> Ready</> : 'Set Key'}
+                    {isSaved ? <><Check size={14} />{uiT(" Ready")}</> : uiT('Set Key')}
                 </button>
             </div>
-            <p className="mt-3 text-xs text-muted">
-                Your key is stored locally in your browser for convenience.
-                <br />
+            <p className="mt-3 text-xs text-muted">{uiT("Your key is stored locally in your browser for convenience.")}<br />
                 <a
                     href="https://aistudio.google.com/app/apikey"
                     target="_blank"
                     rel="noopener noreferrer"
                     className="text-brass hover:underline mt-1 inline-block"
-                >
-                    Get your free Gemini API Key here →
-                </a>
+                >{uiT("Get your free Gemini API Key here →")}</a>
             </p>
         </div>
     );

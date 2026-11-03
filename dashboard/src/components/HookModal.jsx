@@ -1,3 +1,4 @@
+import { t as uiT, useUiLocale } from "../i18n/runtime.js";
 import React, { useState } from 'react';
 import { Loader2 } from 'lucide-react';
 import RemotionPreview from './RemotionPreview';
@@ -58,6 +59,7 @@ function loadHookPrefs() {
 }
 
 export default function HookModal({ isOpen, onClose, onGenerate, onRemove, isProcessing, videoUrl, initialText, durationInSeconds, existingSubtitles, hasCaptions, serverRender, burnedHook }) {
+  useUiLocale();
     const prefs = loadHookPrefs();
     const [text, setText] = useState(initialText || 'POV: You are using the viral hook feature');
     // Stored as `pos`, not `position`: before 'auto' existed every save wrote
@@ -107,8 +109,8 @@ export default function HookModal({ isOpen, onClose, onGenerate, onRemove, isPro
         + "@font-face{font-family:'Anton-Regular';src:url('/fonts/Anton-Regular.ttf') format('truetype');font-weight:400;}";
 
     return (
-        <Modal isOpen={isOpen} onClose={onClose} size="lg" eyebrow="EDITOR · HOOK" title="edit hook">
-            <style>{pillFontFace}</style>
+        <Modal isOpen={isOpen} onClose={onClose} size="lg" eyebrow="EDITOR · HOOK" title={uiT("edit hook")}>
+            <style>{uiT(pillFontFace)}</style>
             <div className="flex flex-col md:flex-row gap-6">
                 {/* Left: Preview */}
                 <div className="w-full max-w-[300px] mx-auto md:mx-0 md:w-[300px] shrink-0 self-start flex flex-col items-center justify-center bg-black rounded-card border border-rule overflow-hidden relative aspect-[9/16]">
@@ -136,7 +138,7 @@ export default function HookModal({ isOpen, onClose, onGenerate, onRemove, isPro
                                         paddingRight: '12px'
                                     }}
                                 >
-                                    {text || "Enter your text..."}
+                                    {text || uiT("Enter your text...")}
                                 </div>
                             </div>
                         </>
@@ -148,19 +150,19 @@ export default function HookModal({ isOpen, onClose, onGenerate, onRemove, isPro
                     <div className="space-y-5 flex-1 overflow-y-auto custom-scrollbar pr-1">
                         {/* Text Input */}
                         <div>
-                            <p className="eyebrow mb-2">Text</p>
+                            <p className="eyebrow mb-2">{uiT("Text")}</p>
                             <textarea
                                 value={text}
                                 onChange={(e) => setText(e.target.value)}
                                 rows={4}
                                 className="input-field resize-none"
-                                placeholder="Enter text that will stop the scroll..."
+                                placeholder={uiT("Enter text that will stop the scroll...")}
                             />
                         </div>
 
                         {/* Style (new) */}
                         <div>
-                            <p className="eyebrow mb-2">Style</p>
+                            <p className="eyebrow mb-2">{uiT("Style")}</p>
                             <div className="grid grid-cols-3 gap-1.5">
                                 {HOOK_STYLES.map((s) => (
                                     <button
@@ -168,12 +170,12 @@ export default function HookModal({ isOpen, onClose, onGenerate, onRemove, isPro
                                         onClick={() => setStyle(s.value)}
                                         className={`px-1 py-2 rounded-input border text-xs transition-colors
                                             ${style === s.value ? 'border-[color:var(--color-accent)]' : 'border-rule2 hover:border-[color:var(--color-accent)]'}`}
-                                        title={s.label}
+                                        title={uiT(s.label)}
                                     >
                                         {s.value === 'pill' ? (
                                             <span className="flex flex-col items-center gap-0.5 py-0.5" style={FONT_CSS[font || styleFont(s.value)]}>
-                                                <span className="rounded-md px-1.5 text-[13px] leading-5 bg-white text-black">Aa Bb</span>
-                                                <span className="rounded-md px-1.5 text-[13px] leading-5 bg-white text-black">Cc</span>
+                                                <span className="rounded-md px-1.5 text-[13px] leading-5 bg-white text-black">{uiT("Aa Bb")}</span>
+                                                <span className="rounded-md px-1.5 text-[13px] leading-5 bg-white text-black">{uiT("Cc")}</span>
                                             </span>
                                         ) : (
                                             <span
@@ -184,9 +186,9 @@ export default function HookModal({ isOpen, onClose, onGenerate, onRemove, isPro
                                                     color: s.text,
                                                     textShadow: s.outline ? '-1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000' : 'none',
                                                 }}
-                                            >Aa</span>
+                                            >{uiT("Aa")}</span>
                                         )}
-                                        <span className="block mt-1 text-muted">{s.label}</span>
+                                        <span className="block mt-1 text-muted">{uiT(s.label)}</span>
                                     </button>
                                 ))}
                             </div>
@@ -194,7 +196,7 @@ export default function HookModal({ isOpen, onClose, onGenerate, onRemove, isPro
 
                         {/* Typeface */}
                         <div>
-                            <p className="eyebrow mb-2">Font</p>
+                            <p className="eyebrow mb-2">{uiT("Font")}</p>
                             <div className="grid grid-cols-3 gap-1.5">
                                 {FONT_OPTIONS.map((f) => (
                                     <button
@@ -204,7 +206,7 @@ export default function HookModal({ isOpen, onClose, onGenerate, onRemove, isPro
                                             ${effectiveFont === f.value ? 'border-[color:var(--color-accent)]' : 'border-rule2 hover:border-[color:var(--color-accent)]'}`}
                                         style={FONT_CSS[f.value]}
                                     >
-                                        {f.label}
+                                        {uiT(f.label)}
                                     </button>
                                 ))}
                             </div>
@@ -212,7 +214,7 @@ export default function HookModal({ isOpen, onClose, onGenerate, onRemove, isPro
 
                         {/* Position Control */}
                         <div>
-                            <p className="eyebrow mb-2">Position</p>
+                            <p className="eyebrow mb-2">{uiT("Position")}</p>
                             <SegmentedControl
                                 options={POSITION_OPTIONS}
                                 value={position}
@@ -220,22 +222,16 @@ export default function HookModal({ isOpen, onClose, onGenerate, onRemove, isPro
                                 size="sm"
                             />
                             {position === 'auto' && (
-                                <p className="text-[11px] text-muted mt-1.5 leading-relaxed">
-                                    Placed where it covers no face and no captions.
-                                    The preview shows it at the top.
-                                </p>
+                                <p className="text-[11px] text-muted mt-1.5 leading-relaxed">{uiT("Placed where it covers no face and no captions. The preview shows it at the top.")}</p>
                             )}
                             {position === 'bottom' && hasCaptions && (
-                                <p className="text-[11px] text-warn mt-1.5 leading-relaxed">
-                                    This clip has captions near the bottom — the hook may
-                                    overlap them (and TikTok's UI). Top is the safe zone.
-                                </p>
+                                <p className="text-[11px] text-warn mt-1.5 leading-relaxed">{uiT("This clip has captions near the bottom — the hook may overlap them (and TikTok's UI). Top is the safe zone.")}</p>
                             )}
                         </div>
 
                         {/* Size Control */}
                         <div>
-                            <p className="eyebrow mb-2">Size</p>
+                            <p className="eyebrow mb-2">{uiT("Size")}</p>
                             <SegmentedControl
                                 options={SIZE_OPTIONS}
                                 value={size}
@@ -247,7 +243,7 @@ export default function HookModal({ isOpen, onClose, onGenerate, onRemove, isPro
                         {/* Entrance Animation (new) */}
                         {!serverRender && (
                         <div>
-                            <p className="eyebrow mb-2">Entrance</p>
+                            <p className="eyebrow mb-2">{uiT("Entrance")}</p>
                             <SegmentedControl
                                 options={ENTRANCE_OPTIONS}
                                 value={entranceAnimation}
@@ -261,8 +257,8 @@ export default function HookModal({ isOpen, onClose, onGenerate, onRemove, isPro
                         {/* Display Duration (new) */}
                         <div>
                             <div className="flex items-center justify-between mb-2">
-                                <p className="eyebrow">Duration</p>
-                                <span className="readout">{displayDuration}S</span>
+                                <p className="eyebrow">{uiT("Duration")}</p>
+                                <span className="readout">{uiT(displayDuration)}{uiT("S")}</span>
                             </div>
                             <input
                                 type="range"
@@ -273,38 +269,29 @@ export default function HookModal({ isOpen, onClose, onGenerate, onRemove, isPro
                                 className="w-full accent-[var(--color-accent)]"
                             />
                             <div className="flex justify-between">
-                                <span className="readout">2S</span>
-                                <span className="readout">15S</span>
+                                <span className="readout">{uiT("2S")}</span>
+                                <span className="readout">{uiT("15S")}</span>
                             </div>
                         </div>
 
                         {burnedHook && (
                             <div className="p-3 border border-rule rounded-input text-xs text-muted space-y-2">
-                                <p>
-                                    This clip has a hook burned in ("{burnedHook}").
-                                    Generating replaces it with the new one.
-                                </p>
+                                <p>{uiT("This clip has a hook burned in (\"")}{uiT(burnedHook)}{uiT("\"). Generating replaces it with the new one.")}</p>
                                 {onRemove && (
                                     <button
                                         onClick={onRemove}
                                         disabled={isProcessing}
                                         className="text-warn underline underline-offset-2 hover:opacity-80 transition-opacity"
-                                    >
-                                        remove hook from clip
-                                    </button>
+                                    >{uiT("remove hook from clip")}</button>
                                 )}
                             </div>
                         )}
 
-                        <div className="p-3 border border-rule rounded-input text-xs text-muted">
-                            Tip: keep it short and punchy. Using "POV:" or specific questions works best for retention.
-                        </div>
+                        <div className="p-3 border border-rule rounded-input text-xs text-muted">{uiT("Tip: keep it short and punchy. Using \"POV:\" or specific questions works best for retention.")}</div>
                     </div>
 
                     <div className="flex gap-2 mt-5 shrink-0">
-                        <button onClick={onClose} className="btn-ghost">
-                            cancel
-                        </button>
+                        <button onClick={onClose} className="btn-ghost">{uiT("cancel")}</button>
                         <button
                             onClick={() => {
                                 try {
@@ -322,7 +309,7 @@ export default function HookModal({ isOpen, onClose, onGenerate, onRemove, isPro
                             className="btn-primary flex-1"
                         >
                             {isProcessing && <Loader2 size={16} className="animate-spin text-brassink" />}
-                            {isProcessing ? 'saving...' : (burnedHook ? 'update hook' : 'add hook')}
+                            {uiT(isProcessing ? 'saving...' : (burnedHook ? 'update hook' : 'add hook'))}
                         </button>
                     </div>
                 </div>

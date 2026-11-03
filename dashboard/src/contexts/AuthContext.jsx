@@ -1,3 +1,4 @@
+import { t as uiT, useUiLocale } from "../i18n/runtime.js";
 // Auth + billing session state for cloud mode.
 // - Reads /api/config to learn whether billing is enabled at all.
 // - Handles the magic-link and Google OAuth redirect hashes.
@@ -16,6 +17,7 @@ const AuthContext = createContext(null);
 export const useAuth = () => useContext(AuthContext);
 
 export function AuthProvider({ children }) {
+  useUiLocale();
   const [config, setConfig] = useState({ billingEnabled: false, googleAuthEnabled: false });
   const [me, setMe] = useState(null);           // /api/me payload, or null when signed out
   const [loading, setLoading] = useState(true);
@@ -175,5 +177,5 @@ export function AuthProvider({ children }) {
     logout,
   };
 
-  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+  return <AuthContext.Provider value={value}>{uiT(children)}</AuthContext.Provider>;
 }
