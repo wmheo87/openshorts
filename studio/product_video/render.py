@@ -44,13 +44,21 @@ def render_product(script, config, output_dir, log):
     generate_tiktok_subs(audio, str(out / 'captions.ass'), max_words=2, language='ko')
     if not (out / 'captions.ass').stat().st_size: raise ValueError('음성 인식 자막이 비어 있습니다. 완료로 처리하지 않습니다.')
     width, height = 720, 1280
-    weights = [s['end'] - s['start'] if s['kind'] == 'video' else s['duration'] for s in scenes]
+    # Approximate scene timing from each scene's own spoken text, not arbitrary photo duration.
+    # This does not provide word-exact alignment; future work can derive cuts from ASR timings.
+    segment_scripts = script.get('segments') or []
+    if len(segment_scripts) != len(scenes) or any(s.get('asset_id') != scene['asset_id'] or not isinstance(s.get('narration'), str) or not s['narration'].strip() for s, scene in zip(segment_scripts, scenes)):
+        raise ValueError('장면별 대본이 원본 장면과 일치하지 않습니다.')
+    weights = [max(1, len(s['narration'].strip())) for s in segment_scripts]
     total = sum(weights)
     for i, (scene, weight) in enumerate(zip(scenes, weights)):
         seconds = duration * weight / total
         log(f'승인 원본 장면 {i + 1}/{len(scenes)} · 크롭/사진 움직임/전환 합성')
         crop_x = {'center': '(in_w-out_w)/2', 'left': '0', 'right': 'in_w-out_w'}[scene['crop']]
-        vf = f'scale={width}:{height}:force_original_aspect_ratio=increase,crop={width}:{height}:{crop_x}:(in_h-out_h)/2,setsar=1,fps=30'
+        if scene.get('fit', 'contain') == 'contain':
+            vf = f'scale={width}:{height}:force_original_aspect_ratio=decrease,pad={width}:{height}:(ow-iw)/2:(oh-ih)/2:color=black,setsar=1,fps=30'
+        else:
+            vf = f'scale={width}:{height}:force_original_aspect_ratio=increase,crop={width}:{height}:{crop_x}:(in_h-out_h)/2,setsar=1,fps=30'
         if scene['kind'] == 'image':
             frames = max(1, math.ceil(seconds * 30))
             if scene['motion'] == 'zoom':

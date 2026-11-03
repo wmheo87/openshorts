@@ -6,7 +6,7 @@ import wave
 from pathlib import Path
 
 DEFAULT_MODEL = 'gemini-3.8-flash-lite-tts'
-VOICES = ('Kore', 'Puck')
+VOICES = ('Kore', 'Puck', 'Zephyr', 'Charon', 'Leda', 'Aoede', 'Achird', 'Sulafat', 'Laomedeia', 'Schedar', 'Iapetus', 'Callirrhoe', 'Vindemiatrix', 'Autonoe', 'Orus', 'Fenrir', 'Enceladus', 'Umbriel', 'Algieba', 'Despina', 'Erinome', 'Algenib', 'Rasalgethi', 'Achernar', 'Alnilam', 'Gacrux', 'Pulcherrima', 'Zubenelgenubi', 'Sadachbia', 'Sadaltager')
 COST_NOTICE = ('Gemini TTS 요금/무료 할당량은 미확인입니다(0원 보장 아님). '
                'fal.ai 영상·립싱크 요금은 별도이며, 실패한 요청도 과금될 수 있습니다. '
                '다른 유료 공급자로 자동 전환하지 않습니다.')
@@ -56,7 +56,7 @@ def generate_voiceover(text, key, output_path, voice='Kore', model=None):
     try:
         with client_for(key) as client:
             response = client.models.generate_content(
-                model=model, contents='다음 한국어 대본을 자연스럽게 읽으세요. 대본만 발화하세요:\n' + text,
+                model=model, contents=text,
                 config=types.GenerateContentConfig(
                     response_modalities=['AUDIO'],
                     speech_config=types.SpeechConfig(voice_config=types.VoiceConfig(

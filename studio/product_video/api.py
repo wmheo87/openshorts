@@ -23,6 +23,7 @@ class Scene(BaseModel):
     end: float = Field(default=1, gt=0, le=600)
     duration: float = Field(default=3, ge=1, le=15)
     crop: Literal['center', 'left', 'right'] = 'center'
+    fit: Literal['contain', 'cover'] = 'contain'
     motion: Literal['none', 'zoom', 'pan'] = 'zoom'
     note: str = Field(default='', max_length=400)
 
@@ -36,7 +37,7 @@ class ProductRequest(BaseModel):
     paid_confirmed: StrictBool = False
     content_confirmed: StrictBool = False
     script: dict | None = None
-    voice: Literal['Kore', 'Puck'] = 'Kore'
+    voice: Literal['Kore', 'Puck', 'Zephyr', 'Charon', 'Leda', 'Aoede', 'Achird', 'Sulafat', 'Laomedeia', 'Schedar', 'Iapetus', 'Callirrhoe', 'Vindemiatrix', 'Autonoe', 'Orus', 'Fenrir', 'Enceladus', 'Umbriel', 'Algieba', 'Despina', 'Erinome', 'Algenib', 'Rasalgethi', 'Achernar', 'Alnilam', 'Gacrux', 'Pulcherrima', 'Zubenelgenubi', 'Sadachbia', 'Sadaltager'] = 'Kore'
     music_id: str | None = None
     music_volume: float = Field(default=.12, ge=0, le=.4)
     transition: Literal['cut', 'fade'] = 'fade'
@@ -68,7 +69,7 @@ def create_router(engine):
             narration = body.script.get('full_narration')
             if not isinstance(narration, str) or not 1 <= len(narration) <= 1200:
                 raise HTTPException(422, '내레이션은 1~1200자로 제한됩니다.')
-            if not isinstance(body.script.get('segments'), list) or any(not isinstance(s, dict) for s in body.script['segments']) or [s.get('asset_id') for s in body.script['segments']] != [s['asset_id'] for s in scenes]:
+            if not isinstance(body.script.get('segments'), list) or any(not isinstance(s, dict) or not isinstance(s.get('narration'), str) or not s['narration'].strip() for s in body.script['segments']) or [s.get('asset_id') for s in body.script['segments']] != [s['asset_id'] for s in scenes]:
                 raise HTTPException(422, '대본과 선택 장면이 다릅니다. 새 대본 요청을 준비하세요.')
         return scenes, music, key
 

@@ -85,7 +85,7 @@ export default function ProductVideoStudio({ geminiApiKey }) {
         else {
           const preview = URL.createObjectURL(file); urls.current.add(preview);
           setScenes(previous => [...previous, { asset_id: asset.id, kind, source_duration: asset.duration,
-            start: 0, end: Math.min(3, asset.duration || 3), duration: 3, crop: 'center', motion: 'zoom', note: '', preview }]);
+            start: 0, end: Math.min(3, asset.duration || 3), duration: 3, crop: 'center', fit: 'contain', motion: 'zoom', note: '', preview }]);
           setScript(null); setContent(false);
         }
       }
@@ -125,14 +125,28 @@ export default function ProductVideoStudio({ geminiApiKey }) {
       {scene.preview && (scene.kind === 'video' ? <video className="max-h-48" src={scene.preview} controls /> : <img className="max-h-48" src={scene.preview} alt={uiT(`장면 ${index + 1} 원본`)} />)}
       <label className="block">{uiT("실제 원본에 보이는 내용(추정 효과·가짜 사용 장면 금지)")}<input aria-label={uiT(`장면 ${index + 1} 내용`)} className={input} maxLength={400} value={scene.note} onChange={e => change(index, { note: e.target.value })} /></label>
       {scene.kind === 'video' ? <div className="flex gap-2"><label>{uiT("시작(초)")}<input aria-label={uiT(`장면 ${index + 1} 시작`)} type="number" min={0} max={scene.source_duration} step="0.1" value={scene.start} onChange={e => change(index, { start: Number(e.target.value) })} /></label><label>{uiT("끝(초)")}<input aria-label={uiT(`장면 ${index + 1} 끝`)} type="number" min={0} max={scene.source_duration} step="0.1" value={scene.end} onChange={e => change(index, { end: Number(e.target.value) })} /></label></div> : <><label>{uiT("사진 시간 비중")}<input aria-label={uiT(`장면 ${index + 1} 사진 시간`)} type="number" min={1} max={15} value={scene.duration} onChange={e => change(index, { duration: Number(e.target.value) })} /></label><label>{uiT("사진 움직임")}<select aria-label={uiT(`장면 ${index + 1} 움직임`)} value={scene.motion} onChange={e => change(index, { motion: e.target.value })}><option value="none">{uiT("없음")}</option><option value="zoom">{uiT("확대")}</option><option value="pan">{uiT("팬")}</option></select></label></>}
+      <label>{uiT("화면 표시 방식")}<select aria-label={uiT(`장면 ${index + 1} 화면 표시`)} value={scene.fit || 'contain'} onChange={e => change(index, { fit: e.target.value })}><option value="contain">{uiT("전체 보기 (잘림 없음)")}</option><option value="cover">{uiT("화면 채우기 (가장자리 잘림)")}</option></select></label>
       <label>{uiT("9:16 크롭 위치")}<select aria-label={uiT(`장면 ${index + 1} 크롭`)} value={scene.crop} onChange={e => change(index, { crop: e.target.value })}><option value="center">{uiT("가운데")}</option><option value="left">{uiT("왼쪽")}</option><option value="right">{uiT("오른쪽")}</option></select></label>
       <button className="btn-ghost p-2" disabled={index === 0} onClick={() => { setScenes(old => { const next = [...old]; [next[index-1], next[index]] = [next[index], next[index-1]]; return next; }); setScript(null); }}>{uiT("위로 이동")}</button><button className="btn-ghost p-2" onClick={() => { setScenes(old => old.filter((_, i) => i !== index)); setScript(null); }}>{uiT("장면 제외")}</button>
     </fieldset>)}
     <label className="block">{uiT("확인된 상품 정보")}<textarea aria-label={uiT("확인된 상품 정보")} className={input} maxLength={4000} disabled={disabled} value={description} onChange={e => { setDescription(e.target.value); setScript(null); }} placeholder={uiT("확인된 사양·원화 가격만 입력하세요. 미확인 효능·할인율·후기를 만들지 않습니다.")} /></label>
-    <div className="flex flex-wrap gap-4"><label>{uiT("장면 전환")}<select aria-label={uiT("장면 전환")} disabled={disabled} value={transition} onChange={e => setTransition(e.target.value)}><option value="fade">{uiT("페이드")}</option><option value="cut">{uiT("컷")}</option></select></label><label>{uiT("한국어 Gemini 음성")}<select aria-label={uiT("제품형 한국어 음성")} disabled={disabled} value={voice} onChange={e => setVoice(e.target.value)}><option>{uiT("Kore")}</option><option>{uiT("Puck")}</option></select></label></div>
+    <div className="flex flex-wrap gap-4"><label>{uiT("장면 전환")}<select aria-label={uiT("장면 전환")} disabled={disabled} value={transition} onChange={e => setTransition(e.target.value)}><option value="fade">{uiT("페이드")}</option><option value="cut">{uiT("컷")}</option></select></label><label>{uiT("한국어 Gemini 음성")}<select aria-label={uiT("제품형 한국어 음성")} disabled={disabled} value={voice} onChange={e => setVoice(e.target.value)}><option>{uiT("Kore")}</option>{['Puck','Zephyr','Charon','Leda','Aoede','Achird','Sulafat','Laomedeia','Schedar','Iapetus','Callirrhoe','Vindemiatrix','Autonoe','Orus','Fenrir','Enceladus','Umbriel','Algieba','Despina','Erinome','Algenib','Rasalgethi','Achernar','Alnilam','Gacrux','Pulcherrima','Zubenelgenubi','Sadachbia','Sadaltager'].map(v => <option key={v} value={v}>{v}</option>)}</select></label></div>
     <label className="block">{uiT("권리 확인된 배경음 업로드(선택)")}<LocalizedFileInput aria-label={uiT("배경음 업로드")} accept="audio/mpeg,audio/wav,audio/mp4,audio/ogg" disabled={!rights || disabled} onChange={e => e.target.files[0] && upload([e.target.files[0]], true)} /></label>
     {music && <div><span>{uiT("배경음 선택됨")}</span><label>{uiT("배경음 음량")}<input aria-label={uiT("배경음 음량")} type="range" min={0} max={.4} step={.01} value={musicVolume} disabled={disabled} onChange={e => setMusicVolume(Number(e.target.value))} /></label><button className="btn-ghost" disabled={disabled} onClick={() => setMusic(null)}>{uiT("배경음 없음")}</button></div>}
-    {script && <label className="block">{uiT("한국어 내레이션 검토·수정")}<textarea aria-label={uiT("한국어 내레이션")} className={input} value={script.full_narration} maxLength={1200} disabled={disabled} onChange={e => { setScript({ ...script, full_narration: e.target.value }); setContent(false); }} /></label>}
+    {script && <div className="space-y-2">
+      <p className="font-semibold">{uiT("장면별 한국어 대본 검토·수정")}</p>
+      <p className="text-xs text-muted">{uiT("각 소스의 설명을 수정하면 전체 내레이션이 해당 순서로 자동 결합됩니다. 영상 전환 시점은 발화 길이 기반 추정이며 단어 단위 정밀 싱크는 아닙니다.")}</p>
+      {script.segments?.map((segment, index) => <label key={segment.asset_id + '-' + index} className="block text-sm">
+        {uiT("장면 ")}{index + 1}
+        <textarea className={input} aria-label={uiT(`장면 ${index + 1} 대본`)} disabled={disabled}
+          value={segment.narration || ''} maxLength={1200}
+          onChange={e => { const segments = script.segments.map((s, i) => i === index ? { ...s, narration: e.target.value } : s);
+            setScript({ ...script, segments, full_narration: segments.map(s => (s.narration || '').trim()).filter(Boolean).join(' ') }); setContent(false); }} />
+      </label>)}
+      <label className="block text-sm">{uiT("전체 내레이션 미리보기")}
+        <textarea className={input} aria-label={uiT("전체 내레이션 미리보기")} value={script.full_narration || ''} readOnly rows={4} />
+      </label>
+    </div>}
     <label className="block"><input type="checkbox" checked={paid} disabled={disabled} onChange={e => setPaid(e.target.checked)} />{uiT(" 이번 Gemini 유료 요청의 비용·요금 미확인·실패 시 과금 가능성을 확인하고 실행에 동의합니다.")}</label>
     {script && <label className="block"><input type="checkbox" checked={content} disabled={disabled} onChange={e => setContent(e.target.checked)} />{uiT(" 원본과 대본을 검토했으며 상품 효능·사용 장면·가격·후기를 임의로 꾸미지 않았습니다.")}</label>}
     <div className="flex flex-wrap gap-3"><button className="btn-primary p-3" disabled={disabled || !rights || !paid || !scenes.length} onClick={() => submit('analyze')}>{uiT("제품 대본 생성")}</button><button className="btn-primary p-3" disabled={disabled || !rights || !paid || !content || !script} onClick={() => submit('generate')}>{uiT("제품 MP4 제작")}</button></div>

@@ -14,10 +14,10 @@ Approved scenes: {json.dumps(approved, ensure_ascii=False)}
 Do not invent effects, reviews, use cases, price, discounts, performance, product appearance or experiences.
 Only mention KRW prices explicitly supplied; never convert foreign prices or invent affiliate relationships.
 Do not require an actor, avatar, lip-sync, generated images, b-roll, or a fixed five-section structure.
-Use one segment per supplied scene in this order, describing only what the user says is shown; otherwise neutral product information.
+Use one segment per supplied scene in this order. Each segment narration MUST explain that scene's own supplied note, with natural short connected sentences. If a scene note is blank, say only verified general product facts, with no fabricated visual claims. Aim for roughly 2-6 seconds of speech per scene.
 CTA should ask to check current information on the seller page, without assuming where the link is.
 Return JSON: {{"title":"short title", "full_narration":"20-45 seconds of factual speech", "hook_text":"short factual hook", "segments":[{{"asset_id":"approved id", "narration":"spoken words", "subtitle_text":"short caption"}}], "hashtags":[], "caption":"factual caption"}}.
-full_narration must concatenate segment narrations. No actor_description or generated scene prompts.'''
+full_narration must join the spoken segment narrations in the exact same order, separated by a single space. The segments are the authoritative per-source script. No actor_description or generated scene prompts.'''
     with client_for(key) as client:
         response = client.models.generate_content(model=GEMINI_MODEL, contents=prompt,
             config=types.GenerateContentConfig(response_mime_type='application/json', max_output_tokens=4096))

@@ -120,7 +120,7 @@ def test_product_generate_no_fal_no_actor_no_elevenlabs_and_missing_file(setup, 
         calls.append(config); return {'filename': 'product.mp4', 'duration': 2}
     monkeypatch.setattr(PROVIDERS['ffmpeg-product'], 'render', render)
     async def run():
-        item = await upload_photo(); request = body(item['id'], script={'production_mode': 'product', 'language': 'ko', 'full_narration': '상품', 'segments': [{'asset_id': item['id']}]})
+        item = await upload_photo(); request = body(item['id'], script={'production_mode': 'product', 'language': 'ko', 'full_narration': '상품', 'segments': [{'asset_id': item['id'], 'narration': '상품'}]})
         assert (await req('POST', '/generate', json={**request, 'content_confirmed': False})).status_code == 400
         assert (await req('POST', '/generate', json=request)).status_code == 200
         result = await wait(request['request_id']); assert result['state'] == 'completed', result
@@ -212,9 +212,10 @@ def test_real_ffmpeg_photo_video_crop_music_korean_ass_and_download(tmp_path, mo
     import saasshorts
     monkeypatch.setattr(saasshorts, 'transcribe_audio_for_subs', lambda *a, **kw: [{'word': '한국어상품안내를확인해요', 'start': 0, 'end': 2.3}])
     output = tmp_path / 'result'
-    result = render_product({'full_narration': '상품 정보'}, {'gemini_key': 'mock', 'model': 'mock', 'voice': 'Kore',
-        'scenes': [{'path': str(image), 'kind': 'image', 'duration': 2, 'motion': motion, 'crop': 'left'},
-                   {'path': str(video), 'kind': 'video', 'start': .2, 'end': 1.2, 'crop': 'right', 'motion': 'none'}],
+    result = render_product({'full_narration': '상품 정보', 'segments': [
+        {'asset_id': 'photo-source', 'narration': '상품'}, {'asset_id': 'video-source', 'narration': '정보'}]}, {'gemini_key': 'mock', 'model': 'mock', 'voice': 'Kore',
+        'scenes': [{'asset_id': 'photo-source', 'path': str(image), 'kind': 'image', 'duration': 2, 'motion': motion, 'crop': 'left', 'fit': 'contain'},
+                   {'asset_id': 'video-source', 'path': str(video), 'kind': 'video', 'start': .2, 'end': 1.2, 'crop': 'right', 'motion': 'none', 'fit': 'cover'}],
         'transition': transition, 'music': {'path': str(music)}, 'music_volume': .1}, str(output), log=lambda message: None)
     streams, duration = storage.probe(output / 'product.mp4')
     assert any(s.get('width') == 720 and s.get('height') == 1280 for s in streams)
@@ -308,3 +309,33 @@ def test_missing_local_asr_fails_before_paid_tts(tmp_path, monkeypatch):
     monkeypatch.setattr(render, 'generate_voiceover', lambda *a: pytest.fail('Do not pay TTS before local prerequisites'))
     with pytest.raises(RuntimeError, match='유료 음성을 생성하지 않았습니다'):
         render.render_product({'full_narration': '상품'}, {}, str(tmp_path), log=lambda message: None)
+
+
+def test_voice_catalog_and_media_fit_validation():
+    from studio import gemini_tts
+    assert len(gemini_tts.VOICES) == 30
+    assert 'Aoede' in gemini_tts.VOICES
+    from studio.product_video.api import Scene, ProductRequest
+    scene = Scene(asset_id=ident())
+    assert scene.fit == 'contain'
+    assert Scene(asset_id=ident(), fit='cover').fit == 'cover'
+    with pytest.raises(Exception):
+        Scene(asset_id=ident(), fit='invalid')
+    assert ProductRequest(request_id=ident(), scenes=[scene], voice='Aoede').voice == 'Aoede'
+
+
+def test_product_script_uses_scene_specific_speech_requirement(monkeypatch):
+    scene = {'asset_id': ident(), 'kind': 'image', 'note': '제품 정면'}
+    seen = []
+    class Client:
+        def __enter__(self): return self
+        def __exit__(self, *a): pass
+        @property
+        def models(self): return self
+        def generate_content(self, **kwargs):
+            seen.append(kwargs['contents'])
+            return NS(text=json.dumps({'full_narration': '제품 정면입니다', 'segments': [
+                {'asset_id': scene['asset_id'], 'narration': '제품 정면입니다'}]}))
+    monkeypatch.setattr(scripts, 'client_for', lambda key: Client())
+    scripts.generate_product_script('실제 정보', [scene], 'ko', 'mock')
+    assert "Each segment narration MUST explain that scene's own supplied note" in seen[0]
