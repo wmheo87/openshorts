@@ -41,12 +41,12 @@ def test_caption_position_and_style(tmp_path, position, alignment, margin, style
     assert result["position"] == position and result["style"] == style
     assert "0:00:00.00,0:00:02.00" in text
     if style == "highlight":
-        assert r"{\\c&H0000FFFF&}" in text
-        assert r"{\\c&H00FFFFFF&}" in text
+        assert r"{\c&H0000FFFF&}" in text
+        assert r"{\c&H00FFFFFF&}" in text
     elif style == "box":
         assert fields[15] == "3" and fields[6] == "&H90000000"
     else:
-        assert fields[15] == "1" and r"{\\c&H0000FFFF&}" not in text
+        assert fields[15] == "1" and r"{\c&H0000FFFF&}" not in text
 
 
 def test_invalid_subtitle_settings_rejected(tmp_path):
