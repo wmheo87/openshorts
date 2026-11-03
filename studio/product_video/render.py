@@ -8,6 +8,7 @@ from pathlib import Path
 from studio.gemini_tts import generate_voiceover
 from saasshorts import generate_tiktok_subs
 from .storage import probe
+from .captions import style_product_captions
 
 
 def run(args, cwd=None):
@@ -43,6 +44,8 @@ def render_product(script, config, output_dir, log):
     log('실제 음성에서 Whisper 타임스탬프·ASS 자막 생성 중')
     generate_tiktok_subs(audio, str(out / 'captions.ass'), max_words=2, language='ko')
     if not (out / 'captions.ass').stat().st_size: raise ValueError('음성 인식 자막이 비어 있습니다. 완료로 처리하지 않습니다.')
+    style_product_captions(out / 'captions.ass', config.get('subtitle_position', 'bottom'),
+                           config.get('subtitle_style', 'outline'))
     width, height = 720, 1280
     # Approximate scene timing from each scene's own spoken text, not arbitrary photo duration.
     # This does not provide word-exact alignment; future work can derive cuts from ASR timings.
