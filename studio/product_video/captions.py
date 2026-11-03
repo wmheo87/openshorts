@@ -37,14 +37,14 @@ def style_product_captions(path, position="bottom", style="outline"):
             parts[18] = str(alignment)
             parts[21] = str(margin)
             if style == "box":
-                parts[16] = "3"             # opaque background box
-                parts[17] = "0"             # no shadow
-                parts[22] = "1"
-                parts[15] = "&H90000000"    # black, semi-transparent
+                parts[15] = "3"             # opaque background box
+                parts[16] = "0"             # outline thickness
+                parts[17] = "0"             # shadow
+                parts[6] = "&H90000000"     # semi-transparent black back colour
             else:
-                parts[16] = "1"             # outline
+                parts[15] = "1"             # normal outlined text
+                parts[16] = "4"
                 parts[17] = "0"
-                parts[22] = "1"
             line = "Style: " + ",".join(parts) + "\n"
             changed_style = True
         elif in_events and stripped.startswith("Dialogue: ") and style == "highlight":
